@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
+const { Schema } = mongoose;
 
 const AccountSchema = new mongoose.Schema({
     name:{
@@ -40,6 +41,11 @@ const AccountSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    passwordResetCode: {
+        type: Schema.Types.ObjectId,
+        default: null,
+        ref: "PasswordResetCode",
+    }
 },
 {
     timestamps: true
