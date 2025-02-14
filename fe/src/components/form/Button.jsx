@@ -6,9 +6,11 @@ const Button = ({
   children,
   className = "px-4 py-2 bg-green-500 text-white rounded",
   showIcon = false,
+  type = "button"
 }) => {
   return (
     <button
+      type={type}
       onClick={onClick}
       className={`${className} hover:bg-green-700 transition duration-300`}
     >
