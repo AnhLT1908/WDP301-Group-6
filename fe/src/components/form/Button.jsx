@@ -6,11 +6,13 @@ const Button = ({
   children,
   className = "px-4 py-2 bg-green-500 text-white rounded",
   showIcon = false,
+  type = "button",
 }) => {
   return (
     <button
+      type={type}
       onClick={onClick}
-      className={`${className} hover:bg-green-700 transition duration-300`}
+      className={`${className} hover:bg-green-700 transition duration-300 sm:px-6 sm:py-3 px-4 py-2 text-sm sm:text-base`}
     >
       <div className="flex items-center">
         {children}
