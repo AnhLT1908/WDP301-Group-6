@@ -5,6 +5,7 @@
   "dependencies": {
     "autoprefixer": "^10.4.20",
     "cra-template": "1.2.0",
+    "lucide-react": "^0.475.0",
     "postcss": "^8.5.2",
     "postcss-loader": "^8.1.1",
     "react": "^18.0.0",

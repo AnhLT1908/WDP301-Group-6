@@ -1,15 +1,13 @@
 import React, { useState } from "react";
 import logo from "../../src/assets/images/logo.png";
 import forgotPasswordImg from "../../src/assets/images/forgot-password-image.png";
-import Input from "../components/form/Input.jsx";
-import Button from "../components/form/Button.jsx";
 
-const ForgotPassword = () => {
-  const [email, setEmail] = useState("");
+const VerifyCodeForgotPassword = () => {
+  const [verifyCode, setVerifyCode] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(`Email submitted: ${email}`);
+    console.log(`Verify Code submitted: ${verifyCode}`);
   };
 
   return (
@@ -20,26 +18,25 @@ const ForgotPassword = () => {
           alt="Logo"
           className="absolute top-[40px] left-[60px] w-[120px] h-[90px]"
         />
-        <h1 className="text-3xl font-bold mb-6">Forgot your password?</h1>
+        <h1 className="text-3xl font-bold mb-6">Verify code</h1>
         <p className="text-gray-600 mb-6">
-          Don’t worry, happens to all of us. Enter your email below to recover
-          your password.
+          An authentication code has been sent to your email.
         </p>
 
         <form onSubmit={handleSubmit}>
-          <Input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
+          <input
+            type="text"
+            value={verifyCode}
+            onChange={(e) => setVerifyCode(e.target.value)}
+            placeholder="Enter code here"
             className="w-2/3 p-3 mb-4 border border-gray-300 rounded-md"
           />
-          <Button
+          <button
             type="submit"
             className="w-2/3 bg-green-500 text-white p-3 rounded-md"
           >
-            Submit
-          </Button>
+            Verify
+          </button>
         </form>
       </div>
 
@@ -58,4 +55,4 @@ const ForgotPassword = () => {
   );
 };
 
-export default ForgotPassword;
+export default VerifyCodeForgotPassword;
