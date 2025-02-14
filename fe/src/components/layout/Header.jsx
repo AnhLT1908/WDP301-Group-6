@@ -6,16 +6,15 @@ function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
 
-  const isActiveLink = (path) => location.pathname === path ? "text-yellow-400" : "text-white";
+  const isActiveLink = (path) =>
+    location.pathname === path ? "text-yellow-400" : "text-white";
 
   return (
     <header>
       <div className="bg-[#0D9F4C] py-4">
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           <div className="flex items-center text-white">
-            <div className="mr-2">
-              <img src={logo} className="w-[90px] h-[70px]" alt="Logo" />
-            </div>
+            <img src={logo} className="w-[90px] h-[70px]" alt="Logo" />
             <span className="font-bold text-xl text-[#FDEE2A]">
               Lodging Chain Management
             </span>
@@ -32,19 +31,19 @@ function Header() {
       <div className="bg-[#06752A] py-4">
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           <nav className="hidden md:flex space-x-6 text-white">
-            <Link to="/" className={`${isActiveLink('/')}`}>
+            <Link to="/" className={`${isActiveLink("/")}`}>
               Home
             </Link>
-            <Link to="/about" className={`${isActiveLink('/about')}`}>
+            <Link to="/about" className={`${isActiveLink("/about")}`}>
               About Us
             </Link>
-            <Link to="/features" className={`${isActiveLink('/features')}`}>
+            <Link to="/features" className={`${isActiveLink("/features")}`}>
               Features
             </Link>
-            <Link to="/categories" className={`${isActiveLink('/categories')}`}>
+            <Link to="/categories" className={`${isActiveLink("/categories")}`}>
               Categories
             </Link>
-            <Link to="/contact" className={`${isActiveLink('/contact')}`}>
+            <Link to="/contact" className={`${isActiveLink("/contact")}`}>
               Contact
             </Link>
           </nav>
@@ -75,19 +74,19 @@ function Header() {
 
       {isMenuOpen && (
         <div className="md:hidden bg-green-600 text-white p-4 space-y-4">
-          <Link to="/" className={`${isActiveLink('/')}`}>
+          <Link to="/" className={`${isActiveLink("/")}`}>
             Home
           </Link>
-          <Link to="/about" className={`${isActiveLink('/about')}`}>
+          <Link to="/about" className={`${isActiveLink("/about")}`}>
             About Us
           </Link>
-          <Link to="/features" className={`${isActiveLink('/features')}`}>
+          <Link to="/features" className={`${isActiveLink("/features")}`}>
             Features
           </Link>
-          <Link to="/categories" className={`${isActiveLink('/categories')}`}>
+          <Link to="/categories" className={`${isActiveLink("/categories")}`}>
             Categories
           </Link>
-          <Link to="/contact" className={`${isActiveLink('/contact')}`}>
+          <Link to="/contact" className={`${isActiveLink("/contact")}`}>
             Contact
           </Link>
         </div>
