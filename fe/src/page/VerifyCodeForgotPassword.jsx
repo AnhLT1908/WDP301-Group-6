@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import logo from "../../src/assets/images/logo.png";
+import logo from "../../src/assets/images/logo2_text.png";
 import forgotPasswordImg from "../../src/assets/images/forgot-password-image.png";
 
 const VerifyCodeForgotPassword = () => {
