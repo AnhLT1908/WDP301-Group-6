@@ -10,15 +10,14 @@ const Footer = () => {
         </div>
 
         {/* Navigation Links on one row */}
-        <div className="flex space-x-6 mb-6">
+        <div className="flex space-x-6 mb-6 sm:mb-0 flex-wrap justify-center sm:justify-start">
           <a href="#" className="text-gray-600 hover:text-blue-500">Home</a>
           <a href="#" className="text-gray-600 hover:text-blue-500">About</a>
           <a href="#" className="text-gray-600 hover:text-blue-500">News</a>
           <a href="#" className="text-gray-600 hover:text-blue-500">Contact Us</a>
         </div>
 
-        {/* Contact Info on one row */}
-        <div className="flex space-x-6 items-center mb-6 text-gray-600">
+        <div className="flex space-x-6 items-center mb-6 sm:mb-0 text-gray-600 flex-wrap justify-center sm:justify-start">
           <div className="flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v6m0 0l3-3m-3 3l-3-3" />
