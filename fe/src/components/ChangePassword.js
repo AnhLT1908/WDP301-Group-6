@@ -31,8 +31,8 @@ const ChangePassword = () => {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-white">
-      <div className="w-full max-w-md bg-white p-8 rounded-xl">
+    <div className="flex justify-center items-center h-screen bg-green-50">
+      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
         <div className="text-center">
           <h2 className="text-3xl font-bold mb-4">Change Your Password</h2>
           <p className="text-lg mb-8">
