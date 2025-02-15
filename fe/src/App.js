@@ -3,8 +3,8 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import ForgotPassword from "./page/ForgotPassword.jsx";
 import VerifyCodeForgotPassword from "./page/VerifyCodeForgotPassword.jsx";
 import HomePage from "./page/HomePage.jsx";
-import Login from "./components/Login";
-import ChangePassword from "./components/ChangePassword";
+import Login from "./page/Login.jsx";
+import ChangePassword from "./page/ChangePassword.jsx";
 
 function App() {
   return (
