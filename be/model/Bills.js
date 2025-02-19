@@ -1,8 +1,8 @@
 const mongoose = require('mongoose')
 
-const priceItemSchema = Schema({
+const priceItemSchema = new mongoose.Schema({
     base: {
-        type: Schema.ObjectId,
+        type:  mongoose.Schema.Types.ObjectId,
         ref: "DefaultPrice",
     },
     unitPrice: {
@@ -36,9 +36,9 @@ const BillSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    priceList: [{
-        type : priceItemSchema
-    }],
+    priceList: [
+       priceItemSchema
+    ],
     debt: {
         type: Number,
         required: true,
@@ -59,7 +59,7 @@ const BillSchema = new mongoose.Schema({
     },
     paymentMethod: {
         type: String,
-        enum: ["Banking", "Cash", ""],
+        enum: ["Banking", "Cash", "Unknown"],
         default: ""
     }
 },  

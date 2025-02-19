@@ -10,17 +10,13 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 const ConnectDB = require('./config/connectDB')
 const app = express();
-const { SERVER_PORT, MONGODB_URL } = process.env;
-
+const PORT = process.env.SERVER_PORT;
 const corsOptions = {
   origin: true, // Allow requests from all origins
   credentials: true, // allow sending cookies from the client
 };
 
-ConnectDB({
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
+ConnectDB();
 
 app.use(cors(corsOptions));
 app.set('view engine', 'ejs');
@@ -59,6 +55,12 @@ app.get("/", (req, res) => {
   res.send("Server đang chạy ngon lành 🚀");
 });
 
-app.listen(SERVER_PORT, () => {
-  console.log(`🚀 Server đang chạy tại http://localhost:${SERVER_PORT}`);
-});
+const startServer = async () => {
+  await ConnectDB(); // Đảm bảo MongoDB kết nối trước khi chạy server
+
+  app.listen(PORT, () => {
+    console.log(`🚀 Server đang chạy tại http://localhost:${PORT}`);
+  });
+};
+
+startServer();
