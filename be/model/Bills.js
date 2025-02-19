@@ -1,5 +1,25 @@
 const mongoose = require('mongoose')
 
+const priceItemSchema = Schema({
+    base: {
+        type: Schema.ObjectId,
+        ref: "DefaultPrice",
+    },
+    unitPrice: {
+        type: Number
+    },
+    startUnit: {
+        type: Number,
+    },
+    endUnit: {
+        type: Number,
+    },
+    totalUnit: {
+        type: Number,
+    } 
+});
+
+
 const BillSchema = new mongoose.Schema({
     roomId : {
         type: mongoose.Schema.Types.ObjectId,
@@ -16,10 +36,9 @@ const BillSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    priceList: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'priceItem'
-    },
+    priceList: [{
+        type : priceItemSchema
+    }],
     debt: {
         type: Number,
         required: true,
