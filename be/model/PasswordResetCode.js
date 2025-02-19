@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const PasswordResetCodeSchema = new mongoose.Schema({
     code: {
         type: String,
-        require: true
+        required: true
     },
     expiresAt: {
         type: Date,

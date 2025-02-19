@@ -7,18 +7,18 @@ const priceItemSchema = new Schema({
     },
     price: {
         type: Number,
-        require: true
+        required: true
     }
 })
 
 const HouseSchema = new mongoose.Schema({
     name: {
         type: String,
-        require: true
+        required: true
     },
     status:{
         type: String,
-        require: true
+        required: true
     },
     location:{
         type: mongoose.Schema.Types.ObjectId,
@@ -31,15 +31,15 @@ const HouseSchema = new mongoose.Schema({
     },
     electricPrice: {
         type: Number,
-        require: true,
+        required: true,
     },
     waterPrice: {
         type: Number,
-        require: true,
+        required: true,
     },
     servicePrice: {
         type: Number,
-        require: true,
+        required: true,
     },
     priceList: [
         {
