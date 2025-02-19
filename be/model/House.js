@@ -48,4 +48,34 @@ const HouseSchema = new mongoose.Schema({
             unique: true,
         }
     ],
-})
+    utilities: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "DefaultUtilities",
+        },
+    ],
+    otherUtilities: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "OtherUtilities",
+        },
+    ],
+    hostId:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Account'
+    },
+    deleted:{
+        type: Boolean,
+        default: false
+    },
+    deleteAt:{
+        type: Date,
+        default: null
+    },
+    },
+    {
+    timestamps: true
+    }
+);
+
+module.exports = mongoose.model('House', HouseSchema);
