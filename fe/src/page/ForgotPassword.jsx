@@ -4,9 +4,11 @@ import forgotPasswordImg from "../../src/assets/images/forgot-password-image.png
 import Input from "../components/form/Input.jsx";
 import Button from "../components/form/Button.jsx";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -17,6 +19,9 @@ const ForgotPassword = () => {
       .then((res) => {
         console.log(res);
         console.log(res.data);
+        const id = res.data.data.accountId;
+        console.log(id);
+        navigate("/verify-code", { state: { id } });
       })
       .catch((err) => {
         console.error("Front-end post forgot password error: ", err);

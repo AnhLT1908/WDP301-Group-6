@@ -1,13 +1,36 @@
 import React, { useState } from "react";
 import logo from "../../src/assets/images/logo2_text.png";
 import forgotPasswordImg from "../../src/assets/images/forgot-password-image.png";
+import axios from "axios";
+import { useLocation } from "react-router-dom";
 
 const VerifyCodeForgotPassword = () => {
-  const [verifyCode, setVerifyCode] = useState("");
+  const [passwordResetCode, setPasswordResetCode] = useState("");
+  const location = useLocation();
+  const { id } = location.state || {};
+
+  console.log("AccountId: ", id)
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(`Verify Code submitted: ${verifyCode}`);
+    console.log(`Verify Code submitted: ${passwordResetCode}`);
+
+    if (id) {
+      axios
+        .post(`http://localhost:8080/api/v1/auth/verify-password-reset-code`, {
+          id,
+          passwordResetCode,
+        })
+        .then((res) => {
+          console.log(res);
+          console.log(res.data);
+        })
+        .catch((err) => {
+          console.error("Front end error verify password: ", err);
+        });
+    } else {
+      console.error("Account ID not found.");
+    }
   };
 
   return (
@@ -26,8 +49,8 @@ const VerifyCodeForgotPassword = () => {
         <form onSubmit={handleSubmit}>
           <input
             type="text"
-            value={verifyCode}
-            onChange={(e) => setVerifyCode(e.target.value)}
+            value={passwordResetCode}
+            onChange={(e) => setPasswordResetCode(e.target.value)}
             placeholder="Enter code here"
             className="w-2/3 p-3 mb-4 border border-gray-300 rounded-md"
           />

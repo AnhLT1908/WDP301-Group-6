@@ -35,6 +35,9 @@ class AuthService {
 
   async verifyPasswordResetCode(req, res) {
     const { id, passwordResetCode } = req.body;
+    console.log("Request body", req.body);
+    console.log("VerifyPasswordResetCodeId:", id);
+    console.log("VerifyPasswordResetCode:", passwordResetCode);
     const account = await Account.findById(id).populate("passwordResetCode");
     if (!account) {
       return res.send("Account not found");
