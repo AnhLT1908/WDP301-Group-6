@@ -1,21 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
-
-const identifyCard = new Schema({
-    identityNumber: {
-      type: String,
-      default: null,
-    },
-    imageFront: {
-      type: String,
-      default: null,
-    },
-    imageBack: {
-      type: String,
-      default: null,
-    },
-  });
-
+const { Schema } = mongoose;
 
 const AccountSchema = new mongoose.Schema({
     name:{
@@ -38,10 +23,6 @@ const AccountSchema = new mongoose.Schema({
         default: null,
         minLenght: [10, "Phone must be at least 10 characters"],
     },
-    identityCard: {
-        type: identifyCard,
-        default: null,
-      },
     avatar:{
         type: String,
         default: null
@@ -51,10 +32,6 @@ const AccountSchema = new mongoose.Schema({
         required: null,
         minLenght: [8, "Password must be at least 8 characters"]
     },
-    provider: {
-        type: String,
-        default: "register",
-      },
     roomId:{
         type: mongoose.Schema.Types.ObjectId,
         default: null,
@@ -64,24 +41,11 @@ const AccountSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    refreshToken: {
-        type: String,
-        default: null,
-    },
-    payosClientId: {
-        type: String,
-    },
-      payosAPIKey: {
-        type: String,
-    },
-      payosCheckSum: {
-        type: String,
-    },
     passwordResetCode: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         default: null,
         ref: "PasswordResetCode",
-    },
+    }
 },
 {
     timestamps: true

@@ -1,15 +1,19 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const ConnectDB = async () => {
-    try {
-      const conn = await mongoose.connect(process.env.MONGODB_URL, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-      });
-      console.log(`✅ MongoDB connected: ${process.env.MONGODB_URL}`);
-    } catch (err) {
-      console.error("❌ MongoDB connection error:", err);
-      process.exit(1); // Dừng server nếu kết nối thất bại
-    }
+const db = {};
+
+db.connectDB = async () => {
+  await mongoose
+    .connect(process.env.MONGODB_URI, {
+      dbName: process.env.DB_NAME,
+    })
+    .then(() => {
+      console.log("Connect to MongoDB successfully");
+    })
+    .catch((error) => {
+      console.error(error.message);
+      process.exit();
+    });
 };
-module.exports = ConnectDB;
+
+module.exports = db;
