@@ -5,11 +5,12 @@ const sendEmail = require("../utils/mailer.js");
 
 class AuthService {
   async forgotPasswordHandler(req, res) {
+    console.log("Email request: ", req.body.email);
     const account = await Account.findOne({ email: req.body.email });
     if (!account) {
       return res.status(400).json({ message: "User not found" });
     }
-    
+
     const { customAlphabet } = await import("nanoid");
     const nanoid = customAlphabet("1234567890", 6);
     const passwordResetCode = nanoid();
