@@ -3,6 +3,7 @@ import logo from "../../src/assets/images/logo2_text.png";
 import forgotPasswordImg from "../../src/assets/images/forgot-password-image.png";
 import Input from "../components/form/Input.jsx";
 import Button from "../components/form/Button.jsx";
+import axios from "axios";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -10,6 +11,16 @@ const ForgotPassword = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log(`Email submitted: ${email}`);
+
+    axios
+      .post(`http://localhost:8080/api/v1/auth/forgot-password`, { email })
+      .then((res) => {
+        console.log(res);
+        console.log(res.data);
+      })
+      .catch((err) => {
+        console.error("Front-end post forgot password error: ", err);
+      });
   };
 
   return (
