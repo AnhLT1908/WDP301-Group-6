@@ -8,7 +8,7 @@ const Input = ({ type, value, onChange, placeholder, className }) => {
       value={value}
       onChange={onChange}
       placeholder={placeholder}
-      className={`${className}`}
+      className={`${className} w-full sm:w-2/3 p-3 mb-4 border border-gray-300 rounded-md`}
     />
   );
 };

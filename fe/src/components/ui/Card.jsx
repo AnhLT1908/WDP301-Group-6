@@ -1,9 +1,22 @@
 import React from "react";
 
-const Card = ({ title, children, actions, showIcon, icon = false }) => {
+const Card = ({
+  title,
+  img,
+  children,
+  actions,
+  showIcon,
+  icon,
+  className = "bg-white border border-gray-200 rounded-lg shadow-sm",
+  cardImgClassName = "w-full h-64 object-cover rounded-t-lg",
+  contentClassName = "p-6",
+}) => {
   return (
-    <div className="max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
-      <div className="grid grid-cols-2 items-center gap-4">
+    <div
+      className={`${className} hover:transform hover:scale-105 hover:shadow-lg transition-all duration-300`}
+    >
+      {img && <img src={img} className={cardImgClassName} alt={title} />}
+      <div className={contentClassName}>
         {showIcon && (
           <div className="relative flex justify-center items-center ml-[-30px]">
             <div className="absolute w-[100px] h-[100px] bg-green-500 rounded-[10px]"></div>
