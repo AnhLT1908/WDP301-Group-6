@@ -1,39 +1,14 @@
-import React from "react";
-import { SidebarProvider, useSidebar } from "../context/SidebarContext";
-import { Outlet } from "react-router";
-import AppHeader from "./AppHeader";
-import Backdrop from "./Backdrop";
-import AppSidebar from "./AppSidebar";
+import DashboardHeader from './DashboardHeader';
+import DashboardSideBar from './DashboardSideBar';
 
-const LayoutContent = () => {
-  const { isExpanded, isHovered, isMobileOpen } = useSidebar();
-
+export default function DashboardLayout({ children }) {
   return (
-    <div className="min-h-screen xl:flex">
-      <div>
-        <AppSidebar />
-        <Backdrop />
-      </div>
-      <div
-        className={`flex-1 transition-all duration-300 ease-in-out ${
-          isExpanded || isHovered ? "lg:ml-[290px]" : "lg:ml-[90px]"
-        } ${isMobileOpen ? "ml-0" : ""}`}
-      >
-        <AppHeader />
-        <div className="p-4 mx-auto max-w-screen-2xl md:p-6">
-          <Outlet />
-        </div>
+    <div className="flex h-screen bg-gray-100">
+      <DashboardSideBar />
+      <div className="flex-1 flex flex-col">
+        <DashboardHeader />
+        <div className="p-8">{children}</div>
       </div>
     </div>
   );
-};
-
-const AppLayout = () => {
-  return (
-    <SidebarProvider>
-      <LayoutContent />
-    </SidebarProvider>
-  );
-};
-
-export default AppLayout;
+}

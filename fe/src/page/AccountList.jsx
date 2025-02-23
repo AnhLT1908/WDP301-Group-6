@@ -1,3 +1,5 @@
+import React from "react";
+
 const accounts = Array(6).fill({
   name: "Lindsey Curtis",
   role: "Web Designer",
