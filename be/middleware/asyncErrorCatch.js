@@ -8,4 +8,3 @@ const catchAsyncErrors = (fn) => {
   };
   
 export default catchAsyncErrors;
-  
