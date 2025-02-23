@@ -6,6 +6,7 @@ import HomePage from './page/HomePage.jsx';
 import Login from './page/Login.jsx';
 import ChangePassword from './page/ChangePassword.jsx';
 import AccountList from './page/AccountList';
+import UserProfile from './page/UserProfile';
 
 function Dashboard() {
   return <div>Welcome to Dashboard</div>;
@@ -23,6 +24,7 @@ function App() {
           path="/admin/account-list"
           element={<DashboardLayout><AccountList /></DashboardLayout>} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/user-profile" element={<UserProfile />} />
         <Route path="/verify-code" element={<VerifyCodeForgotPassword />} />
         <Route path="/login" element={<Login />} />
         <Route path="/change-password" element={<ChangePassword />} />
