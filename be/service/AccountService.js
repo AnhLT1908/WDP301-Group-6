@@ -1,6 +1,7 @@
 const Account = require('../model/Account');
 const bcrypt = require("bcrypt");
 const Room = require('../model/Room')
+
 function getCurrentUser(req) {
     return req.user && req.user.id ? req.user.id : null;
 }
@@ -35,7 +36,7 @@ exports.GetAll= async(req, res)=> {
         });
     } catch (error) {
         return res.status(500).json({
-            message: "Internal Server Error",
+            message: "Lỗi Server Error",
         });
     }
 }
@@ -44,7 +45,7 @@ exports.getProfile = async(req, res) => {
         const accountId = getCurrentUser(req)
         const profile = await Account.findById(accountId)
         if (!profile) {
-            return res.send("Account not found")
+            return res.send("Account không thấy")
         }
         const {
             password,
@@ -67,10 +68,10 @@ exports.CreateAccount = async(req, res) => {
     try {
         const checkEmailExists = await Account.findOne({ email: email });
         if (checkEmailExists !== null)
-            return res.status(400).json({ message: "Email has exists" });
+            return res.status(400).json({ message: "Email đã tồn tại" });
         const checkUsername = await Account.findOne({username})
         if (checkUsername !== null) {
-            return res.status(400).json({ message: "Username has exists" });
+            return res.status(400).json({ message: "Username có rồi" });
         }
 
         const password = "Admin@123";
@@ -87,7 +88,7 @@ exports.CreateAccount = async(req, res) => {
         });
 
         return res.status(201).json({
-            message: "Create Successfully",
+            message: "Tạo acc thành công",
             data: {
                 username: accountData.username,
                 name: accountData.name,
@@ -97,7 +98,77 @@ exports.CreateAccount = async(req, res) => {
         });
     } catch (error) {
         return res.status(500).json({
-            message: "Internal Server Error",
+            message: "Lỗi Server Error",
         });
     }
 }
+
+exports.UpdateProfile = async(req, res) => {
+  try {
+    const accountId = getCurrentUser(req);
+    const account = await Account.findById(accountId);
+    if (!account) {
+      return res.status(404).json({ message: "Account không tìm thấy" });
+    }
+
+    const { name, phone, avatar, payosClientId, payosAPIKey, payosCheckSum } = req.body;
+    const updatedAccount = await Account.findByIdAndUpdate(accountId, {
+      name,
+      phone,
+      avatar,
+      payosClientId,
+      payosAPIKey,
+      payosCheckSum,
+    }, { new: true });
+
+    const { password, _id, refreshToken, passwordResetCode, imageStores, ...other } = updatedAccount._doc;
+    return res.status(200).json({
+      message: "Cập nhật thành công",
+      data: other,
+    });
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).json({
+      message: "Lỗi Server Error",
+    });
+  }
+}
+
+exports.ChangePassword = async(req, res)=> {
+    try {
+      const accountId = getCurrentUser(req);
+      const { oldPassword, newPassword } = req.body;
+      const account = await Account.findById(accountId);
+      if (!account) {
+        res.status(200).json({
+          success: false,
+          message: "Tài khoản không tồn tại !",
+        });
+      } else {
+        const comparePassword = await bcrypt.compare(
+          oldPassword,
+          account.password
+        );
+        if (!comparePassword) {
+          return res.status(200).json({
+            success: false,
+            message: "Mật khẩu cũ không đúng",
+          });
+        } else {
+          const salt = await bcrypt.genSalt(10);
+          const hashedPassword = await bcrypt.hash(newPassword, salt);
+          account.password = hashedPassword;
+          await account.save();
+          return res.status(200).json({
+            success: true,
+            message: "Đổi mật khẩu thành công",
+          });
+        }
+      }
+    } catch (error) {
+      return res.status(500).json({
+        message: "Lỗi Server Error",
+      });
+    }
+  }
+
