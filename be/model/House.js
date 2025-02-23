@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose, { Schema } from 'mongoose';
 
 const priceItemSchema = new Schema({
     base: {
@@ -78,4 +78,4 @@ const HouseSchema = new mongoose.Schema({
     }
 );
 
-module.exports = mongoose.model('House', HouseSchema);
+export default mongoose.model('House', HouseSchema);

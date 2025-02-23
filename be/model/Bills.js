@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+import mongoose from 'mongoose';
 
 const priceItemSchema = new mongoose.Schema({
     base: {
@@ -67,5 +67,4 @@ const BillSchema = new mongoose.Schema({
     timestamps: true 
     }
 );
-
-module.exports = mongoose.model('Bill', BillSchema);
+export default mongoose.model('Bill', BillSchema);

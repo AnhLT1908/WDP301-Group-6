@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const DefaultPriceSchema = new mongoose.Schema({
     name: {
@@ -12,4 +12,4 @@ const DefaultPriceSchema = new mongoose.Schema({
     }
 })
 
-module.exports = mongoose.model('DefaultPrice', DefaultPriceSchema)
+export default mongoose.model('DefaultPrice', DefaultPriceSchema)
