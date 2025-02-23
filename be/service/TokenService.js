@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken');
-const dotenv = require('dotenv');
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
 dotenv.config();
 
 const { REFRESH_KEY, ACCESS_KEY } = process.env;
@@ -12,7 +12,7 @@ class Token {
         accountType: account.accountType,
       },
       ACCESS_KEY,
-      { expiresIn: "1m" }
+      { expiresIn: '1m' }
     );
   }
 
@@ -23,9 +23,9 @@ class Token {
         accountType: account.accountType,
       },
       REFRESH_KEY,
-      { expiresIn: "365d" }
+      { expiresIn: '365d' }
     );
   }
 }
 
-module.exports = new Token();
+export default new Token();

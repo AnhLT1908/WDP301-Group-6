@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const DefaultUtilitiesSchema = new mongoose.Schema({
     name: {
@@ -7,4 +7,4 @@ const DefaultUtilitiesSchema = new mongoose.Schema({
     }
 })
 
-module.exports = mongoose.model('DefaultUtilities', DefaultUtilitiesSchema)
+export default mongoose.model('DefaultUtilities', DefaultUtilitiesSchema)

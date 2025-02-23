@@ -1,23 +1,22 @@
-const AccountService = require('../service/AccountService');
-const catchAsyncErrors = require('../middleware/asyncErrorCatch');
+import * as AccountService from '../service/AccountService.js';
+import catchAsyncErrors from '../middleware/asyncErrorCatch.js';
 
 const AccountController = {
-    getProfile: catchAsyncErrors(async(req, res)=>{
+    getProfile: catchAsyncErrors(async (req, res) => {
         await AccountService.getProfile(req, res);
     }),
-    CreateAccount: catchAsyncErrors(async(req, res) =>{
+    CreateAccount: catchAsyncErrors(async (req, res) => {
         await AccountService.CreateAccount(req, res);
     }),
-    GetAll: catchAsyncErrors(async(req, res)=>{
+    GetAll: catchAsyncErrors(async (req, res) => {
         await AccountService.GetAll(req, res);
     }),
-    UpdateProfile: catchAsyncErrors(async(req, res)=>{
+    UpdateProfile: catchAsyncErrors(async (req, res) => {
         await AccountService.UpdateProfile(req, res);
     }),
-    ChangePassword: catchAsyncErrors(async(req, res)=>{
+    ChangePassword: catchAsyncErrors(async (req, res) => {
         await AccountService.ChangePassword(req, res);
     })
-}
+};
 
-
-module.exports = AccountController
+export default AccountController;

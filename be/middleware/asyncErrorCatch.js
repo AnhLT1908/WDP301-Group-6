@@ -1,10 +1,11 @@
 const catchAsyncErrors = (fn) => {
     return (req, res, next) => {
-        Promise.resolve(fn(req, res, next)).catch((error) => {
-            console.error(error); // Ghi log lỗi
-            next(error); // Gọi next với lỗi để chuyển đến middleware xử lý lỗi
-        });
+      Promise.resolve(fn(req, res, next)).catch((error) => {
+        console.error(error); // Log the error
+        next(error); // Call next with the error to pass it to error-handling middleware
+      });
     };
   };
   
-  module.exports = catchAsyncErrors;
+export default catchAsyncErrors;
+  

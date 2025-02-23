@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const oneYearFormNow =()=>{
     let date = new Date();
@@ -25,4 +25,4 @@ const ContactSchema = new mongoose.Schema({
     }
 )
 
-module.exports = mongoose.model('Contact', ContactSchema)
+export default mongoose.model('Contact', ContactSchema)

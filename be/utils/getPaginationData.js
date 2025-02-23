@@ -1,4 +1,4 @@
-async function getPaginationData(model, page = 1, limit = 200, filter = {}, populateFields = []) {
+const getPaginationData = async (model, page = 1, limit = 200, filter = {}, populateFields = []) => {
     try {
         const pageNumber = parseInt(page) || 1;
         const limitPerPage = parseInt(limit) || 10;
@@ -23,6 +23,6 @@ async function getPaginationData(model, page = 1, limit = 200, filter = {}, popu
     } catch (error) {
         throw new Error(`Error fetching paged data: ${error.message}`);
     }
-}
+};
 
-module.exports = getPaginationData;
+export default getPaginationData;

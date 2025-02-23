@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const OtherUtilitiesSchema = new mongoose.Schema({
     useID: {
@@ -11,4 +11,4 @@ const OtherUtilitiesSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model("OtherUtilities", OtherUtilitiesSchema)
+export default mongoose.model("OtherUtilities", OtherUtilitiesSchema)

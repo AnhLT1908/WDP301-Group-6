@@ -1,5 +1,5 @@
-const nodemailer = require('nodemailer');
-const dotenv = require('dotenv');
+import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-async function sendEmail(payload) {
+const sendEmail = async (payload) => {
   try {
     console.log("Email sent:");
     const info = await transporter.sendMail(payload);
@@ -19,6 +19,6 @@ async function sendEmail(payload) {
     console.error("Error while sending email:", err); // Log lỗi
     throw err;
   }
-}
+};
 
-module.exports = sendEmail;
+export default sendEmail;
