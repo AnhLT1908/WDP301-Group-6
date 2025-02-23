@@ -1,16 +1,16 @@
-const mongoose = require('mongoose')
+import mongoose, { Schema } from 'mongoose';
 
-const imageCCCD = Schema ({
-    type : {
+const imageCCCD = new Schema({
+    type: {
         type: String,
         enum: ['after', 'before']
     },
-    url : {
+    url: {
         type: String,
     }
-})
+});
 
-const member = Schema ({
+const member = new Schema({
     name: {
         type: String,
         required: true,
@@ -23,56 +23,55 @@ const member = Schema ({
     },
     gender: {
         type: String,
-        enum: ["male","female"]
+        enum: ["male", "female"]
     },
     cccd: {
         type: String,
     },
     avatar: {
-        type: Schema.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Upload"
     },
     imageCCCDs: [imageCCCD],
     note: {
         type: String,
     }
-})
+});
 
-
-const RoomSchema = new mongoose.Schema({
-    floor:{
+const RoomSchema = new Schema({
+    floor: {
         type: Number
     },
-    name:{
+    name: {
         type: String
     },
-    status:{
+    status: {
         type: String,
         enum: ["Empty", "Full", "Available"],
         default: "Empty"
     },
-    quantityMember:{
+    quantityMember: {
         type: Number,
         required: true
     },
     members: [member],
-    roomType:{
+    roomType: {
         type: String,
         enum: ['normal', 'premium'],
         default: "normal"
     },
-    roomPrice:{
+    roomPrice: {
         type: Number,
         required: true
     },
-    deposit:{
+    deposit: {
         type: Number
     },
     utilities: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "DefaultUtilities",
     }],
-    otherUtilities : [{
+    otherUtilities: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "OtherUtilities",
     }],
@@ -80,7 +79,7 @@ const RoomSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    houseId:{
+    houseId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "House"
     },
@@ -92,10 +91,8 @@ const RoomSchema = new mongoose.Schema({
         type: Date,
         default: null
     }
-},
-    {
-        timestamps: true
-    }
-)
+}, {
+    timestamps: true
+});
 
-module.exports = mongoose.model('Room', RoomSchema);
+export default mongoose.model('Room', RoomSchema);
