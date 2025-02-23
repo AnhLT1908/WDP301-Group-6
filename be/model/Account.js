@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 
-const identifyCard = new Schema({
+const identifyCard = new mongoose.Schema({
     identityNumber: {
       type: String,
       default: null,

@@ -6,6 +6,7 @@ const passport = require('passport');
 const cloudinary = require('cloudinary').v2;
 const cors = require('cors');
 const morgan = require('morgan');
+const indexRouter = require('./router/IndexRoute')
 const helmet = require('helmet');
 const ConnectDB = require('./config/connectDB')
 const app = express();
@@ -53,6 +54,8 @@ passport.deserializeUser(function (obj, cb) {
 app.get("/", (req, res) => {
   res.send("Server đang chạy ngon lành 🚀");
 });
+
+app.use("/api/v1", indexRouter);
 
 const startServer = async () => {
   await ConnectDB(); // Đảm bảo MongoDB kết nối trước khi chạy server
