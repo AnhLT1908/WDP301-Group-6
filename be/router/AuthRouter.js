@@ -5,20 +5,11 @@ import validateAccount from '../validations/AccountValidate.js';
 
 const AuthRouter = express.Router();
 
-AuthRouter.post(
-  "/verify-password-reset-code",
-  AuthController.VerifyPasswordResetCode
-);
+AuthRouter.post("/forgot-password", AuthController.forgotPasswordHandler);
+AuthRouter.post("/verify-password-reset-code", AuthController.verifyPasswordResetCode);
+AuthRouter.post("/reset-password", validateData(validateAccount.validateNewPassword), AuthController.resetPasswordHandler);
 
-AuthRouter.post(
-  "/reset-password",
-  validateData(validateAccount.validateNewPassword),
-  AuthController.ResetPasswordHandler
-);
-
-AuthRouter.post("/forgot-password", AuthController.ForgotPasswordHandler);
 AuthRouter.post("/login", AuthController.Login);
-
 AuthRouter.post(
   "/register",
   validateData(validateAccount.validateRegister),
