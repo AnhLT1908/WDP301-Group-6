@@ -1,15 +1,20 @@
-const express = require('express');
-require('dotenv').config();
-const cookieParser = require('cookie-parser');
-const session = require('express-session');
-const passport = require('passport');
-const cloudinary = require('cloudinary').v2;
-const cors = require('cors');
-const morgan = require('morgan');
-const helmet = require('helmet');
-const ConnectDB = require('./config/connectDB')
+import express from 'express';
+import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
+import session from 'express-session';
+import passport from 'passport';
+import { v2 as cloudinary } from 'cloudinary';
+import cors from 'cors';
+import morgan from 'morgan';
+import indexRouter from './router/IndexRoute.js';
+import helmet from 'helmet';
+import ConnectDB from './config/connectDB.js';
+
+dotenv.config();
+
 const app = express();
 const PORT = process.env.SERVER_PORT;
+
 const corsOptions = {
   origin: true, // Allow requests from all origins
   credentials: true, // allow sending cookies from the client
@@ -20,7 +25,7 @@ ConnectDB();
 app.use(cors(corsOptions));
 app.set('view engine', 'ejs');
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.use(helmet());
 app.use(cookieParser());
@@ -42,17 +47,19 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-
-passport.serializeUser(function (user, cb) {
+passport.serializeUser((user, cb) => {
   cb(null, user);
 });
-passport.deserializeUser(function (obj, cb) {
+
+passport.deserializeUser((obj, cb) => {
   cb(null, obj);
 });
 
 app.get("/", (req, res) => {
   res.send("Server đang chạy ngon lành 🚀");
 });
+
+app.use("/api/v1", indexRouter);
 
 const startServer = async () => {
   await ConnectDB(); // Đảm bảo MongoDB kết nối trước khi chạy server

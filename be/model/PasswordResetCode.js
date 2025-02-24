@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const PasswordResetCodeSchema = new mongoose.Schema({
     code: {
@@ -7,9 +7,9 @@ const PasswordResetCodeSchema = new mongoose.Schema({
     },
     expiresAt: {
         type: Date,
-        default: () => new Date(),
+        default: () => new Date(),  
         expires: 14400
     }
 })
 
-module.exports = mongoose.model("PasswordResetCode", PasswordResetCodeSchema)
+export default mongoose.model("PasswordResetCode", PasswordResetCodeSchema)

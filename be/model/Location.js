@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+import mongoose from 'mongoose';
 
 const LocationSchema = new mongoose.Schema({
     district:{
@@ -19,4 +19,4 @@ const LocationSchema = new mongoose.Schema({
     }
 }) 
 
-module.exports = mongoose.model('Location', LocationSchema)
+export default mongoose.model('Location', LocationSchema)
