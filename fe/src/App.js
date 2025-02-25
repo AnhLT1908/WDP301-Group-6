@@ -5,7 +5,7 @@ import VerifyCodeForgotPassword from './page/VerifyCodeForgotPassword.jsx';
 import HomePage from './page/HomePage.jsx';
 import Login from './page/Login.jsx';
 import ChangePassword from './page/ChangePassword.jsx';
-import AccountList from './page/AccountList';
+import ManagerList from './page/ManagerList.jsx';
 import UserProfile from './page/UserProfile';
 
 function Dashboard() {
@@ -21,8 +21,8 @@ function App() {
           path="/admin"
           element={<DashboardLayout><Dashboard /></DashboardLayout>} />
         <Route
-          path="/admin/account-list"
-          element={<DashboardLayout><AccountList /></DashboardLayout>} />
+          path="/admin/manager-list"
+          element={<DashboardLayout><ManagerList /></DashboardLayout>} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/user-profile" element={<UserProfile />} />
         <Route path="/verify-code" element={<VerifyCodeForgotPassword />} />

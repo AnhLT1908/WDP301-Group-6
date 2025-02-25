@@ -8,10 +8,10 @@ const accounts = Array(6).fill({
   budget: "3.9K"
 });
 
-export default function AccountList() {
+export default function ManagerList() {
   return (
     <section className="p-8 w-full">
-      <h2 className="text-yellow-500 text-2xl font-bold mb-4">Account List</h2>
+      <h2 className="text-yellow-500 text-2xl font-bold mb-4">Manager List</h2>
       <h3 className="text-yellow-400 text-xl font-bold mb-4">List</h3>
       <div className="bg-white p-4 rounded-lg shadow">
         <table className="w-full text-left">
