@@ -9,6 +9,7 @@ const errorMiddleware = (err, req, res, next) => {
     err.message = err.message || "Internal Server Error";
     err.statusCode = err.statusCode || 500;
 
+
     // Xử lý các lỗi cụ thể
     if (err.code === 11000) {
         const message = `Duplicate ${Object.keys(err.keyValue)} Entered`;
@@ -33,6 +34,7 @@ const errorMiddleware = (err, req, res, next) => {
             .join(" ")
         : err.message;
 
+
     // Kiểm tra nếu headers đã được gửi
     if (!res.headersSent) {
         return res.status(err.statusCode).json({
@@ -41,4 +43,5 @@ const errorMiddleware = (err, req, res, next) => {
         });
     }
 };
-module.exports.errorMiddleware = errorMiddleware;
+
+export { errorMiddleware };

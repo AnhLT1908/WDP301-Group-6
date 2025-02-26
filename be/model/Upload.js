@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const UploadSchema = new mongoose.Schema({
     imageName: {
@@ -9,4 +9,4 @@ const UploadSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('Upload', UploadSchema)
+export default mongoose.model('Upload', UploadSchema);
