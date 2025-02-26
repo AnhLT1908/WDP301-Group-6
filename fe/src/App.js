@@ -18,6 +18,10 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route
+          path = "/manager"
+          element = {<DashboardLayout><ManagerList /></DashboardLayout>}
+        />
+        <Route
           path="/admin"
           element={<DashboardLayout><Dashboard /></DashboardLayout>} />
         <Route
