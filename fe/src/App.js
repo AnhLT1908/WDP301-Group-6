@@ -7,6 +7,7 @@ import Login from './page/Login.jsx';
 import ChangePassword from './page/ChangePassword.jsx';
 import ManagerList from './page/ManagerList.jsx';
 import UserProfile from './page/UserProfile';
+import LodgerList from './page/LodgerList.jsx';
 
 function Dashboard() {
   return <div>Welcome to Dashboard</div>;
@@ -18,8 +19,8 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route
-          path = "/manager"
-          element = {<DashboardLayout><ManagerList /></DashboardLayout>}
+          path = "/manager/lodger-list"
+          element = {<DashboardLayout><LodgerList /></DashboardLayout>}
         />
         <Route
           path="/admin"
