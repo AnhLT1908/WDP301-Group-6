@@ -90,31 +90,40 @@ export const Logout = async (req, res) => {
 };
 
 export const ForgotPasswordHandler = async (req, res) => {
-  const account = await Account.findOne({ email: req.body.email });
-  if (!account) {
-    return res.status(400).json({ message: 'User not found' });
+  try {
+    const account = await Account.findOne({ email: req.body.email });
+    if (!account) {
+      return res.status(400).json({ message: 'User not found' });
+    }
+
+    const nanoid = customAlphabet('1234567890', 6);
+    const resetCode = nanoid(); // Lưu giá trị của nanoid vào một biến khác
+
+    // Tạo mã đặt lại mật khẩu trong DB
+    const newPasswordResetCode = await PasswordResetCode.create({ code: resetCode });
+    account.passwordResetCode = newPasswordResetCode._id;
+    await account.save();
+
+    // Gửi email
+    await sendEmail({
+      from: 'longhvhe170156@fpt.edu.vn',
+      to: account.email,
+      subject: 'Reset your password',
+      text: `Password reset code: ${resetCode}`, // Sử dụng resetCode ở đây
+    });
+
+    return res.status(200).json({
+      message: 'Check Email',
+      data: { accountId: account._id },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Internal Server Error',
+      error: error.message,
+    });
   }
-
-  const nanoid = customAlphabet('1234567890', 6);
-  const PasswordResetCode = nanoid();
-
-  const newPasswordResetCode = await PasswordResetCode.create({
-    code: PasswordResetCode,
-  });
-  account.passwordResetCode = newPasswordResetCode._id;
-  await account.save();
-
-  await sendEmail({
-    from: 'longhvhe170156@fpt.edu.vn',
-    to: account.email,
-    subject: 'Reset your password',
-    text: `Password reset code: ${PasswordResetCode}`,
-  });
-  return res.status(200).json({
-    message: 'Check Email',
-    data: { accountId: account._doc._id },
-  });
 };
+
 
 export const VerifyPasswordResetCode = async (req, res) => {
   const { id, passwordResetCode } = req.body;

@@ -11,12 +11,12 @@ AccountRouter.get("/house/:houseId", /*Token Manager*/ AccountController.GetAll)
 
 AccountRouter.post("/create", validateData(accountValidate.validateAccount), /*Token Manager*/ AccountController.CreateAccount);
 
-AccountRouter.post(
-  "/create",
-  validateData(accountValidate.validateAccount),
-  /*Token Manager*/
-  AccountController.CreateAccount
-);
+// AccountRouter.post(
+//   "/create",
+//   validateData(accountValidate.validateAccount),
+//   /*Token Manager*/
+//   AccountController.CreateAccount
+// );
 
 AccountRouter.put(
   "/profile/change-password",
