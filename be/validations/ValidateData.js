@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import Joi from 'joi';
 
 const validateData = (schema) => {
@@ -29,3 +30,16 @@ const validateData = (schema) => {
 };
 
 export default validateData;
+=======
+const validateData = (schema) => {
+  return (req, res, next) => {
+    const { error } = schema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+    next();
+  };
+};
+
+module.exports = validateData;
+>>>>>>> f330ac951d8a4f6868ad9765a8766b9c57206310

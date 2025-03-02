@@ -5,11 +5,19 @@ class ErrorHandler extends Error {
     }
 }
 
+<<<<<<< HEAD
 export const errorMiddleware = (err, req, res, next) => {
     err.message = err.message || "Internal Server Error";
     err.statusCode = err.statusCode || 500;
 
     // Handle specific errors
+=======
+const errorMiddleware = (err, req, res, next) => {
+    err.message = err.message || "Internal Server Error";
+    err.statusCode = err.statusCode || 500;
+
+    // Xử lý các lỗi cụ thể
+>>>>>>> f330ac951d8a4f6868ad9765a8766b9c57206310
     if (err.code === 11000) {
         const message = `Duplicate ${Object.keys(err.keyValue)} Entered`;
         err = new ErrorHandler(message, 400);
@@ -33,7 +41,11 @@ export const errorMiddleware = (err, req, res, next) => {
             .join(" ")
         : err.message;
 
+<<<<<<< HEAD
     // Check if headers have been sent
+=======
+    // Kiểm tra nếu headers đã được gửi
+>>>>>>> f330ac951d8a4f6868ad9765a8766b9c57206310
     if (!res.headersSent) {
         return res.status(err.statusCode).json({
             success: false,
@@ -41,5 +53,9 @@ export const errorMiddleware = (err, req, res, next) => {
         });
     }
 };
+<<<<<<< HEAD
 
 export default ErrorHandler;
+=======
+module.exports.errorMiddleware = errorMiddleware;
+>>>>>>> f330ac951d8a4f6868ad9765a8766b9c57206310
