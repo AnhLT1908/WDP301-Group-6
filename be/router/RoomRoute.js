@@ -9,5 +9,7 @@ RoomRouter.put("/update-equipment/:id", RoomController.UpdateUtilities);
 RoomRouter.patch("/:id/equipment-status", RoomController.ChangeUtilitiesStatus);
 RoomRouter.delete("/delete-room-equipment/:roomId/:utilityId", RoomController.DeleteUtilities);
 
+RoomRouter.put("/:roomId/status", RoomController.ChangeRoomStatus);
+RoomRouter.put("/:roomId", RoomController.updateRoomDetails);
 
 export default RoomRouter;
