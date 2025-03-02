@@ -6,9 +6,9 @@ export default function DashboardSideBar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <aside className="bg-green-600 text-white w-64 p-4">
+    <aside className="bg-green-600 text-white w-64 p-4 fixed inset-y-0 left-0 md:relative z-50 min-h-screen">
       <div className="flex items-center gap-2 mb-8">
-        <img src={logo} alt="Logo" className="h-8 w-[70px] h-[60px]" />
+        <img src={logo} alt="Logo" className="h-8 w-[70px]" />
         <span className="font-bold text-xl text-[#FDEE2A]">
           Lodging Chain Management
         </span>
