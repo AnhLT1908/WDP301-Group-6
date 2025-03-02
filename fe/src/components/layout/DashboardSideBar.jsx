@@ -24,7 +24,10 @@ export default function DashboardSideBar() {
           {menuOpen && (
             <ul className="ml-4">
               <li className="mb-2 text-[#FDEE2A]">
-                <Link to="/admin">Dashboard</Link>
+                <Link to="/admin">Home</Link>
+              </li>
+              <li className="mb-2 text-[#FDEE2A]">
+                <Link to="/admin/dashboard">Dashboard</Link>
               </li>
               <li className="mb-2 text-[#FDEE2A]">
                 <Link to="/admin/account-list">Account List</Link>
