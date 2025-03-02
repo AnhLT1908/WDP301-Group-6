@@ -2,10 +2,10 @@ import express from 'express';
 import AccountController from '../controller/AccountController.js';
 import validateData from '../validations/ValidateData.js';
 import accountValidate from '../validations/AccountValidate.js';
-
+import protect from '../middleware/verifyToken.js';
 const AccountRouter = express.Router();
 
-AccountRouter.get("/profile", AccountController.getProfile);
+AccountRouter.get("/profile",protect, AccountController.getProfile);
 
 AccountRouter.get("/house/:houseId", /*Token Manager*/ AccountController.GetAll);
 
@@ -25,7 +25,7 @@ AccountRouter.put(
 );
 
 AccountRouter.put(
-  "/profile",
+  "/profile",protect,
   validateData(accountValidate.validateProfile),
   AccountController.UpdateProfile
 );
