@@ -6,11 +6,8 @@ export const ViewListUtilities = async (req, res) => {
   try {
     const { roomId } = req.params;
 
-    const utilities = await DefaultUtilities.find({ roomId })
-      .populate({
-        path: "roomId",
-        select: "name number", // Adjust fields as per your Room schema
-      })
+    const utilities = await Room.findById(roomId)
+      .populate("utilities")
       .sort({ name: 1 });
 
     if (!utilities || utilities.length === 0) {
@@ -22,7 +19,7 @@ export const ViewListUtilities = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: utilities,
+      data: utilities.utilities,
     });
   } catch (error) {
     return res.status(500).json({
@@ -32,8 +29,6 @@ export const ViewListUtilities = async (req, res) => {
     });
   }
 };
-
-
 
 export const AddNewUtilities = async (req, res) => {
   try {
