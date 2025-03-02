@@ -14,6 +14,10 @@ const AuthController = {
   ChangeUtilitiesStatus: catchAsyncErrors(async (req, res) => {
     await RoomService.ChangeUtilitiesStatus(req, res);
   }),
+  DeleteUtilities: catchAsyncErrors(async (req, res) => {
+    await RoomService.DeleteUtilities(req, res);
+  }),
+
 };
 
 export default AuthController;
