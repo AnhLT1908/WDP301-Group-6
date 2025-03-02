@@ -8,6 +8,7 @@ import ChangePassword from "./page/ChangePassword.jsx";
 import AccountList from "./page/AccountList";
 import UserProfile from "./page/UserProfile";
 import SetNewPassword from "./page/SetNewPassword.jsx";
+import HomePageAdmin from "./page/HomePageAdmin.jsx";
 
 
 function Dashboard() {
@@ -21,6 +22,14 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route
           path="/admin"
+          element={
+            <DashboardLayout>
+              <HomePageAdmin />
+            </DashboardLayout>
+          }
+        />
+        <Route
+          path="/admin/dashboard"
           element={
             <DashboardLayout>
               <Dashboard />
