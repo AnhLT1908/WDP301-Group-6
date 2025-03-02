@@ -6,11 +6,8 @@ export const ViewListUtilities = async (req, res) => {
   try {
     const { roomId } = req.params;
 
-    const utilities = await DefaultUtilities.find({ roomId })
-      .populate({
-        path: "roomId",
-        select: "name number", // Adjust fields as per your Room schema
-      })
+    const utilities = await Room.findById(roomId)
+      .populate("utilities")
       .sort({ name: 1 });
 
     if (!utilities || utilities.length === 0) {
@@ -22,7 +19,7 @@ export const ViewListUtilities = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: utilities,
+      data: utilities.utilities,
     });
   } catch (error) {
     return res.status(500).json({
@@ -32,8 +29,6 @@ export const ViewListUtilities = async (req, res) => {
     });
   }
 };
-
-
 
 export const AddNewUtilities = async (req, res) => {
   try {
@@ -151,6 +146,43 @@ export const ChangeUtilitiesStatus = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Error changing utility status",
+      error: error.message,
+    });
+  }
+};
+
+export const DeleteUtilities = async (req, res) => {
+  try {
+    const { roomId, utilityId } = req.params;
+    if (![roomId, utilityId].every((id) => /^[0-9a-fA-F]{24}$/.test(id))) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid ID format" });
+    }
+
+    const updatedRoom = await Room.findByIdAndUpdate(
+      roomId,
+      { $pull: { utilities: utilityId } }, 
+      { new: true }
+    );
+
+    if (!updatedRoom) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Room not found" });
+    }
+
+    const deletedUtility = await DefaultUtilities.findByIdAndDelete(utilityId);
+    return res.status(200).json({
+      success: true,
+      message: "Utility deleted successfully",
+      deletedFromRoom: updatedRoom,
+      deletedFromDefaultUtilities: !!deletedUtility,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error delete utilities",
       error: error.message,
     });
   }
