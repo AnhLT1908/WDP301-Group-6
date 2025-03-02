@@ -1,5 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 
+
 const priceItemSchema = new Schema({
     base: {
         type: Schema.ObjectId,
@@ -72,6 +73,10 @@ const HouseSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
+    rules: {
+        type: [String],
+        default: []
+    }
     },
     {
     timestamps: true

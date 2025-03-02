@@ -1,7 +1,7 @@
 import Account from '../model/Account.js';
 import PasswordResetCode from '../model/PasswordResetCode.js';
 import bcrypt from 'bcrypt';
-import TokenService from './TokenService.js';
+import TokenService from '../service/TokenService.js'
 import sendEmail from '../utils/mailer.js';
 import { customAlphabet } from 'nanoid';
 
@@ -38,7 +38,7 @@ export const Login = async (req, res) => {
       );
       return res.status(200).json({
         message: 'Login Successfully',
-        data: { ...others },
+        data: { ...others , Token: genAccessToken},
       });
     }
   } catch (error) {

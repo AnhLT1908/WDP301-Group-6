@@ -11,7 +11,7 @@ const accountValidate = {
       .pattern(new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).+$"))  // Thêm yêu cầu ký tự đặc biệt
       .required(),
   }),
-
+  
   validateAccount: Joi.object({
     username: Joi.string().not(null).min(3).max(30).required(),  // Thêm giới hạn cho username
     name: Joi.string().not(null).min(2).max(50).required(),  // Thêm giới hạn cho tên

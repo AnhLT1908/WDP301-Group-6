@@ -9,7 +9,7 @@ import morgan from 'morgan';
 import indexRouter from './router/IndexRoute.js';
 import helmet from 'helmet';
 import ConnectDB from './config/connectDB.js';
-
+import errorMiddleware from './middleware/ErrorHandler.js'
 dotenv.config();
 
 const app = express();
@@ -54,12 +54,13 @@ passport.serializeUser((user, cb) => {
 passport.deserializeUser((obj, cb) => {
   cb(null, obj);
 });
-
+// Middleware xử lý lỗi 
 app.get("/", (req, res) => {
   res.send("Server đang chạy ngon lành 🚀");
 });
 
 app.use("/api/v1", indexRouter);
+app.use(errorMiddleware);
 
 const startServer = async () => {
   await ConnectDB(); // Đảm bảo MongoDB kết nối trước khi chạy server

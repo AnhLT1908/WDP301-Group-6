@@ -2,6 +2,7 @@ import express from 'express';
 import AuthController from '../controller/AuthController.js';
 import validateData from '../validations/ValidateData.js';
 import validateAccount from '../validations/AccountValidate.js';
+import { protect } from '../middleware/verifyToken.js';
 
 const AuthRouter = express.Router();
 
@@ -25,7 +26,7 @@ AuthRouter.post(
   AuthController.Register
 );
 
-AuthRouter.get("/logout", /*verifyToken*/ AuthController.Logout);
+AuthRouter.get("/logout", protect, AuthController.Logout);
 AuthRouter.post("/refreshtoken", AuthController.RefreshTokenHandler);
 
 export default AuthRouter;

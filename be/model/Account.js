@@ -51,9 +51,10 @@ const AccountSchema = new mongoose.Schema(
             required: true,
             minlength: [8, "Password must be at least 8 characters"],
         },
-        provider: {
+        accountType: {
             type: String,
-            default: "register",
+            enum: ["Lodger", "Manager", "Admin"],
+            default: "Lodger"
         },
         roomId: {
             type: mongoose.Schema.Types.ObjectId,
