@@ -41,7 +41,7 @@ export const Login = async (req, res) => {
       );
       return res.status(200).json({
         message: "Login Successfully",
-        data: { ...others },
+        data: { ...others , token: genAccessToken},
       });
     }
   } catch (error) {

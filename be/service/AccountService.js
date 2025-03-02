@@ -1,10 +1,7 @@
 import Account from '../model/Account.js';
 import bcrypt from 'bcrypt';
 import Room from '../model/Room.js';
-
-function getCurrentUser(req) {
-    return req.user && req.user.id ? req.user.id : null;
-}
+import getCurrentUser from '../utils/getCurrentUser.js';
 
 export const GetAll = async (req, res) => {
     try {
