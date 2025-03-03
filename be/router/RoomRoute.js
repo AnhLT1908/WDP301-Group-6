@@ -1,6 +1,6 @@
 import express from "express";
 import RoomController from "../controller/RoomController.js";
-import { verifyTokenManager } from "../middleware/VerifyToken.middleware.js";
+import { protect } from "../middleware/verifyToken.js";
 
 const RoomRouter = express.Router();
 RoomRouter.get("/view-equipment/:roomId", RoomController.ViewListUtilities);
