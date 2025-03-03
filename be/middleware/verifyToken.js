@@ -8,6 +8,10 @@ const getAccountFromToken = async (token, next) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
+        if (!token) {
+            return res.status(401).json({ message: "Bạn chưa đăng nhập!" });
+        }
+
         const account = await Account.findById(decoded.id);
         
         return account;
