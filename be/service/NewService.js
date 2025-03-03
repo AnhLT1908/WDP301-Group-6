@@ -101,3 +101,16 @@ export const deleteOne = async (req, res) => {
         return res.status(500).json({ message: "Internal Server Error" });
     }
 };
+
+export const getList = async (req, res, next) => {
+    try {
+        const news = await New.find(); 
+        res.status(200).json({
+            success: true,
+            count: news.length,
+            data: news,
+        });
+    } catch (error) {
+        next(error); 
+    }
+};

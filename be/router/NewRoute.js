@@ -8,5 +8,6 @@ NewRouter.get("/house/:houseId/",NewController.getAll)
 NewRouter.post("/",NewController.addOne);
 NewRouter.put("/:newsId", protect, NewController.updateOne);
 NewRouter.delete("/:newsId",NewController.deleteOne);
+NewRouter.get("/", protect, NewController.getList);
 
 export default NewRouter;
