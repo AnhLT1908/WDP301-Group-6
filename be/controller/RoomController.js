@@ -17,6 +17,12 @@ const AuthController = {
   DeleteUtilities: catchAsyncErrors(async (req, res) => {
     await RoomService.DeleteUtilities(req, res);
   }),
+  ChangeRoomStatus: catchAsyncErrors(async (req, res) => {
+    await RoomService.ChangeRoomStatus(req, res);
+  }),
+  updateRoomDetails: catchAsyncErrors(async (req, res) => {
+    await RoomService.updateRoomDetails(req, res);
+  }),
 
 };
 
