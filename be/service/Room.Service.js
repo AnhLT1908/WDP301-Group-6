@@ -176,7 +176,7 @@ export const DeleteUtilities = async (req, res) => {
 
     const updatedRoom = await Room.findByIdAndUpdate(
       roomId,
-      { $pull: { utilities: utilityId } }, 
+      { $pull: { utilities: utilityId } },
       { new: true }
     );
 
@@ -202,45 +202,92 @@ export const DeleteUtilities = async (req, res) => {
   }
 };
 
-export const createRoom = async (req, res, next) => {
-  try {
-      const { floor, name, status, quantityMember, members, roomType, roomPrice, deposit, utilities, otherUtilities, area, houseId } = req.body;
 
-      // Kiểm tra dữ liệu đầu vào
-      if (!name || !roomPrice || !quantityMember || !area || !houseId) {
-          return res.status(400).json({
-              success: false,
-              message: "Thiếu thông tin bắt buộc! (name, roomPrice, quantityMember, area, houseId)",
-          });
+export const ChangeRoomStatus = async (req, res) => {
+  const validStatuses = ["Empty", "Full", "Available"];
+  const { newStatus } = req.body;
+
+  if (!validStatuses.includes(newStatus)) {
+    return res.status(400).json({
+      error: `Invalid status value. Allowed values: ${validStatuses.join(
+        ", "
+      )}`,
+    });
+  }
+
+  const { roomId } = req.params;
+  const updatedRoom = await Room.findByIdAndUpdate(
+    roomId,
+    { status: newStatus },
+    { new: true }
+  );
+
+  if (!updatedRoom) {
+    return res.status(404).json({ error: "Room not found" });
+  }
+
+  res.status(200).json({
+    message: "Room status updated successfully",
+    room: updatedRoom,
+  });
+};
+
+export const updateRoomDetails = async (req, res) => {
+  try {
+      const { roomId } = req.params;
+      const updateData = req.body;
+
+      // Allowed fields for updating
+      const allowedFields = [
+          "floor",
+          "name",
+          "status",
+          "quantityMember",
+          "roomType",
+          "roomPrice",
+          "deposit",
+          "utilities",
+          "otherUtilities",
+          "area",
+          "houseId",
+          "members",
+          "deleted"
+      ];
+
+      // Validate if the provided keys are allowed
+      const updateKeys = Object.keys(updateData);
+      const isValidUpdate = updateKeys.every(key => allowedFields.includes(key));
+
+      if (!isValidUpdate) {
+          return res.status(400).json({ error: `Invalid update fields: ${updateKeys.join(", ")}` });
       }
 
-      // Tạo mới phòng
-      const newRoom = new Room({
-          floor,
-          name,
-          status: status || "Empty",
-          quantityMember,
-          members: members || [],
-          roomType: roomType || "normal",
-          roomPrice,
-          deposit: deposit || 0,
-          utilities: utilities || [],
-          otherUtilities: otherUtilities || [],
-          area,
-          houseId,
-          deleted: false,
-          deletedAt: null,
-      });
+      // Validate status if it's being updated
+      if (updateData.status) {
+          const validStatuses = ["Empty", "Full", "Available"];
+          if (!validStatuses.includes(updateData.status)) {
+              return res.status(400).json({ error: `Invalid status value. Allowed values: ${validStatuses.join(", ")}` });
+          }
+      }
 
-      // Lưu vào database
-      const savedRoom = await newRoom.save();
+      // Validate roomType if it's being updated
+      if (updateData.roomType) {
+          const validRoomTypes = ["normal", "premium"];
+          if (!validRoomTypes.includes(updateData.roomType)) {
+              return res.status(400).json({ error: `Invalid room type. Allowed values: ${validRoomTypes.join(", ")}` });
+          }
+      }
 
-      return res.status(201).json({
-          success: true,
-          message: "Tạo phòng thành công!",
-          data: savedRoom,
-      });
+      // Update the room details
+      const updatedRoom = await Room.findByIdAndUpdate(roomId, updateData, { new: true });
+
+      if (!updatedRoom) {
+          return res.status(404).json({ error: "Room not found" });
+      }
+
+      return res.status(200).json({ message: "Room details updated successfully", room: updatedRoom });
   } catch (error) {
-      next(error);
+      return res.status(500).json({ error: error.message });
   }
 };
+
