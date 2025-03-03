@@ -16,6 +16,12 @@ const AccountController = {
     }),
     ChangePassword: catchAsyncErrors(async (req, res) => {
         await AccountService.ChangePassword(req, res);
+    }),
+    ChangeStatus: catchAsyncErrors(async(req, res)=>{
+        await AccountService.ChangeStatus(req, res)
+    }),
+    getManagerAccounts: catchAsyncErrors(async(req, res)=>{
+        await AccountService.getManagerAccounts(req, res)
     })
 };
 

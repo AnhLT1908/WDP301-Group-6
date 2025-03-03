@@ -2,6 +2,20 @@
 import DefaultUtilities from "../model/DefaultUtilities.js";
 import Room from "../model/Room.js";
 
+
+export const getAllRoom = async(req, res, next)=>{
+  try {
+    const rooms = await Room.find();
+    res.status(200).json({
+      success: true,
+      count: rooms.length,
+      data: rooms,
+  });
+  } catch (error) {
+    next(error)
+  }
+}
+
 export const ViewListUtilities = async (req, res) => {
   try {
     const { roomId } = req.params;
@@ -185,5 +199,48 @@ export const DeleteUtilities = async (req, res) => {
       message: "Error delete utilities",
       error: error.message,
     });
+  }
+};
+
+export const createRoom = async (req, res, next) => {
+  try {
+      const { floor, name, status, quantityMember, members, roomType, roomPrice, deposit, utilities, otherUtilities, area, houseId } = req.body;
+
+      // Kiểm tra dữ liệu đầu vào
+      if (!name || !roomPrice || !quantityMember || !area || !houseId) {
+          return res.status(400).json({
+              success: false,
+              message: "Thiếu thông tin bắt buộc! (name, roomPrice, quantityMember, area, houseId)",
+          });
+      }
+
+      // Tạo mới phòng
+      const newRoom = new Room({
+          floor,
+          name,
+          status: status || "Empty",
+          quantityMember,
+          members: members || [],
+          roomType: roomType || "normal",
+          roomPrice,
+          deposit: deposit || 0,
+          utilities: utilities || [],
+          otherUtilities: otherUtilities || [],
+          area,
+          houseId,
+          deleted: false,
+          deletedAt: null,
+      });
+
+      // Lưu vào database
+      const savedRoom = await newRoom.save();
+
+      return res.status(201).json({
+          success: true,
+          message: "Tạo phòng thành công!",
+          data: savedRoom,
+      });
+  } catch (error) {
+      next(error);
   }
 };

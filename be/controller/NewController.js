@@ -16,6 +16,9 @@ const NewController = {
     }),
     deleteOne: catchAsyncErrors(async(req, res)=> {
         await NewService.deleteOne(req, res)
+    }),
+    getList: catchAsyncErrors(async(req, res)=>{
+        await NewService.getList(req, res)
     })
 }
 
