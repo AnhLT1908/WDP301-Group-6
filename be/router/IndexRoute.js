@@ -6,6 +6,7 @@ import HouseRouter from '../router/HouseRouter.js';
 import NewRouter from './NewRoute.js';
 import ProblemRouter from './ProblemRouter.js';
 import BillRouter from './BillRouter.js';
+import StatisticRouter from './StatisticsRoute.js';
 const indexRouter = express.Router();
 
 indexRouter.use("/account", AccountRouter);
@@ -13,6 +14,7 @@ indexRouter.use("/auth", AuthRouter);
 indexRouter.use("/room", RoomRouter);
 indexRouter.use("/house", HouseRouter);
 indexRouter.use("/new", NewRouter);
-indexRouter.use("/problem", ProblemRouter)
-indexRouter.use("/bill", BillRouter)
+indexRouter.use("/problem", ProblemRouter);
+indexRouter.use("/bill", BillRouter);
+indexRouter.use("/static", StatisticRouter);
 export default indexRouter;

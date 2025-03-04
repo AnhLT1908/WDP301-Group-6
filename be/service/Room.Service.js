@@ -4,6 +4,7 @@ import Room from "../model/Room.js";
 import exceljs from 'exceljs';
 import bcrypt from 'bcrypt';
 import Account from "../model/Account.js";
+import Bills from "../model/Bills.js";
 import House from "../model/House.js";
 import mongoose from 'mongoose'
 
@@ -205,6 +206,29 @@ export const DeleteUtilities = async (req, res) => {
     });
   }
 };
+export const getRoomEquipment = async (req, res) => {
+    try {
+        const { roomId } = req.params;
+
+        const room = await Room.findById(roomId)
+            .populate("utilities")
+            .populate("otherUtilities");
+
+        if (!room) {
+            return res.status(404).json({ message: "Room not found" });
+        }
+
+        res.json({
+            roomId: room._id,
+            name: room.name,
+            equipment: [...room.utilities, ...room.otherUtilities]
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
 
 export const addRoom = async (req, res, next) => {
   try {
@@ -294,6 +318,69 @@ export const GetOne = async (req, res, next) => {
   }
 };
 
+export const getRoomServices = async (req, res, next) => {
+    try {
+        const { roomId } = req.params;
+
+        // Lấy thông tin phòng
+        const room = await Room.findById(roomId)
+            .populate("utilities")
+
+        if (!room) {
+            return res.status(404).json({ message: "Không tìm thấy phòng!" });
+        }
+
+        // Lấy hóa đơn mới nhất của phòng
+        const latestBill = await Bills.findOne({ roomId })
+            .sort({ createdAt: -1 }) // Lấy hóa đơn mới nhất
+            .limit(1);
+
+        // Tạo danh sách phí dịch vụ
+        const services = [];
+
+        // Thêm tiền phòng
+        services.push({
+            name: "Tiền thuê phòng",
+            price: room.roomPrice,
+        });
+
+        // Thêm các tiện ích mặc định
+        if (room.utilities.length > 0) {
+            room.utilities.forEach((utility) => {
+                services.push({
+                    name: utility.name,
+                    price: utility.price,
+                });
+            });
+        }
+
+        // Thêm các tiện ích khác
+        if (room.otherUtilities.length > 0) {
+            room.otherUtilities.forEach((utility) => {
+                services.push({
+                    name: utility.name,
+                    price: utility.price,
+                });
+            });
+        }
+
+        // Nếu có hóa đơn mới nhất, lấy tổng số tiền cần thanh toán
+        let totalAmount = room.roomPrice;
+        if (latestBill) {
+            totalAmount = latestBill.total;
+        }
+
+        res.json({
+            room: room.name,
+            services,
+            totalAmount,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
 export const addMember = async(req, res, next) =>{
   try {
     const { roomId } = req.params;
@@ -313,7 +400,7 @@ export const addMember = async(req, res, next) =>{
         throw new Error("Số điện thoại hoặc số CCCD đã tồn tại trong phòng.");
     }
 
-    // ✅ Bỏ qua xử lý hình ảnh
+    //  Bỏ qua xử lý hình ảnh
     room.members.push(req.body);
     await room.save();
 
