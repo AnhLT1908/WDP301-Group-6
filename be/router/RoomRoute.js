@@ -13,4 +13,7 @@ RoomRouter.get("/", protect, RoomController.GetAllRoom);
 RoomRouter.post("/addRoom", protect, RoomController.addRoom);
 RoomRouter.get("/:roomId", protect, RoomController.getOne);
 RoomRouter.post("/:roomId/member", protect, RoomController.addMember);
+RoomRouter.get("/:roomId/services", protect, RoomController.getRoomService);
+RoomRouter.get("/:roomId/equipment", protect, RoomController.getRoomEquipment);
+
 export default RoomRouter;

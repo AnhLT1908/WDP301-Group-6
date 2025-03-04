@@ -28,6 +28,12 @@ const AuthController = {
   }),
   addMember: catchAsyncErrors(async(req, res, next)=>{
     await RoomService.addMember(req, res, next)
+  }),
+  getRoomService: catchAsyncErrors(async(req, res, next)=>{
+    await RoomService.getRoomServices(req, res, next)
+  }),
+  getRoomEquipment: catchAsyncErrors(async(req, res, next)=>{
+    await RoomService.getRoomEquipment(req, res, next)
   })
 };
 
