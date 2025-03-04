@@ -23,7 +23,7 @@ const HouseSchema = new mongoose.Schema({
     location:{
         type: mongoose.Schema.Types.ObjectId,
         ref:'Location',
-        default: {}
+        default: null
     },
     numberOfRoom: {
         type: Number,

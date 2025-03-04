@@ -1,7 +1,9 @@
+import mongoose from 'mongoose';
 import House from '../model/House.js';
 import New from '../model/New.js'
 import getCurrentUser from '../utils/getCurrentUser.js';
 import getPaginationData from '../utils/getPaginationData.js';
+import path from 'path';
 
 export const addOne = async(req, res)=>{
     try {
@@ -24,6 +26,10 @@ export const getAll = async(req, res)=>{
     try {
         const { houseId } = req.params;
         const { page, limit, title, content } = req.query;
+
+        if(!mongoose.Types.ObjectId.isValid(houseId)){
+            return res.status(400).json({ success: false, message: 'HouseId có vấn đề'})
+        };
         const query = { houseId,deleted: false };
         if (title) {
             query.title = { $regex: title, $options: "i" };
@@ -31,13 +37,14 @@ export const getAll = async(req, res)=>{
         if (content) {
             query.content = { $regex: content, $options: "i" };
         }
-        const populateField = ['authorId']
+        const populateField = [{path: "authorId", select: "name avatar email"}];
         const data = await getPaginationData(New, page, limit, query,populateField);
-        res.status(201).json(data);
+        res.status(200).json({
+            success: true,
+            data
+        });
     } catch (error) {
-        return res.status(500).json({
-            message: "Internal Server Error",
-          });
+        next(error)
     }
 }
 

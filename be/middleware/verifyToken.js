@@ -32,11 +32,11 @@ export const protect = catchAsyncErrors(async (req, res, next) => {
 
     // Giải mã token
     
-    req.user = await getAccountFromToken(token, next);
-    if (!req.user) {
+    const account = await getAccountFromToken(token, next);
+    if (!account) {
         return next(new ErrorHandler('Không tìm thấy người dùng với token này!', 404));
     }
-
+    req.user = account;
     next();
 });
 
