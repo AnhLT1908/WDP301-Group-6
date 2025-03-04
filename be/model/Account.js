@@ -55,6 +55,11 @@ const AccountSchema = new mongoose.Schema(
             type: String,
             default: "register",
         },
+        accountType: {
+            type: String,
+            enum: ["Lodger", "Manager", "Admin"],
+            default: "Lodger",
+        },
         roomId: {
             type: mongoose.Schema.Types.ObjectId,
             default: null,

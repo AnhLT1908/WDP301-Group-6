@@ -38,6 +38,39 @@ export const GetAll = async (req, res) => {
     }
 };
 
+export const getManagerAccounts = async (req, res) => {
+    try {
+        const { page, limit } = req.query;
+        const pageNumber = parseInt(page) || 1;
+        const limitPerPage = parseInt(limit) || 10;
+        const skip = (pageNumber - 1) * limitPerPage;
+
+        // Lọc các tài khoản có accountType là "Manager"
+        const totalManagers = await Account.countDocuments({ accountType: "Manager" });
+        const managers = await Account.find({ accountType: "Manager" })
+            .skip(skip)
+            .limit(limitPerPage)
+            .sort({ createdAt: -1 })
+            .select("-password -refreshToken -passwordResetCode") // Ẩn thông tin nhạy cảm
+            .exec();
+
+        const totalPages = Math.ceil(totalManagers / limitPerPage);
+
+        return res.status(200).json({
+            pagination: {
+                currentPage: pageNumber,
+                totalPages,
+                totalManagers,
+                accountsPerPage: managers.length,
+            },
+            data: managers,
+        });
+    } catch (error) {
+        console.error("Error fetching manager accounts:", error);
+        return res.status(500).json({ message: "Lỗi Server" });
+    }
+};
+
 export const getProfile = async (req, res) => {
     try {
         const accountId = getCurrentUser(req);
@@ -176,5 +209,42 @@ export const ChangePassword = async (req, res) => {
         return res.status(500).json({
             message: "Lỗi Server Error",
         });
+    }
+};
+
+export const ChangeStatus = async (req, res, next) => {
+    try {
+        const accountId = getCurrentUser(req);
+        const { status } = req.body;
+
+        // Kiểm tra status phải là Boolean (true/false)
+        if (typeof status !== "boolean") {
+            return res.status(400).json({
+                success: false,
+                message: "Status must be either true or false",
+            });
+        }
+
+        const existAccount = await Account.findById(accountId);
+        if (!existAccount) {
+            return res.status(404).json({
+                success: false,
+                message: "Tài khoản không tồn tại!",
+            });
+        }
+
+        const updatedAccount = await Account.findByIdAndUpdate(
+            accountId,
+            { status },
+            { new: true }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: `Account changed to ${status}`,
+            data: updatedAccount,
+        });
+    } catch (error) {
+        next(error);
     }
 };

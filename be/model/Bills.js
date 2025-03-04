@@ -37,7 +37,7 @@ const BillSchema = new mongoose.Schema({
         required: true,
     },
     priceList: [
-       priceItemSchema
+       priceItemSchema  
     ],
     debt: {
         type: Number,

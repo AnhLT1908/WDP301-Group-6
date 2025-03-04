@@ -2,6 +2,20 @@
 import DefaultUtilities from "../model/DefaultUtilities.js";
 import Room from "../model/Room.js";
 
+
+export const getAllRoom = async(req, res, next)=>{
+  try {
+    const rooms = await Room.find();
+    res.status(200).json({
+      success: true,
+      count: rooms.length,
+      data: rooms,
+  });
+  } catch (error) {
+    next(error)
+  }
+}
+
 export const ViewListUtilities = async (req, res) => {
   try {
     const { roomId } = req.params;
@@ -188,6 +202,7 @@ export const DeleteUtilities = async (req, res) => {
   }
 };
 
+
 export const ChangeRoomStatus = async (req, res) => {
   const validStatuses = ["Empty", "Full", "Available"];
   const { newStatus } = req.body;
@@ -275,3 +290,4 @@ export const updateRoomDetails = async (req, res) => {
       return res.status(500).json({ error: error.message });
   }
 };
+
