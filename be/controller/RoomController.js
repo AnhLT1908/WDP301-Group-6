@@ -20,6 +20,7 @@ const AuthController = {
   GetAllRoom: catchAsyncErrors(async(req, res, next)=>{
     await RoomService.getAllRoom(req, res, next);
   }),
+
   addRoom: catchAsyncErrors(async(req, res, next)=>{
     await RoomService.addRoom(req, res, next)
   }),
@@ -35,6 +36,12 @@ const AuthController = {
   getRoomEquipment: catchAsyncErrors(async(req, res, next)=>{
     await RoomService.getRoomEquipment(req, res, next)
   })
+  ChangeRoomStatus: catchAsyncErrors(async (req, res) => {
+    await RoomService.ChangeRoomStatus(req, res);
+  }),
+  updateRoomDetails: catchAsyncErrors(async (req, res) => {
+    await RoomService.updateRoomDetails(req, res);
+  }),
 };
 
 export default AuthController;
