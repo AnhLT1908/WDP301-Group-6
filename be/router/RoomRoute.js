@@ -8,6 +8,9 @@ RoomRouter.post("/add-equipment", RoomController.AddNewUtilities);
 RoomRouter.put("/update-equipment/:id", RoomController.UpdateUtilities);
 RoomRouter.patch("/:id/equipment-status", RoomController.ChangeUtilitiesStatus);
 RoomRouter.delete("/delete-room-equipment/:roomId/:utilityId", RoomController.DeleteUtilities);
+
 RoomRouter.get("/", protect, RoomController.GetAllRoom);
-RoomRouter.post("/", protect, RoomController.createRoom)
+RoomRouter.post("/addRoom", protect, RoomController.addRoom);
+RoomRouter.get("/:roomId", protect, RoomController.getOne);
+RoomRouter.post("/:roomId/member", protect, RoomController.addMember);
 export default RoomRouter;
