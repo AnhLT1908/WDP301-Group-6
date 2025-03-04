@@ -1,14 +1,14 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import cookieParser from 'cookie-parser';
-import session from 'express-session';
-import passport from 'passport';
-import { v2 as cloudinary } from 'cloudinary';
-import cors from 'cors';
-import morgan from 'morgan';
-import indexRouter from './router/IndexRoute.js';
-import helmet from 'helmet';
-import ConnectDB from './config/connectDB.js';
+import express from "express";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import session from "express-session";
+import passport from "passport";
+import { v2 as cloudinary } from "cloudinary";
+import cors from "cors";
+import morgan from "morgan";
+import indexRouter from "./router/IndexRoute.js";
+import helmet from "helmet";
+import ConnectDB from "./config/connectDB.js";
 
 dotenv.config();
 
@@ -23,10 +23,10 @@ const corsOptions = {
 ConnectDB();
 
 app.use(cors(corsOptions));
-app.set('view engine', 'ejs');
+app.set("view engine", "ejs");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(morgan('dev'));
+app.use(morgan("dev"));
 app.use(helmet());
 app.use(cookieParser());
 
@@ -63,7 +63,6 @@ app.use("/api/v1", indexRouter);
 
 const startServer = async () => {
   await ConnectDB(); // Đảm bảo MongoDB kết nối trước khi chạy server
-
   app.listen(PORT, () => {
     console.log(`🚀 Server đang chạy tại http://localhost:${PORT}`);
   });

@@ -1,3 +1,23 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@keyframes progress-bar-animation {
+    0% {
+        width: 100%;
+        /* Start with full width */
+    }
+
+    100% {
+        width: 0%;
+        /* End with 0% width */
+    }
+}
+
+.progress-bar {
+    height: 4px;
+    background-color: #38a169;
+    /* green color */
+    animation: progress-bar-animation 5s linear forwards;
+    width: 100%;
+}
