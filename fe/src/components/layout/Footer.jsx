@@ -1,48 +1,60 @@
-import React from 'react';
+import React from "react";
+import logo from "../../assets/images/logo1_noText.png";
+import { MapPin, Phone } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-100 py-8 border-t-2 border-gray-300">
-      <div className="container mx-auto px-6 flex flex-col items-center justify-center">
+    <footer className="bg-[#0D9F4C] py-8 mt-6">
+      <div className=" mx-auto px-6 flex  items-start justify-around">
         {/* Website logo and name */}
-        <div className="text-blue-500 text-lg font-semibold mb-6">
-          Website logo and name here
+        <div className="flex flex-col items-center text-[#FDEE2A] text-lg font-semibold mb-3">
+          <img src={logo} alt="logo" className="w-[90px] h-[70px]" />
+          <span>Nhà Trọ Tuấn Cường 1</span>
         </div>
 
         {/* Navigation Links on one row */}
-        <div className="flex space-x-6 mb-6 sm:mb-0 flex-wrap justify-center sm:justify-start">
-          <a href="#" className="text-gray-600 hover:text-blue-500">Home</a>
-          <a href="#" className="text-gray-600 hover:text-blue-500">About</a>
-          <a href="#" className="text-gray-600 hover:text-blue-500">News</a>
-          <a href="#" className="text-gray-600 hover:text-blue-500">Contact Us</a>
+        <div className="flex flex-col mb-3 items-center">
+          <div className="flex space-x-6 mb-3 ">
+            <a
+              href="#"
+              className=" font-medium text-[#FDEE2A] hover:text-yellow-50"
+            >
+              Trang chủ
+            </a>
+            <a
+              href="#"
+              className="font-medium text-[#FDEE2A] hover:text-yellow-50"
+            >
+              Về chúng tôi
+            </a>
+            <a
+              href="#"
+              className="font-medium text-[#FDEE2A] hover:text-yellow-50"
+            >
+              Tin tức
+            </a>
+          </div>
+          <div className="flex flex-col text-[#FDEE2A]">
+            <div className="flex justify-center hover:text-yellow-50">
+              <Phone color="#fdee2a" className="mr-2 mb-4"/>
+              <a href="tel:+84979070540">Liên hệ 1: +84 97-907-0540</a>
+            </div>
+            <div className="flex justify-center hover:text-yellow-50">
+              <Phone color="#fdee2a" className="mr-2"/>
+              <a href="tel:+84342266206">Liên hệ 2: +84 34-226-6206</a>
+            </div>
+          </div>
         </div>
 
-        <div className="flex space-x-6 items-center mb-6 sm:mb-0 text-gray-600 flex-wrap justify-center sm:justify-start">
-          <div className="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v6m0 0l3-3m-3 3l-3-3" />
-            </svg>
-            <span>8819 Ohio St. South Gate, CA 90280</span>
+        <div className="flex flex-col text-[#FDEE2A]">
+          <div className="flex mb-6">
+            <MapPin color="#fdee2a" />
+            <span>Cơ sở 1: Cụm 6, thôn 3, Thạch Hòa, Thạch Thất, Hà Nội</span>
           </div>
-
-          <div className="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 10l-2 2m0 0l-2-2m2 2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2v-7" />
-            </svg>
-            <a href="mailto:Ourstudio@hello.com">Ourstudio@hello.com</a>
+          <div className="flex">
+            <MapPin color="#fdee2a" />
+            <span>Cơ sở 2: Số 70, thôn 3, Thạch Hoà, Thạch Thất, Hà Nội</span>
           </div>
-
-          <div className="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 12l-6 6-6-6" />
-            </svg>
-            <a href="tel:+13866883295">+1 386-688-3295</a>
-          </div>
-        </div>
-
-        {/* Copyright Text on one row */}
-        <div className="text-center text-gray-500">
-          Copyright Satyam Studio
         </div>
       </div>
     </footer>

@@ -1,10 +1,7 @@
 import Account from '../model/Account.js';
 import bcrypt from 'bcrypt';
 import Room from '../model/Room.js';
-
-function getCurrentUser(req) {
-    return req.user && req.user.id ? req.user.id : null;
-}
+import getCurrentUser from '../utils/getCurrentUser.js';
 
 export const GetAll = async (req, res) => {
     try {
@@ -108,18 +105,27 @@ export const UpdateProfile = async (req, res) => {
     try {
         const accountId = getCurrentUser(req);
         const account = await Account.findById(accountId);
+        console.log(accountId);
+        
         if (!account) {
             return res.status(404).json({ message: "Account không tìm thấy" });
         }
 
-        const { name, phone, avatar, payosClientId, payosAPIKey, payosCheckSum } = req.body;
+        const { 
+            name, 
+            phone, 
+            avatar, 
+            // payosClientId, 
+            // payosAPIKey, 
+            // payosCheckSum 
+        } = req.body;
         const updatedAccount = await Account.findByIdAndUpdate(accountId, {
             name,
             phone,
             avatar,
-            payosClientId,
-            payosAPIKey,
-            payosCheckSum,
+            // payosClientId,
+            // payosAPIKey,
+            // payosCheckSum,
         }, { new: true });
 
         const { password, _id, refreshToken, passwordResetCode, imageStores, ...other } = updatedAccount._doc;
