@@ -8,5 +8,7 @@ BillRouter.post("/room/:roomId", protect, BillController.addBillinRoom);
 // Xác nhận thanh toán hóa đơn
 BillRouter.put('/confirm/:billId', protect, BillController.confimBill);
 
+BillRouter.get('/', BillController.getAllBill);
+
 
 export default BillRouter;
