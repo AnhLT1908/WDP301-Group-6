@@ -1,9 +1,8 @@
-import Account from '../model/Account.js';
-import PasswordResetCode from '../model/PasswordResetCode.js';
-import bcrypt from 'bcrypt';
-import TokenService from './TokenService.js';
-import sendEmail from '../utils/mailer.js';
-import { customAlphabet } from 'nanoid';
+import Account from "../model/Account.js";
+import PasswordResetCode from "../model/PasswordResetCode.js";
+import bcrypt from "bcrypt";
+import TokenService from "./TokenService.js";
+import sendEmail from "../utils/mailer.js";
 
 export const Login = async (req, res) => {
   try {
@@ -11,25 +10,29 @@ export const Login = async (req, res) => {
       $or: [{ email: req.body.email }, { username: req.body.username }],
     });
     if (!findAccount) {
-      return res.status(401).json({ error: 'Wrong email or Username' });
+      return res.status(401).json({ error: "Wrong email or Username" });
     }
     const comparePassword = await bcrypt.compare(
       req.body.password,
       findAccount.password
     );
     if (!comparePassword) {
-      return res.status(401).json({ error: 'Wrong password' });
+      return res.status(401).json({ error: "Wrong password" });
     }
     const { password, refreshToken, ...others } = findAccount._doc;
     if (findAccount && comparePassword) {
-      const genAccessToken = await TokenService.genAccessToken(findAccount._doc);
-      const genRefreshToken = await TokenService.genRefreshToken(findAccount._doc);
+      const genAccessToken = await TokenService.genAccessToken(
+        findAccount._doc
+      );
+      const genRefreshToken = await TokenService.genRefreshToken(
+        findAccount._doc
+      );
 
-      res.cookie('accessToken', genAccessToken, {
+      res.cookie("accessToken", genAccessToken, {
         httpOnly: false,
         secure: false,
-        path: '/',
-        sameSite: 'None',
+        path: "/",
+        sameSite: "None",
       });
 
       await Account.findByIdAndUpdate(
@@ -37,13 +40,13 @@ export const Login = async (req, res) => {
         { refreshToken: genRefreshToken }
       );
       return res.status(200).json({
-        message: 'Login Successfully',
-        data: { ...others },
+        message: "Login Successfully",
+        data: { ...others , token: genAccessToken},
       });
     }
   } catch (error) {
     return res.status(500).json({
-      message: 'Internal Server Error',
+      message: "Internal Server Error",
     });
   }
 };
@@ -54,10 +57,10 @@ export const Register = async (req, res) => {
   try {
     const checkEmailExists = await Account.findOne({ email: email });
     if (checkEmailExists !== null)
-      return res.status(400).json({ message: 'Email has exists' });
+      return res.status(400).json({ message: "Email has exists" });
     const checkUsername = await Account.findOne({ username });
     if (checkUsername !== null) {
-      return res.status(400).json({ message: 'Username has exists' });
+      return res.status(400).json({ message: "Username has exists" });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -69,7 +72,7 @@ export const Register = async (req, res) => {
       password: hashedPassword,
     }).then((data) => {
       return res.status(201).json({
-        message: 'Register Successfully',
+        message: "Register Successfully",
         data: {
           username: data.username,
           name: data.name,
@@ -79,66 +82,72 @@ export const Register = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({
-      message: 'Internal Server Error',
+      message: "Internal Server Error",
     });
   }
 };
 
 export const Logout = async (req, res) => {
-  res.clearCookie('accessToken');
-  return res.status(200).json('Logout successful');
+  res.clearCookie("accessToken");
+  return res.status(200).json("Logout successful");
 };
 
-export const ForgotPasswordHandler = async (req, res) => {
+export const forgotPasswordHandler = async (req, res) => {
+  console.log("Email request: ", req.body.email);
   const account = await Account.findOne({ email: req.body.email });
   if (!account) {
-    return res.status(400).json({ message: 'User not found' });
+    return res.status(400).json({ message: "User not found" });
   }
 
-  const nanoid = customAlphabet('1234567890', 6);
-  const PasswordResetCode = nanoid();
+  const { customAlphabet } = await import("nanoid");
+  const nanoid = customAlphabet("1234567890", 6);
+  const passwordResetCode = nanoid();
 
   const newPasswordResetCode = await PasswordResetCode.create({
-    code: PasswordResetCode,
+    code: passwordResetCode,
   });
   account.passwordResetCode = newPasswordResetCode._id;
   await account.save();
 
   await sendEmail({
-    from: 'longhvhe170156@fpt.edu.vn',
+    from: "WDPGroup6@gmail.com",
     to: account.email,
-    subject: 'Reset your password',
-    text: `Password reset code: ${PasswordResetCode}`,
+    subject: "Reset your password",
+    text: `Password reset code: ${passwordResetCode}`,
   });
   return res.status(200).json({
-    message: 'Check Email',
+    message: "Check Email",
     data: { accountId: account._doc._id },
   });
 };
 
-export const VerifyPasswordResetCode = async (req, res) => {
+export const verifyPasswordResetCode = async (req, res) => {
   const { id, passwordResetCode } = req.body;
-  const account = await Account.findById(id).populate('passwordResetCode');
+  const account = await Account.findById(id).populate("passwordResetCode");
   if (!account) {
-    return res.send('Account not found');
+    return res.send("Account not found");
   } else if (account.passwordResetCode === null) {
-    return res.send('Code reset password is expired time !!');
+    return res.send("Code reset password is expires time !!");
   } else if (account.passwordResetCode.code !== passwordResetCode) {
     return res.send(
-      'Code verify is not correct, please check in email again !!'
+      "Code verify is not correct, please check in email again !!"
     );
   } else if (account.passwordResetCode.code === passwordResetCode) {
-    return res.status(200).json({ message: 'Verify Successfully' });
+    return res
+      .status(200)
+      .json({
+        message: "Verify Successfully",
+        data: { accountId: account._doc._id },
+      });
   }
 };
 
-export const ResetPasswordHandler = async (req, res) => {
+export const resetPasswordHandler = async (req, res) => {
   const { password, id, passwordResetCode } = req.body;
   const account = await Account.findById(id);
-
   if (!account) {
     return res.status(400).json({
-      message: 'Could not reset user password, because account not found !!',
+      message: "Could not reset user password, because account not found !!",
     });
   } else {
     account.passwordResetCode = null;
@@ -146,7 +155,7 @@ export const ResetPasswordHandler = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
     account.password = hashedPassword;
     await account.save();
-    return res.status(201).json({ message: 'Successfully updated password' });
+    return res.status(201).json({ message: "Successfully updated password" });
   }
 };
 
@@ -157,38 +166,35 @@ export const RefreshTokenHandler = async (req, res) => {
 
     if (!account) {
       return res.status(400).json({
-        message:
-          'Could not reset user password, because account not found !!',
+        message: "Could not reset user password, because account not found !!",
       });
     } else {
       if (account.refreshToken !== refreshToken) {
-        return res.status(401).json({ message: 'Invalid refresh token' });
+        return res.status(401).json({ message: "Invalid refresh token" });
       }
 
       const genAccessToken = await TokenService.genAccessToken(account._doc);
-      const genRefreshToken = await TokenService.genRefreshToken(
-        account._doc
-      );
+      const genRefreshToken = await TokenService.genRefreshToken(account._doc);
 
-      res.cookie('accessToken', genAccessToken, {
+      res.cookie("accessToken", genAccessToken, {
         httpOnly: false,
         secure: false,
-        path: '/',
-        sameSite: 'lax',
+        path: "/",
+        sameSite: "lax",
       });
 
-      res.cookie('refreshToken', genRefreshToken, {
+      res.cookie("refreshToken", genRefreshToken, {
         httpOnly: false,
         secure: false,
-        path: '/',
-        sameSite: 'lax',
+        path: "/",
+        sameSite: "lax",
       });
       await Account.findByIdAndUpdate(
         { _id: account.id },
         { refreshToken: genRefreshToken }
       );
       return res.status(200).json({
-        message: 'Refresh token Successfully',
+        message: "Refresh token Successfully",
       });
     }
   } catch (error) {

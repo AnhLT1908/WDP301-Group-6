@@ -8,6 +8,10 @@ import ChangePassword from './page/ChangePassword.jsx';
 import ManagerList from './page/ManagerList.jsx';
 import UserProfile from './page/UserProfile';
 import LodgerList from './page/LodgerList.jsx';
+import AccountList from "./page/AccountList";
+import SetNewPassword from "./page/SetNewPassword.jsx";
+import HomePageAdmin from "./page/HomePageAdmin.jsx";
+
 
 function Dashboard() {
   return <div>Welcome to Dashboard</div>;
@@ -33,6 +37,7 @@ function App() {
         <Route path="/verify-code" element={<VerifyCodeForgotPassword />} />
         <Route path="/login" element={<Login />} />
         <Route path="/change-password" element={<ChangePassword />} />
+        <Route path="/reset-password" element={<SetNewPassword />} />
       </Routes>
     </Router>
   );

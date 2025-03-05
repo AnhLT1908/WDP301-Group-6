@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import logo from "../../src/assets/images/logo2_text.png";
 import loginImg from "../../src/assets/images/login.png";
@@ -8,6 +8,18 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+
+  useEffect(() => {
+    const message = localStorage.getItem("toastMessage");
+    if (message) {
+      setToastMessage(message);
+      setShowToast(true);
+      localStorage.removeItem("toastMessage"); // Remove the message after showing it
+      setTimeout(() => setShowToast(false), 5000); // Hide toast after 3 seconds
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,6 +39,44 @@ const Login = () => {
 
   return (
     <div className="flex h-screen items-center justify-center">
+      {/* Toast notification */}
+      {showToast && (
+        <div
+          id="toast-success"
+          className="fixed top-4 right-4 flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow-sm dark:text-gray-400 dark:bg-gray-800"
+          role="alert"
+        >
+          <div className="ms-3 text-sm font-normal">{toastMessage}</div>
+          <button
+            type="button"
+            className="ms-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8 dark:text-gray-500 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700"
+            aria-label="Close"
+            onClick={() => setShowToast(false)}
+          >
+            <span className="sr-only">Close</span>
+            <svg
+              className="w-3 h-3"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 14 14"
+            >
+              <path
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
+              />
+            </svg>
+          </button>
+        </div>
+      )}
+      {showToast && (
+        <div className="fixed top-4 right-4 w-full max-w-xs progress-bar bg-green-400 rounded-lg"></div>
+      )}
+
+      {/* Login form */}
       <div className="w-1/2 bg-white ml-[110px] ">
         <img
           src={logo}

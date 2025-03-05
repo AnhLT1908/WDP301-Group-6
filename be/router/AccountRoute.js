@@ -2,21 +2,18 @@ import express from 'express';
 import AccountController from '../controller/AccountController.js';
 import validateData from '../validations/ValidateData.js';
 import accountValidate from '../validations/AccountValidate.js';
-
+import protect from '../middleware/verifyToken.js';
 const AccountRouter = express.Router();
 
-AccountRouter.get("/profile", AccountController.getProfile);
+AccountRouter.get("/profile",protect, AccountController.getProfile);
 
 AccountRouter.get("/house/:houseId", /*Token Manager*/ AccountController.GetAll);
 
 AccountRouter.post("/create", validateData(accountValidate.validateAccount), /*Token Manager*/ AccountController.CreateAccount);
 
-AccountRouter.post(
-  "/create",
-  validateData(accountValidate.validateAccount),
-  /*Token Manager*/
-  AccountController.CreateAccount
-);
+AccountRouter.put("/change-status", protect, AccountController.ChangeStatus);
+
+AccountRouter.get("/manager", protect, AccountController.getManagerAccounts);
 
 AccountRouter.put(
   "/profile/change-password",
@@ -25,7 +22,7 @@ AccountRouter.put(
 );
 
 AccountRouter.put(
-  "/profile",
+  "/profile",protect,
   validateData(accountValidate.validateProfile),
   AccountController.UpdateProfile
 );

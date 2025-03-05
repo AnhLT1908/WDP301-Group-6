@@ -1,25 +1,49 @@
 import React, { useState } from "react";
 import logo from "../../src/assets/images/logo2_text.png";
 import forgotPasswordImg from "../../src/assets/images/forgot-password-image.png";
-import Input from "../components/form/Input.jsx";
-import Button from "../components/form/Button.jsx";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false); // State to handle loading
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log(`Email submitted: ${email}`);
+
+    if (!email) {
+      setError("Please fill in this fields.");
+      return;
+    }
+
+    // Disable the submit button while loading
+    setLoading(true);
+    setError(""); // Reset error message on submit
 
     axios
       .post(`http://localhost:8080/api/v1/auth/forgot-password`, { email })
       .then((res) => {
         console.log(res);
         console.log(res.data);
+        const id = res.data.data.accountId;
+        console.log(id);
+        navigate("/verify-code", { state: { id } });
       })
       .catch((err) => {
         console.error("Front-end post forgot password error: ", err);
+        if (err.response && err.response.data && err.response.data.message) {
+          setError("Email does not exist. Please try again!");
+        } else {
+          // Handle general error
+          setError("An error occurred. Please try again later.");
+        }
+      })
+      .finally(() => {
+        // Re-enable the submit button once the request is finished
+        setLoading(false);
       });
   };
 
@@ -38,19 +62,22 @@ const ForgotPassword = () => {
         </p>
 
         <form onSubmit={handleSubmit}>
-          <Input
+          {error && <p className="text-red-500 mb-4">{error}</p>}
+          <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
             className="w-2/3 p-3 mb-4 border border-gray-300 rounded-md"
+            disabled={loading} // Disable input while loading
           />
-          <Button
+          <button
             type="submit"
             className="w-2/3 bg-green-500 text-white p-3 rounded-md"
+            disabled={loading} // Disable button while loading
           >
-            Submit
-          </Button>
+            {loading ? "Submitting..." : "Submit"}
+          </button>
         </form>
       </div>
 
