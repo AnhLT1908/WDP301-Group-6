@@ -41,7 +41,7 @@ export const Login = async (req, res) => {
       );
       return res.status(200).json({
         message: "Login Successfully",
-        data: { ...others },
+        data: { ...others , token: genAccessToken},
       });
     }
   } catch (error) {
@@ -133,7 +133,12 @@ export const verifyPasswordResetCode = async (req, res) => {
       "Code verify is not correct, please check in email again !!"
     );
   } else if (account.passwordResetCode.code === passwordResetCode) {
-    return res.status(200).json({ message: "Verify Successfully" });
+    return res
+      .status(200)
+      .json({
+        message: "Verify Successfully",
+        data: { accountId: account._doc._id },
+      });
   }
 };
 

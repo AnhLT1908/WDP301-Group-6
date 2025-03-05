@@ -544,3 +544,12 @@ video {
 [hidden]:where(:not([hidden="until-found"])) {
   display: none;
 }
+
+@keyframes progress-bar-animation {
+  0% {
+    width: 100%;
+  }
+  100% {
+    width: 0%;
+  }
+}

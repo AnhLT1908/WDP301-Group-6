@@ -1,13 +1,62 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import logo from "../../src/assets/images/logo2_text.png";
 import forgotPasswordImg from "../../src/assets/images/forgot-password-image.png";
+import axios from "axios";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const VerifyCodeForgotPassword = () => {
-  const [verifyCode, setVerifyCode] = useState("");
+  const [passwordResetCode, setPasswordResetCode] = useState("");
+  const [error, setError] = useState("");
+  const location = useLocation();
+  const { id } = location.state || {};
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (id) {
+      console.log("AccountId:", id);
+    }
+  }, [id]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(`Verify Code submitted: ${verifyCode}`);
+    console.log(`Verify Code submitted: ${passwordResetCode}`);
+
+    if (!passwordResetCode) {
+      setError("Please fill in this field.");
+      return;
+    }
+    if (passwordResetCode.length !== 6) {
+      setError("The verification code must be 6 character numbers long.");
+      return;
+    }
+    if (isNaN(passwordResetCode)) {
+      setError("The verification code must be a number.");
+      return;
+    }
+
+    if (id) {
+      axios
+        .post(`http://localhost:8080/api/v1/auth/verify-password-reset-code`, {
+          id,
+          passwordResetCode,
+        })
+        .then((res) => {
+          console.log(res);
+          console.log("VerifyCodeResData: ", res.data);
+          if (res.data.message === "Verify Successfully") {
+            const id = res.data.data.accountId;
+            console.log("VerifyCodeResDataId:", id);
+            navigate("/reset-password", { state: { id } });
+          } else {
+            setError("The verification code is incorrect.");
+          }
+        })
+        .catch((err) => {
+          console.error("Front end error verify password: ", err);
+        });
+    } else {
+      console.error("Account ID not found.");
+    }
   };
 
   return (
@@ -24,10 +73,11 @@ const VerifyCodeForgotPassword = () => {
         </p>
 
         <form onSubmit={handleSubmit}>
+          {error && <p className="text-red-500 mb-4">{error}</p>}
           <input
             type="text"
-            value={verifyCode}
-            onChange={(e) => setVerifyCode(e.target.value)}
+            value={passwordResetCode}
+            onChange={(e) => setPasswordResetCode(e.target.value)}
             placeholder="Enter code here"
             className="w-2/3 p-3 mb-4 border border-gray-300 rounded-md"
           />
