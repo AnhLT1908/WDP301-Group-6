@@ -7,6 +7,9 @@ const BillController = {
     }),
     confimBill: catchAsyncErrors(async(req, res, next) =>{
         await BillService.confirmBill(req, res, next)
+    }),
+    getAllBill: catchAsyncErrors(async(req, res, next)=>{
+        await BillService.getAllBill(req, res, next)
     })
 }
 

@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false); // State to handle loading
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
@@ -19,12 +19,11 @@ const ForgotPassword = () => {
       return;
     }
 
-    // Disable the submit button while loading
     setLoading(true);
-    setError(""); // Reset error message on submit
+    setError("");
 
     axios
-      .post(`http://localhost:8080/api/v1/auth/forgot-password`, { email })
+      .post(`http://localhost:5000/api/v1/auth/forgot-password`, { email })
       .then((res) => {
         console.log(res);
         console.log(res.data);
@@ -37,12 +36,10 @@ const ForgotPassword = () => {
         if (err.response && err.response.data && err.response.data.message) {
           setError("Email does not exist. Please try again!");
         } else {
-          // Handle general error
           setError("An error occurred. Please try again later.");
         }
       })
       .finally(() => {
-        // Re-enable the submit button once the request is finished
         setLoading(false);
       });
   };
@@ -69,12 +66,12 @@ const ForgotPassword = () => {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
             className="w-2/3 p-3 mb-4 border border-gray-300 rounded-md"
-            disabled={loading} // Disable input while loading
+            disabled={loading}
           />
           <button
             type="submit"
             className="w-2/3 bg-green-500 text-white p-3 rounded-md"
-            disabled={loading} // Disable button while loading
+            disabled={loading}
           >
             {loading ? "Submitting..." : "Submit"}
           </button>
