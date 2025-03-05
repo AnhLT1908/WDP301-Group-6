@@ -13,7 +13,9 @@ AccountRouter.post("/create", validateData(accountValidate.validateAccount), /*T
 
 AccountRouter.put("/change-status", protect, AccountController.ChangeStatus);
 
-AccountRouter.get("/manager", protect, AccountController.getManagerAccounts);
+//AccountRouter.get("/manager", protect, AccountController.getManagerAccounts);
+
+AccountRouter.get("/manager", AccountController.getManagerAccounts);
 
 AccountRouter.put(
   "/profile/change-password",

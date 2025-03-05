@@ -6,21 +6,7 @@ import bcrypt from 'bcrypt';
 import Account from "../model/Account.js";
 import Bills from "../model/Bills.js";
 import House from "../model/House.js";
-import mongoose from 'mongoose'
-
-export const getAllRoom = async(req, res, next)=>{
-  try {
-    const rooms = await Room.find();
-    res.status(200).json({
-      success: true,
-      count: rooms.length,
-      data: rooms,
-  });
-  } catch (error) {
-    next(error)
-  }
-}
-
+import mongoose from 'mongoose';
 
 export const getAllRoom = async(req, res, next)=>{
   try {
