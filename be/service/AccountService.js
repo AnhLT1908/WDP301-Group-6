@@ -248,3 +248,36 @@ export const ChangeStatus = async (req, res, next) => {
         next(error);
     }
 };
+
+export const getListLodger = async(req,res,next)=>{
+    try {
+        const { page, limit } = req.query;
+        const pageNumber = parseInt(page) || 1;
+        const limitPerPage = parseInt(limit) || 10;
+        const skip = (pageNumber - 1) * limitPerPage;
+
+        // Lọc các tài khoản có accountType là "Manager"
+        const totalLodger = await Account.countDocuments({ accountType: "Lodger" });
+        const lodger = await Account.find({ accountType: "Lodger" })
+            .skip(skip)
+            .limit(limitPerPage)
+            .sort({ createdAt: -1 })
+            .select("-password -refreshToken -passwordResetCode") // Ẩn thông tin nhạy cảm
+            .exec();
+
+        const totalPages = Math.ceil(totalLodger / limitPerPage);
+
+        return res.status(200).json({
+            pagination: {
+                currentPage: pageNumber,
+                totalPages,
+                totalLodger,
+                accountsPerPage: lodger.length,
+            },
+            data: lodger,
+        });
+    } catch (error) {
+        console.error("Error fetching manager accounts:", error);
+        return res.status(500).json({ message: "Lỗi Server" });
+    }
+}
