@@ -22,19 +22,6 @@ export const getAllRoom = async(req, res, next)=>{
 }
 
 
-export const getAllRoom = async(req, res, next)=>{
-  try {
-    const rooms = await Room.find();
-    res.status(200).json({
-      success: true,
-      count: rooms.length,
-      data: rooms,
-  });
-  } catch (error) {
-    next(error)
-  }
-}
-
 export const ViewListUtilities = async (req, res) => {
   try {
     const { roomId } = req.params;
