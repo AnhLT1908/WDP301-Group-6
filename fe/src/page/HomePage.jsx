@@ -58,7 +58,6 @@ const HomePage = () => {
 
   return (
     <div className="font-sans">
-      <Header />
       <main className="bg-white">
         <section className="grid grid-flow-col grid-rows-1 grid-cols-1">
           <div className="col-span-1">

@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
 import { useEffect, useState } from "react";
 import DashboardLayout from "./components/layout/DashboardLayout";
 import ForgotPassword from "./page/ForgotPassword.jsx";
@@ -10,6 +15,8 @@ import AccountList from "./page/AccountList";
 import UserProfile from "./page/UserProfile";
 import SetNewPassword from "./page/SetNewPassword.jsx";
 import HomePageAdmin from "./page/HomePageAdmin.jsx";
+import LodgerAccountList from "./page/LodgerAccountList.jsx";
+import ManagerLayout from "./components/layout/ManagerLayout.jsx";
 //import NotFound from "./page/NotFound.jsx";
 
 function Dashboard() {
@@ -17,7 +24,9 @@ function Dashboard() {
 }
 
 function App() {
-  const [accountType, setAccountType] = useState(null);
+  const [accountType, setAccountType] = useState(
+    localStorage.getItem("accountType")
+  );
 
   useEffect(() => {
     const storedAccountType = localStorage.getItem("accountType");
@@ -29,7 +38,10 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
 
-        <Route path="/login" element={<Login setAccountType={setAccountType} />} />
+        <Route
+          path="/login"
+          element={<Login setAccountType={setAccountType} />}
+        />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/user-profile" element={<UserProfile />} />
         <Route path="/verify-code" element={<VerifyCodeForgotPassword />} />
@@ -37,7 +49,17 @@ function App() {
         <Route path="/reset-password" element={<SetNewPassword />} />
 
         {accountType === "Lodger" ? (
-          <Route path="/home" element={<HomePage />} />
+          <>
+            <Route path="/home" element={<HomePage />} />
+            <Route
+              path="/lodger-account-list"
+              element={
+                <ManagerLayout>
+                  <LodgerAccountList />
+                </ManagerLayout>
+              }
+            />
+          </>
         ) : (
           <Route path="/home" element={<Navigate to="/login" replace />} />
         )}
@@ -53,12 +75,12 @@ function App() {
               }
             />
             <Route
-            path="/admin/dashboard"
-            element={
-              <DashboardLayout>
-                <Dashboard />
-              </DashboardLayout>
-            }
+              path="/admin/dashboard"
+              element={
+                <DashboardLayout>
+                  <Dashboard />
+                </DashboardLayout>
+              }
             />
             <Route
               path="/admin/account-list"
@@ -74,12 +96,7 @@ function App() {
         )}
 
         {accountType === "Manager" ? (
-          <Route
-            path="/manager"
-            element={
-              ""
-            }
-          />
+          <Route path="/manager/lodger-account-list" element={""} />
         ) : (
           <Route path="/manager/*" element={<Navigate to="/login" replace />} />
         )}
