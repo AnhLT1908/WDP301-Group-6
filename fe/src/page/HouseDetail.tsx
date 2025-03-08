@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-export default function ManagerList() {
+export default function HouseDetail() {
   const [managers, setManagers] = useState([]);
   const [loading, setLoading] = useState(true);
 
