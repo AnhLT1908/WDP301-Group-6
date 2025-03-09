@@ -3,25 +3,26 @@ import authorsTableData from "../data/authors-table-data";
 
 const LodgerAccountList = () => {
   return (
-    <div className="mb-8 flex flex-col gap-12">
+    <div className="mb-8 flex flex-col">
       {/* Card Container */}
-      <div>
-        <button className="bg-green-600 p-6">Back</button>
+      <div className="m-6">
+        <button className="flex justify-center items-center rounded-md font-medium text-white bg-green-600 p-6 w-[100px] h-[50px]">Back</button>
       </div>
       <div className=" shadow overflow-hidden">
         {/* Card Header */}
-        <div className="rounded-lg bg-gradient-to-r from-gray-500 to-gray-700 p-6 mx-6">
-          <h6 className="text-white text-lg font-medium">Authors Table</h6>
+        <div className="flex justify-between items-center rounded-lg bg-gradient-to-r from-green-700 to-green-500 p-6 mx-6">
+          <h6 className="text-white text-lg font-medium">Lodger List</h6>
+          <button className="bg-white text-green-500 font-bold px-6 py-2 rounded-xl shadow-md">Create new account</button>
         </div>
         {/* Card Body */}
         <div className="overflow-x-auto px-0 pt-0 pb-2">
           <table className="w-full min-w-[640px] table-auto">
             <thead>
               <tr>
-                {["author", "function", "status", "employed", ""].map((el) => (
+                {["name", "room", "status", "rental start date", ""].map((el) => (
                   <th
                     key={el}
-                    className="border-b border-blue-gray-50 py-3 px-5 text-left"
+                    className="border-b border-blue-gray-50 py-3 px-6 text-left"
                   >
                     <span className="text-[11px] font-bold uppercase text-blue-gray-400">
                       {el}
@@ -33,7 +34,7 @@ const LodgerAccountList = () => {
             <tbody>
               {authorsTableData.map(
                 ({ img, name, email, job, online, date }, key) => {
-                  const cellClass = `py-3 px-5 ${
+                  const cellClass = `py-3 px-6 ${
                     key === authorsTableData.length - 1
                       ? ""
                       : "border-b border-blue-gray-50"
@@ -43,11 +44,6 @@ const LodgerAccountList = () => {
                       {/* Author Column */}
                       <td className={cellClass}>
                         <div className="flex items-center gap-4">
-                          <img
-                            src={img}
-                            alt={name}
-                            className="w-8 h-8 rounded-full object-cover"
-                          />
                           <div>
                             <p className="text-sm font-semibold text-blue-gray-700">
                               {name}
@@ -73,7 +69,7 @@ const LodgerAccountList = () => {
                           className={`py-0.5 px-2 text-[11px] font-medium inline-block rounded ${
                             online
                               ? "bg-gradient-to-r from-green-400 to-green-600 text-white"
-                              : "bg-gradient-to-r from-blue-gray-400 to-blue-gray-600 text-white"
+                              : "bg-gradient-to-r from-gray-400 to-gray-600 text-white"
                           }`}
                         >
                           {online ? "online" : "offline"}
