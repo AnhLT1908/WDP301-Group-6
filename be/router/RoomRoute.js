@@ -10,7 +10,8 @@ RoomRouter.patch("/:id/equipment-status", RoomController.ChangeUtilitiesStatus);
 RoomRouter.delete("/delete-room-equipment/:roomId/:utilityId", RoomController.DeleteUtilities);
 
 
-RoomRouter.get("/", protect, RoomController.GetAllRoom);
+//RoomRouter.get("/", protect, RoomController.GetAllRoom);
+RoomRouter.get("/", RoomController.GetAllRoom);
 RoomRouter.post("/addRoom", protect, RoomController.addRoom);
 RoomRouter.get("/:roomId", protect, RoomController.getOne);
 RoomRouter.post("/:roomId/member", protect, RoomController.addMember);

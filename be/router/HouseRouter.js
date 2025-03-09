@@ -8,6 +8,7 @@ HouseRouter.put("/:houseId", protect, HouseController.updateOne);
 //HouseRouter.get("/:houseId", protect, HouseController.getOne);
 HouseRouter.get("/:houseId", HouseController.getOne);
 HouseRouter.put("/:houseId/change-status", protect, HouseController.ChangeHouseStatus);
-HouseRouter.get("/", protect,  HouseController.getAll);
+//HouseRouter.get("/", protect,  HouseController.getAll);
+HouseRouter.get("/", HouseController.getAll);
 
 export default HouseRouter;

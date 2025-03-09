@@ -11,6 +11,7 @@ import LodgerList from './page/LodgerList.jsx';
 import AccountList from "./page/AccountList";
 import SetNewPassword from "./page/SetNewPassword.jsx";
 import HomePageAdmin from "./page/HomePageAdmin.jsx";
+import InvoiceList from "./page/InvoiceList.jsx";
 
 
 function Dashboard() {
@@ -22,16 +23,10 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route
-          path = "/manager/lodger-list"
-          element = {<DashboardLayout><LodgerList /></DashboardLayout>}
-        />
-        <Route
-          path="/admin"
-          element={<DashboardLayout><Dashboard /></DashboardLayout>} />
-        <Route
-          path="/admin/manager-list"
-          element={<DashboardLayout><ManagerList /></DashboardLayout>} />
+        <Route path = "/manager/lodger-list" element = {<DashboardLayout><LodgerList /></DashboardLayout>}/>
+        <Route path="/admin" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
+        <Route path="/admin/manager-list" element={<DashboardLayout><ManagerList /></DashboardLayout>} />
+        <Route path="/manager/bill-list" element={<DashboardLayout><InvoiceList /></DashboardLayout>} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/user-profile" element={<UserProfile />} />
         <Route path="/verify-code" element={<VerifyCodeForgotPassword />} />

@@ -22,11 +22,25 @@ const generateVietQR = (amount, courseName) => {
 
 export const getAllBill = async(req, res, next) =>{
   try {
-    const allBill = Bills.find();
+    const allBill = await Bills.find();
     res.status(200).json({
       success: true,
       count: allBill.length,
       data: allBill
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+//get bill detail by id
+export const getOneBill = async(req, res, next) => {
+  try {
+    const { billId } = req.params;
+    const oneBill = await Bills.findById(billId);
+    res.status(200).json({
+      success: true,
+      data: oneBill
     })
   } catch (error) {
     next(error)
