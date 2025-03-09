@@ -12,7 +12,7 @@ import AccountList from "./page/AccountList";
 import SetNewPassword from "./page/SetNewPassword.jsx";
 import HomePageAdmin from "./page/HomePageAdmin.jsx";
 import InvoiceList from "./page/InvoiceList.jsx";
-
+import HouseDetail from './page/HouseDetail.jsx';
 
 function Dashboard() {
   return <div>Welcome to Dashboard</div>;
@@ -24,6 +24,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path = "/manager/lodger-list" element = {<DashboardLayout><LodgerList /></DashboardLayout>}/>
+        <Route path = "/manager/house-detail/:houseId" element = {<DashboardLayout><HouseDetail /></DashboardLayout>}/>
         <Route path="/admin" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
         <Route path="/admin/manager-list" element={<DashboardLayout><ManagerList /></DashboardLayout>} />
         <Route path="/manager/bill-list" element={<DashboardLayout><InvoiceList /></DashboardLayout>} />
