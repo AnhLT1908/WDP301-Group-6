@@ -3,11 +3,14 @@ import authorsTableData from "../data/authors-table-data";
 
 const LodgerAccountList = () => {
   return (
-    <div className="mt-12 mb-8 flex flex-col gap-12">
+    <div className="mb-8 flex flex-col gap-12">
       {/* Card Container */}
-      <div className="rounded-lg shadow overflow-hidden">
+      <div>
+        <button className="bg-green-600 p-6">Back</button>
+      </div>
+      <div className=" shadow overflow-hidden">
         {/* Card Header */}
-        <div className="bg-gradient-to-r from-gray-500 to-gray-700 p-6">
+        <div className="rounded-lg bg-gradient-to-r from-gray-500 to-gray-700 p-6 mx-6">
           <h6 className="text-white text-lg font-medium">Authors Table</h6>
         </div>
         {/* Card Body */}
