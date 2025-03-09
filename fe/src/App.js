@@ -13,6 +13,7 @@ import SetNewPassword from "./page/SetNewPassword.jsx";
 import HomePageAdmin from "./page/HomePageAdmin.jsx";
 import InvoiceList from "./page/InvoiceList.jsx";
 import HouseDetail from './page/HouseDetail.jsx';
+import InvoiceDetail from './page/InvoiceDetail.jsx';
 
 function Dashboard() {
   return <div>Welcome to Dashboard</div>;
@@ -28,6 +29,7 @@ function App() {
         <Route path="/admin" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
         <Route path="/admin/manager-list" element={<DashboardLayout><ManagerList /></DashboardLayout>} />
         <Route path="/manager/bill-list" element={<DashboardLayout><InvoiceList /></DashboardLayout>} />
+        <Route path="/manager/bill-detail/:billId" element={<DashboardLayout><InvoiceDetail /></DashboardLayout>} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/user-profile" element={<UserProfile />} />
         <Route path="/verify-code" element={<VerifyCodeForgotPassword />} />
