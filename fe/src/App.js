@@ -18,6 +18,7 @@ import HomePageAdmin from "./page/HomePageAdmin.jsx";
 import LodgerAccountList from "./page/LodgerAccountList.jsx";
 import ManagerLayout from "./components/layout/ManagerLayout.jsx";
 import CreateLodgerAccount from "./page/CreateLodgerAccount.jsx";
+import HouseList from "./page/HouseList.jsx";
 //import NotFound from "./page/NotFound.jsx";
 
 function Dashboard() {
@@ -65,6 +66,14 @@ function App() {
               element={
                 <ManagerLayout>
                   <CreateLodgerAccount />
+                </ManagerLayout>
+              }
+            />
+            <Route
+              path="/house-list"
+              element={
+                <ManagerLayout>
+                  <HouseList />
                 </ManagerLayout>
               }
             />
