@@ -70,10 +70,6 @@ const RoomSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "DefaultUtilities",
     }],
-    otherUtilities: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "OtherUtilities",
-    }],
     area: {
         type: Number,
         required: true
