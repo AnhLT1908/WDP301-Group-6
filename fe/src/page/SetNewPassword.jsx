@@ -51,7 +51,7 @@ const SetNewPassword = () => {
     }
     if (id) {
       axios
-        .post("http://localhost:8080/api/v1/auth/reset-password", {
+        .post("http://localhost:5000/api/v1/auth/reset-password", {
           id,
           password,
         })

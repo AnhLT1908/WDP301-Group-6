@@ -7,13 +7,18 @@ import Account from '../model/Account.js';
 const getAccountFromToken = async (token, next) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+
+        console.log("Decode id: ", decoded)
+
         if (!token) {
             return res.status(401).json({ message: "Bạn chưa đăng nhập!" });
         }
+
         const account = await Account.findById(decoded.id);
         
         return account;
     } catch (error) {
+        console.log("Error token: ", error)
         return next(new ErrorHandler('Token không hợp lệ hoặc đã hết hạn!', 401));
     }
 };

@@ -22,6 +22,9 @@ const AccountController = {
     }),
     getManagerAccounts: catchAsyncErrors(async(req, res)=>{
         await AccountService.getManagerAccounts(req, res)
+    }),
+    getListLodger: catchAsyncErrors(async(req,res)=>{
+        await AccountService.getListLodger(req,res);
     })
 };
 
