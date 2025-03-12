@@ -33,12 +33,10 @@ const HouseList = () => {
 
   return (
     <div className="grid grid-cols-6 gap-4 p-8">
-      {/* Column 1 (Button) */}
       <div className="col-span-1 flex flex-col gap-4 w-[50%]">
         <button className="bg-green-500 text-white w-full px-4 py-2 rounded">Back</button>
       </div>
 
-      {/* Column 2 (Title, Subtitle, and Cards) */}
       <div className="mr-28 col-span-2 flex flex-col gap-8">
         <div className="flex justify-between">
           <h1 className="text-3xl font-bold">Hostel List</h1>
@@ -74,7 +72,6 @@ const HouseList = () => {
         )}
       </div>
 
-      {/* Column 3 (Map) */}
       <div className="col-span-3 flex flex-col gap-4">
         <div className="relative w-full h-full bg-gray-300 rounded-3xl shadow-xl">
           {selectedHouse ? (
