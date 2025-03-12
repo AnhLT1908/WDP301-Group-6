@@ -6,10 +6,10 @@ import bcrypt from 'bcrypt';
 import Account from "../model/Account.js";
 import Bills from "../model/Bills.js";
 import House from "../model/House.js";
+
 import mongoose from 'mongoose';
 
 export const getAllRoom = async(req, res, next)=>{
-
   try {
     const rooms = await Room.find();
     res.status(200).json({
@@ -21,6 +21,7 @@ export const getAllRoom = async(req, res, next)=>{
     next(error);
   }
 };
+
 
 export const ViewListUtilities = async (req, res) => {
   try {
@@ -410,6 +411,7 @@ export const addMember = async(req, res, next) =>{
   } catch (error) {
       throw error;
   }
+
 }
 
 
@@ -517,3 +519,4 @@ export const updateRoomDetails = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 };
+

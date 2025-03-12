@@ -19,5 +19,4 @@ indexRouter.use("/problem", ProblemRouter);
 indexRouter.use("/bill", BillRouter);
 indexRouter.use("/static", StatisticRouter);
 
-
 export default indexRouter;

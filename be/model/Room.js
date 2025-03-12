@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+
 const imageCCCD = new Schema({
     type: {
         type: String,

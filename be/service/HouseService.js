@@ -146,6 +146,7 @@ export const ChangeHouseStatus = async (req, res, next) => {
         success: false,
         message: "Status must be either true or false",
       });
+
     }
 
     const existHouse = await House.findById(houseId);
