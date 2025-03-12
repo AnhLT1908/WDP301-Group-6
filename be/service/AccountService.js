@@ -95,41 +95,71 @@ export const getProfile = async (req, res) => {
 };
 
 export const CreateAccount = async (req, res) => {
-    const { email, username, role, name } = req.body;
+    const { firstName, lastName, email, password, dateOfBirth, identityCard, phone, room, rentalDate, leaseTerminationDate, gender, status, accountType } = req.body;
     try {
         const checkEmailExists = await Account.findOne({ email: email });
         if (checkEmailExists !== null)
             return res.status(400).json({ message: "Email đã tồn tại" });
-        const checkUsername = await Account.findOne({ username });
-        if (checkUsername !== null) {
-            return res.status(400).json({ message: "Username có rồi" });
-        }
-
-        const password = "Admin@123";
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
+        const roomData = await Room.findOne({ name: room });
+        if (!roomData) {
+            return res.status(404).json({ message: "Phòng không tồn tại" });
+        }
+
+        if (roomData.members && roomData.members.length >= roomData.quantityMember) {
+            return res.status(400).json({ message: "Phòng đã đầy" });
+        }
+
         const accountData = await Account.create({
-            username,
-            name,
+            firstName,
+            lastName,
             email,
             password: hashedPassword,
-            accountType: role,
+            dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+            identityCard,
+            phone,
+            roomId: roomData._id,
+            rentalDate: rentalDate ? new Date(rentalDate) : null,
+            leaseTerminationDate: leaseTerminationDate ? new Date(leaseTerminationDate) : null,
+            gender,
+            status: status,
+            accountType: accountType || "Lodger",
         });
 
+        await Room.findByIdAndUpdate(
+            roomData._id,
+            { 
+                $push: { 
+                    members: {
+                        accountId: accountData._id,
+                        joinDate: rentalDate
+                    }
+                },
+                $set: { 
+                    status: roomData.members.length + 1 >= roomData.quantityMember ? "Full" : "Available" 
+                }
+            }
+        );
+
         return res.status(201).json({
-            message: "Tạo acc thành công",
+            message: "Tạo tài khoản thành công",
             data: {
-                username: accountData.username,
-                name: accountData.name,
+                firstName: accountData.firstName,
+                lastName: accountData.lastName,
                 email: accountData.email,
                 accountType: accountData.accountType,
+                room: roomData.name,
+                gender: accountData.gender
             },
         });
     } catch (error) {
+        console.error(error);
         return res.status(500).json({
             message: "Lỗi Server Error",
+            error: error.message
         });
     }
 };
@@ -248,3 +278,37 @@ export const ChangeStatus = async (req, res, next) => {
         next(error);
     }
 };
+
+export const getListLodger = async(req,res,next)=>{
+    try {
+        const { page, limit } = req.query;
+        const pageNumber = parseInt(page) || 1;
+        const limitPerPage = parseInt(limit) || 10;
+        const skip = (pageNumber - 1) * limitPerPage;
+
+        // Lọc các tài khoản có accountType là "Manager"
+        const totalLodger = await Account.countDocuments({ accountType: "Lodger" });
+        const lodger = await Account.find({ accountType: "Lodger" })
+            .skip(skip)
+            .limit(limitPerPage)
+            .sort({ createdAt: -1 })
+            .select("-password -refreshToken -passwordResetCode") // Ẩn thông tin nhạy cảm
+            .exec();
+
+        const totalPages = Math.ceil(totalLodger / limitPerPage);
+
+        return res.status(200).json({
+            pagination: {
+                currentPage: pageNumber,
+                totalPages,
+                totalLodger,
+                accountsPerPage: lodger.length,
+            },
+            data: lodger,
+        });
+    } catch (error) {
+        console.error("Error fetching manager accounts:", error);
+        return res.status(500).json({ message: "Lỗi Server" });
+    }
+}
+

@@ -1,6 +1,6 @@
 import Bills from "../model/Bills.js";
-import crypto from 'crypto';
-import Account from '../model/Account.js'
+import crypto from "crypto";
+import Account from "../model/Account.js";
 import Notification from "../model/Notification.js";
 import Room from "../model/Room.js";
 import getCurrentUser from "../utils/getCurrentUser.js";
@@ -10,12 +10,19 @@ const generateTransactionId = () => {
     return crypto.randomBytes(4).toString('hex').substring(0, 7);
 };
   
+
 // Hàm tạo URL QR code
 const generateVietQR = (amount, courseName) => {
-    const transactionId = generateTransactionId();
-    const qrUrl = `https://img.vietqr.io/image/${config2.bankInfo.bankId}-${config2.bankInfo.bankAccount}-${config2.bankInfo.template}.png?amount=${amount}&addInfo=${encodeURIComponent(courseName + ' Ma giao dich ' + transactionId)}&accountName=${encodeURIComponent(config2.bankInfo.accountName)}`;
-    
-    return { qrUrl, transactionId };
+  const transactionId = generateTransactionId();
+  const qrUrl = `https://img.vietqr.io/image/${config2.bankInfo.bankId}-${
+    config2.bankInfo.bankAccount
+  }-${
+    config2.bankInfo.template
+  }.png?amount=${amount}&addInfo=${encodeURIComponent(
+    courseName + " Ma giao dich " + transactionId
+  )}&accountName=${encodeURIComponent(config2.bankInfo.accountName)}`;
+
+  return { qrUrl, transactionId };
 };
 
 
@@ -26,6 +33,21 @@ export const getAllBill = async(req, res, next) =>{
       success: true,
       count: allBill.length,
       data: allBill
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+
+//get bill detail by id
+export const getOneBill = async(req, res, next) => {
+  try {
+    const { billId } = req.params;
+    const oneBill = await Bills.findById(billId);
+    res.status(200).json({
+      success: true,
+      data: oneBill
     })
   } catch (error) {
     next(error)
@@ -129,7 +151,6 @@ export const confirmBill = async(req, res, next) =>{
         await bill.save();
   
         const roomAccount = await Bills.findOne({ roomId: bill.roomId });
-        console.log(roomAccount);
         
         if (!roomAccount) {
             throw new Error("Không tìm thấy tài khoản phòng!");
@@ -151,5 +172,5 @@ export const confirmBill = async(req, res, next) =>{
       } catch (error) {
         next(error)
       }
-    
 }
+

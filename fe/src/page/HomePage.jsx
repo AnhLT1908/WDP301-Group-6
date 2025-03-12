@@ -4,7 +4,7 @@ import Footer from "../components/layout/Footer";
 import Card from "../components/ui/Card";
 import Carousel from "../components/ui/Carousel";
 import Button from "../components/form/Button";
-import { House, DoorOpen, Newspaper, FileWarning } from "lucide-react";
+import { House, DoorOpen, AlignJustify, FileWarning } from "lucide-react";
 import carousel_img_1 from "../../src/assets/images/carousel_images/carousel_img_1.jpg";
 import carousel_img_2 from "../../src/assets/images/carousel_images/carousel_img_2.jpg";
 import carousel_img_3 from "../../src/assets/images/carousel_images/carousel_img_3.jpg";
@@ -48,7 +48,7 @@ const HomePage = () => {
     },
     {
       title: "Tin tức",
-      icon: <Newspaper size={70} className="relative text-white" />,
+      icon: <AlignJustify  size={70} className="relative text-white" />,
     },
     {
       title: "Báo cáo",
