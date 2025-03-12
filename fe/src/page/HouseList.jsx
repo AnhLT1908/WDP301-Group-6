@@ -7,17 +7,16 @@ import House3_img from "../assets/images/house_3.jpg";
 
 const HouseList = () => {
   const [houseList, setHouseList] = useState([]);
-  const [selectedHouse, setSelectedHouse] = useState(houseList[0]);
+  const [selectedHouse, setSelectedHouse] = useState(null);
 
-  console.log("House list: ", houseList)
-
-  console.log("Selected house: ", selectedHouse)
+  console.log("House list: ", houseList);
+  console.log("Selected house: ", selectedHouse);
 
   useEffect(() => {
     const fetchHouses = async () => {
       try {
         const response = await axios.get("http://localhost:5000/api/v1/house/");
-        console.log("House list response: ", response)
+        console.log("House list response: ", response);
         setHouseList(response.data.houses);
       } catch (error) {
         console.error("Error fetching houses:", error);
@@ -27,29 +26,41 @@ const HouseList = () => {
     fetchHouses();
   }, []);
 
+  useEffect(() => {
+    if (houseList.length > 0) {
+      setSelectedHouse(houseList[0]);
+    }
+  }, [houseList]);
+
   const handleSelectHouse = (house) => {
     setSelectedHouse(house);
   };
+
   return (
     <div className="grid grid-cols-6 gap-4 p-8">
-      {/* Column 1 (Button) */}
       <div className="col-span-1 flex flex-col gap-4 w-[50%]">
-        <button className="bg-green-500 text-white w-full px-4 py-2 rounded">Back</button>
+        <button className="bg-green-500 text-white w-full px-4 py-2 rounded">
+          Back
+        </button>
       </div>
 
-      {/* Column 2 (Title, Subtitle, and Cards) */}
-      <div className="mr-28 col-span-2 flex flex-col gap-8">
+      <div className="col-span-2 flex flex-col gap-8 ml-[-70px] mr-[60px]">
         <div className="flex justify-between">
           <h1 className="text-3xl font-bold">Hostel List</h1>
-          <button className="bg-green-500 text-white w-[50%] px-4 py-2 rounded">Create new hostel</button>
+          <button className="bg-green-500 text-white w-[50%] px-4 py-2 rounded">
+            Create new hostel
+          </button>
         </div>
-        <h2 className="text-2xl text-gray-500 font-semibold">Nhà trọ Tuấn Cường</h2>
+        <h2 className="text-2xl text-gray-500 font-semibold">
+          {selectedHouse?.name}
+        </h2>
 
         {houseList.length > 0 ? (
           houseList.map((house, index) => (
             <div
               key={index}
               className="relative flex flex-row items-center bg-white p-4 rounded-lg shadow-lg overflow-hidden h-48 hover:transform hover:scale-105 hover:shadow-lg transition-all duration-300"
+              onClick={() => handleSelectHouse(house)}
             >
               <img
                 src={house.imageUrl || House1_img}
@@ -57,14 +68,34 @@ const HouseList = () => {
                 className="absolute left-0 top-0 w-1/3 h-full object-cover"
               />
               <div className="flex flex-col justify-between ml-[36%] w-full h-[150px]">
-                <h3 className="font-semibold">{house.name || `Nhà trọ ${index + 1}`}</h3>
-                <p className="text-sm text-gray-700">{house.description || "Text | text | text"}</p>
-                <button
-                  className="bg-green-500 text-white px-4 py-2 mt-2 rounded"
-                  onClick={() => handleSelectHouse(house)}
-                >
-                  View more
-                </button>
+                <h2 className="font-bold">{house.name || `Nhà trọ`}</h2>
+                <div className="flex flex-col">
+                  <p className="text-sm text-gray-700">
+                    {`Số lượng phòng: ${house.numberOfRoom}`}
+                  </p>
+                  <p className="text-sm text-gray-700">
+                    {`Số lượng người thuê: ${house.numberOfMember}`}
+                  </p>
+                  <p className="text-sm text-gray-700">
+                    {`Địa chỉ: ${house.location[0].detailLocation}`}
+                  </p>
+                </div>
+                <div className="flex justify-around">
+                  {house.status === "available" ? (
+                    <button className="bg-blue-500 text-white px-4 py-2 mt-2 rounded">
+                      Còn phòng
+                    </button>
+                  ) : (
+                    <button className="bg-red-500 text-white px-4 py-2 mt-2 rounded">
+                      Hết phòng
+                    </button>
+                  )}
+                  <button
+                    className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 mt-2 rounded"
+                  >
+                    View more
+                  </button>
+                </div>
               </div>
             </div>
           ))
@@ -73,7 +104,6 @@ const HouseList = () => {
         )}
       </div>
 
-      {/* Column 3 (Map) */}
       <div className="col-span-3 flex flex-col gap-4">
         <div className="relative w-full h-full bg-gray-300 rounded-3xl shadow-xl">
           {selectedHouse ? (
