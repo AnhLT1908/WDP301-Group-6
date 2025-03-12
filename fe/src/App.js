@@ -12,6 +12,8 @@ import HomePageAdmin from "./page/HomePageAdmin.jsx";
 import InvoiceList from "./page/InvoiceList.jsx";
 import HouseDetail from './page/HouseDetail.jsx';
 import InvoiceDetail from './page/InvoiceDetail.jsx';
+import UserProfile from './page/UserProfile.jsx';
+import LodgerList from './page/LodgerList.jsx';
 
 function Dashboard() {
   return <div>Welcome to Dashboard</div>;
@@ -75,12 +77,40 @@ function App() {
         )}
 
         {accountType === "Manager" ? (
+          <>
           <Route
-            path="/manager"
+            path="/manager/invoice-list"
             element={
-              ""
+              <DashboardLayout>
+                <InvoiceList />
+              </DashboardLayout>
+            }
+            />
+          <Route
+            path = "/manager/lodger-list"
+            element={
+              <DashboardLayout>
+                <LodgerList />
+              </DashboardLayout>
             }
           />
+          <Route
+            path = "/manager/house-detail/:houseId"
+            element={
+              <DashboardLayout>
+                <HouseDetail />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path = "/manager/invoice-detail/:invoiceId"
+            element={
+              <DashboardLayout>
+                <InvoiceDetail />
+              </DashboardLayout>
+            }
+          />
+          </>
         ) : (
           <Route path="/manager/*" element={<Navigate to="/login" replace />} />
         )}
