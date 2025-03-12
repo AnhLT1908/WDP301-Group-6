@@ -30,7 +30,6 @@ const HouseList = () => {
   const handleSelectHouse = (house) => {
     setSelectedHouse(house);
   };
-
   return (
     <div className="grid grid-cols-6 gap-4 p-8">
       {/* Column 1 (Button) */}
