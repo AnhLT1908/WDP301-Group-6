@@ -37,56 +37,76 @@ const member = new Schema({
 });
 
 const RoomSchema = new Schema({
-    floor: {
-        type: Number
+  name: {
+    type: String,
+    required: true
+  },
+  house: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "House",
+    required: true
+  },
+  floor: {
+    type: Number,
+    required: true
+  },
+  members: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Account"
+  }],
+  area: {
+    type: Number,
+    required: true
+  },
+  roomPrice: {
+    type: Number,
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ["full", "available"],
+    default: "available"
+  },
+  utilities: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "DefaultUtilities"
+  }],
+  debtMoney: {
+    type: Number,
+    default: 0
+  },
+  monthlyElectricityUsage: [{
+    value: {
+      type: Number,
+      default: 0
     },
-    name: {
-        type: String
+    month: {
+      type: String,
+      required: true
     },
-    status: {
-        type: String,
-        enum: ["Empty", "Full", "Available"],
-        default: "Empty"
-    },
-    quantityMember: {
-        type: Number,
-        required: true
-    },
-    members: [member],
-    roomType: {
-        type: String,
-        enum: ['normal', 'premium'],
-        default: "normal"
-    },
-    roomPrice: {
-        type: Number,
-        required: true
-    },
-    deposit: {
-        type: Number
-    },
-    utilities: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "DefaultUtilities",
-    }],
-    area: {
-        type: Number,
-        required: true
-    },
-    houseId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "House"
-    },
-    deleted: {
-        type: Boolean,
-        required: false
-    },
-    deletedAt: {
-        type: Date,
-        default: null
-    }
+  }],
+  roomBill: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Bill"
+  },
+  deposit: {
+    type: Number,
+    default: 0
+  },
+  roomReport: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Problem"
+  }],
+  deleted: {
+    type: Boolean,
+    default: false
+  },
+  deletedAt: {
+    type: Date,
+    default: null
+  }
 }, {
-    timestamps: true
+  timestamps: true
 });
 
-export default mongoose.model('Room', RoomSchema);
+module.exports = mongoose.model('Room', RoomSchema);
