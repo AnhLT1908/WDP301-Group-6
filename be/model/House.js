@@ -24,11 +24,18 @@ const HouseSchema = new mongoose.Schema(
       enum: ["available", "full"],
       required: true,
     },
-    location:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref:'Location',
-        default: null
-  },
+    location: [
+      {
+        detailLocation: {
+          type: String,
+          default: "",
+        },
+        srcMap: {
+          type: String,
+          default: "",
+        },
+      },
+    ],
     rules: {
       type: String,
       default: null,
