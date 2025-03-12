@@ -13,7 +13,6 @@ const priceItemSchema = new Schema({
     required: true,
   },
 });
-
 const HouseSchema = new mongoose.Schema(
   {
     name: {
