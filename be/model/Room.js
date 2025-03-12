@@ -25,14 +25,13 @@ const member = new Schema({
         type: String,
         enum: ["male", "female"]
     },
-    cccd: {
+    identityCard: {
         type: String,
     },
     avatar: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Upload"
     },
-    imageCCCDs: [imageCCCD],
     note: {
         type: String,
     }
@@ -70,10 +69,6 @@ const RoomSchema = new Schema({
     utilities: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "DefaultUtilities",
-    }],
-    otherUtilities: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "OtherUtilities",
     }],
     area: {
         type: Number,

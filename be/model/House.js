@@ -1,10 +1,14 @@
 import mongoose, { Schema } from 'mongoose';
 
 const priceItemSchema = new Schema({
+
+    //?
     base: {
         type: Schema.ObjectId,
         ref: "DefaultPrice",
     },
+
+    //?
     price: {
         type: Number,
         required: true
@@ -29,6 +33,10 @@ const HouseSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
+    numberOfMember: {
+        type: Number,
+        default: 0,
+    },
     electricPrice: {
         type: Number,
         required: true,
@@ -41,6 +49,8 @@ const HouseSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
+
+    //?
     priceList: [
         {
             type: priceItemSchema,
@@ -52,12 +62,6 @@ const HouseSchema = new mongoose.Schema({
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: "DefaultUtilities",
-        },
-    ],
-    otherUtilities: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "OtherUtilities",
         },
     ],
     hostId:{

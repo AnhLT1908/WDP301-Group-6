@@ -1,7 +1,15 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function DashboardHeader() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("accountType");
+    navigate("/login");
+  };
 
   return (
     <header className="bg-green-800 text-white flex justify-between items-center p-4">
@@ -23,9 +31,18 @@ export default function DashboardHeader() {
         {dropdownOpen && (
           <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded shadow-lg z-50">
             <ul>
-              <li className="p-2 hover:bg-gray-200">User Profile</li>
-              <li className="p-2 hover:bg-gray-200">Change Password</li>
-              <li className="p-2 hover:bg-gray-200">Logout</li>
+              <li className="p-2 hover:bg-gray-200 cursor-pointer">
+                User Profile
+              </li>
+              <li className="p-2 hover:bg-gray-200 cursor-pointer">
+                Change Password
+              </li>
+              <li
+                className="p-2 hover:bg-gray-200 cursor-pointer"
+                onClick={handleLogout}
+              >
+                Logout
+              </li>
             </ul>
           </div>
         )}
