@@ -48,6 +48,10 @@ const HouseSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    numberOfMember: {
+      type: Number,
+      default: 0,
+    },
     electricPrice: {
       type: Number,
       required: true,
