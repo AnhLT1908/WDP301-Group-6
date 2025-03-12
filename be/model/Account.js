@@ -1,28 +1,13 @@
 import mongoose from 'mongoose';
 import validator from 'validator';
 
-const identifyCardSchema = new mongoose.Schema({
-    identityNumber: {
-        type: String,
-        default: null,
-    },
-    imageFront: {
-        type: String,
-        default: null,
-    },
-    imageBack: {
-        type: String,
-        default: null,
-    },
-});
-
 const AccountSchema = new mongoose.Schema(
     {
-        name: {
+        firstName: {
             type: String,
             required: true,
         },
-        username: {
+        lastName: {
             type: String,
             required: true,
         },
@@ -38,13 +23,22 @@ const AccountSchema = new mongoose.Schema(
             default: null,
             minlength: [10, "Phone must be at least 10 characters"],
         },
+        dateOfBirth: {
+            type: Date,
+            default: null,
+        },
         identityCard: {
-            type: identifyCardSchema,
+            type: String,
             default: null,
         },
         avatar: {
             type: String,
             default: null,
+        },
+        gender: {
+            type: String,
+            enum: ["Male", "Female"],
+            required: true,
         },
         password: {
             type: String,
@@ -64,6 +58,14 @@ const AccountSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             default: null,
             ref: 'Room',
+        },
+        rentalDate: {
+            type: Date,
+            default: null,
+        },
+        leaseTerminationDate: {
+            type: Date,
+            default: null,
         },
         status: {
             type: Boolean,

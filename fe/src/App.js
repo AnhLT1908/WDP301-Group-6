@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
 import { useEffect, useState } from "react";
 import DashboardLayout from "./components/layout/DashboardLayout";
 import ForgotPassword from "./page/ForgotPassword.jsx";
@@ -14,14 +19,20 @@ import HouseDetail from './page/HouseDetail.jsx';
 import InvoiceDetail from './page/InvoiceDetail.jsx';
 import UserProfile from './page/UserProfile.jsx';
 import LodgerList from './page/LodgerList.jsx';
+import LodgerAccountList from "./page/LodgerAccountList.jsx";
+import ManagerLayout from "./components/layout/ManagerLayout.jsx";
+import CreateLodgerAccount from "./page/CreateLodgerAccount.jsx";
+import HouseList from "./page/HouseList.jsx";
+//import NotFound from "./page/NotFound.jsx";
 
 function Dashboard() {
   return <div>Welcome to Dashboard</div>;
 }
 
 function App() {
-  const [accountType, setAccountType] = useState(null);
-
+  const [accountType, setAccountType] = useState(
+    localStorage.getItem("accountType")
+  );
   useEffect(() => {
     const storedAccountType = localStorage.getItem("accountType");
     setAccountType(storedAccountType);
@@ -31,8 +42,10 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
-
-        <Route path="/login" element={<Login setAccountType={setAccountType} />} />
+        <Route
+          path="/login"
+          element={<Login setAccountType={setAccountType} />}
+        />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/user-profile" element={<UserProfile />} />
         <Route path="/verify-code" element={<VerifyCodeForgotPassword />} />
@@ -40,7 +53,33 @@ function App() {
         <Route path="/reset-password" element={<SetNewPassword />} />
 
         {accountType === "Lodger" ? (
-          <Route path="/home" element={<HomePage />} />
+          <>
+            <Route path="/home" element={<HomePage />} />
+            <Route
+              path="/lodger-account-list"
+              element={
+                <ManagerLayout>
+                  <LodgerAccountList />
+                </ManagerLayout>
+              }
+            />
+            <Route
+              path="/create-lodger-account"
+              element={
+                <ManagerLayout>
+                  <CreateLodgerAccount />
+                </ManagerLayout>
+              }
+            />
+            <Route
+              path="/house-list"
+              element={
+                <ManagerLayout>
+                  <HouseList />
+                </ManagerLayout>
+              }
+            />
+          </>
         ) : (
           <Route path="/home" element={<Navigate to="/login" replace />} />
         )}

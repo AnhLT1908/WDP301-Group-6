@@ -9,17 +9,18 @@ import House from "../model/House.js";
 import mongoose from 'mongoose';
 
 export const getAllRoom = async(req, res, next)=>{
+
   try {
     const rooms = await Room.find();
     res.status(200).json({
       success: true,
       count: rooms.length,
       data: rooms,
-  });
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 export const ViewListUtilities = async (req, res) => {
   try {
@@ -443,60 +444,76 @@ export const ChangeRoomStatus = async (req, res) => {
 
 export const updateRoomDetails = async (req, res) => {
   try {
-      const { roomId } = req.params;
-      const updateData = req.body;
+    const { roomId } = req.params;
+    const updateData = req.body;
 
-      // Allowed fields for updating
-      const allowedFields = [
-          "floor",
-          "name",
-          "status",
-          "quantityMember",
-          "roomType",
-          "roomPrice",
-          "deposit",
-          "utilities",
-          "otherUtilities",
-          "area",
-          "houseId",
-          "members",
-          "deleted"
-      ];
+    // Allowed fields for updating
+    const allowedFields = [
+      "floor",
+      "name",
+      "status",
+      "quantityMember",
+      "roomType",
+      "roomPrice",
+      "deposit",
+      "utilities",
+      "otherUtilities",
+      "area",
+      "houseId",
+      "members",
+      "deleted",
+    ];
 
-      // Validate if the provided keys are allowed
-      const updateKeys = Object.keys(updateData);
-      const isValidUpdate = updateKeys.every(key => allowedFields.includes(key));
+    // Validate if the provided keys are allowed
+    const updateKeys = Object.keys(updateData);
+    const isValidUpdate = updateKeys.every((key) =>
+      allowedFields.includes(key)
+    );
 
-      if (!isValidUpdate) {
-          return res.status(400).json({ error: `Invalid update fields: ${updateKeys.join(", ")}` });
+    if (!isValidUpdate) {
+      return res
+        .status(400)
+        .json({ error: `Invalid update fields: ${updateKeys.join(", ")}` });
+    }
+
+    // Validate status if it's being updated
+    if (updateData.status) {
+      const validStatuses = ["Empty", "Full", "Available"];
+      if (!validStatuses.includes(updateData.status)) {
+        return res.status(400).json({
+          error: `Invalid status value. Allowed values: ${validStatuses.join(
+            ", "
+          )}`,
+        });
       }
+    }
 
-      // Validate status if it's being updated
-      if (updateData.status) {
-          const validStatuses = ["Empty", "Full", "Available"];
-          if (!validStatuses.includes(updateData.status)) {
-              return res.status(400).json({ error: `Invalid status value. Allowed values: ${validStatuses.join(", ")}` });
-          }
+    // Validate roomType if it's being updated
+    if (updateData.roomType) {
+      const validRoomTypes = ["normal", "premium"];
+      if (!validRoomTypes.includes(updateData.roomType)) {
+        return res.status(400).json({
+          error: `Invalid room type. Allowed values: ${validRoomTypes.join(
+            ", "
+          )}`,
+        });
       }
+    }
 
-      // Validate roomType if it's being updated
-      if (updateData.roomType) {
-          const validRoomTypes = ["normal", "premium"];
-          if (!validRoomTypes.includes(updateData.roomType)) {
-              return res.status(400).json({ error: `Invalid room type. Allowed values: ${validRoomTypes.join(", ")}` });
-          }
-      }
+    // Update the room details
+    const updatedRoom = await Room.findByIdAndUpdate(roomId, updateData, {
+      new: true,
+    });
 
-      // Update the room details
-      const updatedRoom = await Room.findByIdAndUpdate(roomId, updateData, { new: true });
+    if (!updatedRoom) {
+      return res.status(404).json({ error: "Room not found" });
+    }
 
-      if (!updatedRoom) {
-          return res.status(404).json({ error: "Room not found" });
-      }
-
-      return res.status(200).json({ message: "Room details updated successfully", room: updatedRoom });
+    return res.status(200).json({
+      message: "Room details updated successfully",
+      room: updatedRoom,
+    });
   } catch (error) {
-      return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 };
-

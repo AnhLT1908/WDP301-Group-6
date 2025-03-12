@@ -1,8 +1,8 @@
 import * as RoomService from "../service/Room.Service.js";
 import catchAsyncErrors from "../middleware/asyncErrorCatch.js";
 
-const AuthController = {
-  ViewListUtilities: catchAsyncErrors(async (req, res) => {
+const RoomController = {
+  ViewListUtilitiesbyRoom: catchAsyncErrors(async (req, res) => {
     await RoomService.ViewListUtilities(req, res);
   }),
   AddNewUtilities: catchAsyncErrors(async (req, res) => {
@@ -17,10 +17,13 @@ const AuthController = {
   DeleteUtilities: catchAsyncErrors(async (req, res) => {
     await RoomService.DeleteUtilities(req, res);
   }),
-  GetAllRoom: catchAsyncErrors(async(req, res, next)=>{
-    await RoomService.getAllRoom(req, res, next);
+  ViewListEquipment: catchAsyncErrors(async (req, res) => {
+    await RoomService.ViewListEquipment(req, res);
   }),
 
+  GetAllRoom: catchAsyncErrors(async (req, res, next) => {
+    await RoomService.getAllRoom(req, res, next);
+  }),
   addRoom: catchAsyncErrors(async(req, res, next)=>{
     await RoomService.addRoom(req, res, next)
   }),
@@ -35,6 +38,7 @@ const AuthController = {
   }),
   getRoomEquipment: catchAsyncErrors(async(req, res, next)=>{
     await RoomService.getRoomEquipment(req, res, next)
+
   }),
   ChangeRoomStatus: catchAsyncErrors(async (req, res) => {
     await RoomService.ChangeRoomStatus(req, res);
@@ -44,4 +48,4 @@ const AuthController = {
   }),
 };
 
-export default AuthController;
+export default RoomController;
