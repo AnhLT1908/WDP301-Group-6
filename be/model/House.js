@@ -22,6 +22,7 @@ const HouseSchema = new mongoose.Schema(
     },
     status: {
       type: String,
+      enum: ["available", "full"],
       required: true,
     },
     location: [
