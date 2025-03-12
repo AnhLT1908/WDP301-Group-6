@@ -60,6 +60,8 @@ const HouseSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+
+    //?
     priceList: [
       {
         type: priceItemSchema,
