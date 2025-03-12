@@ -3,21 +3,53 @@ import House from '../model/House.js';
 import Room from '../model/Room.js';
 import mongoose from "mongoose";
 import getCurrentUser from '../utils/getCurrentUser.js';
+import Account from '../model/Account.js';
 
-export const addHouse = async (req, res, next) => { // Thêm next ở đây
+export const addHouse = async (req, res, next) => { 
     try {
-        const { name,status, location, electricPrice, waterPrice, servicePrice, rules } = req.body;
+        const { name, status, location, electricPrice, waterPrice, servicePrice, rules, hostId } = req.body;
         
         if (!servicePrice) {
-            return next(new ErrorHandler("Thiếu servicePrice", 400)); // ✅ Dùng next()
+            return res.status(400).json({
+                success: false,
+                message: "Thiếu servicePrice!",
+            }); 
         }
 
         const defaultPriceWater = await DefaultPrice.findOne({ name: "Tiền nước theo khối" });
         if (!defaultPriceWater) {
-            return next(new ErrorHandler("Không tìm thấy giá tiền nước", 400));
+            return res.status(400).json({
+                success: false,
+                message: "Không tìm thấy giá tiền nước!",
+            });
         }
 
-        const hostId = getCurrentUser(req);
+        const adminId = getCurrentUser(req);
+        if (!adminId) {
+            return res.status(401).json({
+                success: false,
+                message: "Không tìm thấy thông tin người dùng!",
+            });
+        }
+
+        // Kiểm tra role của Admin (chỉ Admin mới có quyền tạo nhà)
+        const adminUser = await Account.findById(adminId);
+        if (!adminUser || adminUser.accountType !== "Admin") {
+            return res.status(403).json({
+                success: false,
+                message: "Bạn không có quyền tạo nhà!",
+            });
+        }
+
+        // Kiểm tra nếu hostId có phải là Manager không
+        const hostUser = await Account.findById(hostId);
+        if (!hostUser || hostUser.accountType !== "Manager") {
+            return res.status(400).json({
+                success: false,
+                message: "hostId phải là một tài khoản có role Manager!",
+            });
+        }
+
         const house = new House({
             name,
             location,
