@@ -6,7 +6,6 @@ import getCurrentUser from "../utils/getCurrentUser.js";
 import ErrorHandler from "../middleware/ErrorHandler.js";
 
 export const addHouse = async (req, res, next) => {
-  // Thêm next ở đây
   try {
     const {
       name,
@@ -15,36 +14,48 @@ export const addHouse = async (req, res, next) => {
       electricPrice,
       waterPrice,
       servicePrice,
-      rules,
+      rules = null,
+      numberOfRoom,
+      numberOfMember = 0,
+      priceList = [],
+      utilities = [],
+      deleted = false,
+      deleteAt = null,
     } = req.body;
 
     if (!servicePrice) {
-      return next(new ErrorHandler("Thiếu servicePrice", 400)); // ✅ Dùng next()
+      return next(new ErrorHandler("Thiếu servicePrice", 400));
     }
 
-    const defaultPriceWater = await DefaultPrice.findOne({
-      name: "Tiền nước theo khối",
-    });
-    if (!defaultPriceWater) {
-      return next(new ErrorHandler("Không tìm thấy giá tiền nước", 400));
-    }
+    // const defaultPriceWater = await DefaultPrice.findOne({
+    //   name: "Tiền nước theo khối",
+    // });
+    // if (!defaultPriceWater) {
+    //   return next(new ErrorHandler("Không tìm thấy giá tiền nước", 400));
+    // }
 
     const hostId = getCurrentUser(req);
     const house = new House({
       name,
-      location,
       status,
+      location,
       electricPrice,
       waterPrice,
       servicePrice,
       rules,
+      numberOfRoom,
+      numberOfMember,
+      priceList,
+      utilities,
+      deleted,
+      deleteAt,
       hostId,
     });
 
     await house.save();
     res.status(201).json({ success: true, data: house });
   } catch (error) {
-    next(error); // Đẩy lỗi vào middleware
+    next(error);
   }
 };
 
@@ -167,7 +178,7 @@ export const getAll = async (req, res, next) => {
     res.status(200).json({
       success: true,
       count: houses.length,
-      data: houses,
+      houses,
     });
   } catch (error) {
     next(error);
@@ -195,12 +206,10 @@ export const updateFee = async (req, res, next) => {
     const { electricPrice, waterPrice, servicePrice } = req.body;
 
     if (electricPrice < 0 || waterPrice < 0 || servicePrice < 0) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Fees must be greater than or equal to 0",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Fees must be greater than or equal to 0",
+      });
     }
     const updatedHouse = await House.findByIdAndUpdate(
       houseId,
