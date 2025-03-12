@@ -4,7 +4,8 @@ import Account from "../model/Account.js";
 import Notification from "../model/Notification.js";
 import Room from "../model/Room.js";
 import getCurrentUser from "../utils/getCurrentUser.js";
-import config2 from "../utils/configPayment.js";
+import config2 from "../utils/configPayment.js"
+
 
 const generateTransactionId = () => {
   return crypto.randomBytes(4).toString("hex").substring(0, 7);
@@ -24,70 +25,151 @@ const generateVietQR = (amount, courseName) => {
   return { qrUrl, transactionId };
 };
 
-export const getAllBill = async (req, res, next) => {
+
+export const getAllBill = async(req, res, next) =>{
   try {
-    const allBill = Bills.find();
+    const allBill = await Bills.find();
     res.status(200).json({
       success: true,
       count: allBill.length,
-      data: allBill,
-    });
+      data: allBill
+    })
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
-export const viewBillDetails = async (req, res, next) => {
+}
+
+//get bill detail by id
+export const getOneBill = async(req, res, next) => {
   try {
     const { billId } = req.params;
-    const billDetail = await Bills.findById(billId);
-    if (!billDetail) {
-      res.status(404).json({
-        message: "Bill don't exist",
-        error: error.message,
-      });
-    }
-    return res.status(200).json({
+    const oneBill = await Bills.findById(billId);
+    res.status(200).json({
       success: true,
-      data: billDetail,
-    });
+      data: oneBill
+    })
   } catch (error) {
-    next(error);
+    next(error)
+  }
+}
+
+export const addBillinRoom = async(req, res, next) => {
+  try {
+      const { roomId } = req.params;
+      const room = await Room.findById(roomId).populate({
+          path: "houseId",
+          populate: { path: "priceList", populate: "base" },
+      });
+
+      if (!room) {
+          return res.status(404).json({ message: "Không tìm thấy phòng." });
+      }
+
+      if (!room.houseId) {
+          return res.status(400).json({ message: `Phòng ${room.name} không có houseId!` });
+      }
+
+      if (room.members.length === 0) {
+          return res.status(400).json({ message: `Phòng ${room.name} chưa có người ở, không thể tạo hóa đơn!` });
+      }
+
+      const { priceList, note, debt, paymentMethod } = req.body;
+
+      if (!Array.isArray(priceList)) {
+          throw new Error("priceList phải là một mảng!");
+      }
+
+      let priceListForBill = priceList.map(item => {
+          if (item.startUnit > item.endUnit) {
+              throw new Error("Chỉ số đầu không thể lớn hơn chỉ số cuối");
+          }
+          return {
+              base: item.base?._id,
+              unitPrice: item.unitPrice,
+              startUnit: item.startUnit,
+              endUnit: item.endUnit,
+              totalUnit: item.base.unit === "đồng/tháng" 
+                  ? item.unitPrice 
+                  : (item.endUnit - item.startUnit) * item.unitPrice,
+          };
+      });
+
+      const totalUnits = priceListForBill.reduce((total, item) => total + item.totalUnit, 0);
+      const totalAmount = room.roomPrice + totalUnits;
+      console.log("Tổng số tiền:", totalAmount);
+
+      const { qrUrl, transactionId } = generateVietQR(totalAmount, "Thanh toán tiền phòng " + room.name);
+
+      const bill = new Bills({
+          roomId,
+          roomPrice: room.roomPrice,
+          priceList: priceListForBill,
+          total: totalAmount,
+          note,
+          houseId: room.houseId._id,  // ✅ Đã kiểm tra trước đó
+          paymentLink: qrUrl,
+          transactionId,
+          isPaid: false,
+          debt,  
+          paymentMethod,
+      });
+
+      await bill.save();
+
+      const roomAccount = await Account.findOne({ roomId: roomId });
+      await Notification.create({
+          sender: getCurrentUser(req),
+          recipients: [{ user: roomAccount?.id, isRead: false }],
+          message: "Một hoá đơn phòng " + room.name + " đã được tạo",
+          type: "bill",
+      });
+
+      res.status(201).json({ bill, qrUrl, transactionId });
+
+  } catch (error) {
+      next(error);
   }
 };
 
-export const addBillinRoom = async (req, res, next) => {
-  try {
-    const { roomId } = req.params;
-    const room = await Room.findById(roomId).populate({
-      path: "houseId",
-      populate: { path: "priceList", populate: "base" },
-    });
+export const confirmBill = async(req, res, next) =>{
+    try {
+        const { billId } = req.params;
+        const { paymentMethod } = req.body;
+        const bill = await Bills.findById(billId);
+        if (!bill) {
+            return res.status(404).json({ message: "Không tìm thấy hóa đơn!" });
+        }
+        if (bill.isPaid) {
+          return { message: "Bill đã thanh toán rồi !!" };
+        }
+  
+        bill.isPaid = true;
+        bill.paymentMethod = paymentMethod;
+  
+        await bill.save();
+  
 
-    if (!room) {
-      return res.status(404).json({ message: "Không tìm thấy phòng." });
-    }
+        const roomAccount = await Bills.findOne({ roomId: bill.roomId });
+        
+        if (!roomAccount) {
+            throw new Error("Không tìm thấy tài khoản phòng!");
+        }
 
-    if (!room.houseId) {
-      return res
-        .status(400)
-        .json({ message: `Phòng ${room.name} không có houseId!` });
-    }
+        const room = await Room.findById(bill.roomId);
+        if (!room) {
+            throw new Error("Không tìm thấy thông tin phòng!");
+        }
 
-    if (room.members.length === 0) {
-      return res.status(400).json({
-        message: `Phòng ${room.name} chưa có người ở, không thể tạo hóa đơn!`,
-      });
-    }
-
-    const { priceList, note, debt, paymentMethod } = req.body;
-
-    if (!Array.isArray(priceList)) {
-      throw new Error("priceList phải là một mảng!");
-    }
-
-    let priceListForBill = priceList.map((item) => {
-      if (item.startUnit > item.endUnit) {
-        throw new Error("Chỉ số đầu không thể lớn hơn chỉ số cuối");
+        await Notification.create({
+                sender: getCurrentUser(req),
+                recipients: [{ user: roomAccount.id, isRead: false }],
+                message: `Hóa đơn của phòng ${room.name} đã được thanh toán bằng ${paymentMethod === "Cash" ? "Tiền mặt" : "Chuyển khoản"}.`,
+                type: "bill",
+            });
+  
+            res.json(bill);
+      } catch (error) {
+        next(error)
       }
       return {
         base: item.base?._id,
