@@ -14,10 +14,10 @@ AccountRouter.get(
 
 AccountRouter.post(
   "/create",
+  protect,
   validateData(accountValidate.validateAccount),
   /*Token Manager*/ AccountController.CreateAccount
 );
-
 
 AccountRouter.put("/change-status", protect, AccountController.ChangeStatus);
 
