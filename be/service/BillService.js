@@ -7,8 +7,9 @@ import getCurrentUser from "../utils/getCurrentUser.js";
 import config2 from "../utils/configPayment.js"
 
 const generateTransactionId = () => {
-  return crypto.randomBytes(4).toString("hex").substring(0, 7);
+    return crypto.randomBytes(4).toString('hex').substring(0, 7);
 };
+  
 
 // Hàm tạo URL QR code
 const generateVietQR = (amount, courseName) => {
@@ -52,6 +53,7 @@ export const getOneBill = async(req, res, next) => {
     next(error)
   }
 }
+
 export const addBillinRoom = async(req, res, next) => {
   try {
       const { roomId } = req.params;
@@ -171,3 +173,4 @@ export const confirmBill = async(req, res, next) =>{
         next(error)
       }
 }
+

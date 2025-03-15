@@ -24,21 +24,10 @@ const HouseSchema = new mongoose.Schema(
       enum: ["available", "full"],
       required: true,
     },
-    location: [
-      {
-        detailLocation: {
-          type: String,
-          default: "",
-        },
-        srcMap: {
-          type: String,
-          default: "",
-        },
-      },
-    ],
-    rules: {
-      type: String,
-      default: null,
+    location:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref:'Location',
+        default: null
     },
     numberOfRoom: {
       type: Number,

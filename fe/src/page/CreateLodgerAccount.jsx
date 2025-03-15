@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const CreateLodgerAccount = () => {
+const CreateLodgerAccount = ({accountType}) => {
   // Initial state to use for resetting the form
   const initialFormData = {
     firstName: "",
@@ -29,17 +29,22 @@ const CreateLodgerAccount = () => {
   // Fetch room data when component mounts
   useEffect(() => {
     fetchRooms();
-    console.log("Get token: ", token);
-  }, []);
-
+    if (accountType !== "Lodger") {
+      setError("You do not have permission to create a lodger account.");
+    }
+  }, [accountType]);
+  
 
   // Function to fetch rooms from API
   const fetchRooms = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:5000/api/v1/room");
-
-      // Simplified and robust room data extraction
+      const token = localStorage.getItem("token"); // Assuming token is stored
+      const response = await axios.get("http://localhost:5000/api/v1/room", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      // Check the structure of the response and extract the array
       let roomsData = [];
       if (response.data) {
         if (Array.isArray(response.data)) {
@@ -65,6 +70,7 @@ const CreateLodgerAccount = () => {
     }
   };
 
+
   const handleAvatarChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -82,6 +88,10 @@ const CreateLodgerAccount = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (accountType !== "Lodger") {
+      setError("You do not have permission to create a lodger account.");
+      return;
+    }
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -95,6 +105,7 @@ const CreateLodgerAccount = () => {
 
     try {
       // Prepare data in the format expected by the API
+      const token = localStorage.getItem("token");      
       const requestData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -110,41 +121,16 @@ const CreateLodgerAccount = () => {
         status: isActive,
         accountType: "Lodger",
       };
-
-      // If avatar handling is required, use FormData approach
-      if (avatar) {
-        const formDataWithFile = new FormData();
-        formDataWithFile.append("avatar", avatar);
-
-        // Append other form data
-        Object.entries(requestData).forEach(([key, value]) => {
-          formDataWithFile.append(key, value);
-        });
-
-        await axios.post(
-          "http://localhost:5000/api/v1/account/create",
-          formDataWithFile,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-      } else {
-        // JSON approach without file
-        await axios.post(
-          "http://localhost:5000/api/v1/account/create",
-          requestData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-      }
-
+      console.log("Sending data:", requestData);
+  
+      await axios.post(
+        "http://localhost:5000/api/v1/account/create",
+        requestData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+  
       setSuccess("Account created successfully!");
       handleDiscard();
     } catch (err) {
@@ -303,8 +289,8 @@ const CreateLodgerAccount = () => {
                       rooms.map((room) => (
                         <option
                           key={room._id || room.id || Math.random().toString()}
-                          value={room.name}
-                          disabled={room.status === "Full"}
+                          value={room._id}
+                          disabled={room.status === "full"}
                         >
                           {room.name} ({room.status})
                         </option>

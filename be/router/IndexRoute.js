@@ -7,7 +7,6 @@ import NewRouter from './NewRoute.js';
 import ProblemRouter from './ProblemRouter.js';
 import BillRouter from './BillRouter.js';
 import StatisticRouter from './StatisticsRoute.js';
-
 const indexRouter = express.Router();
 
 indexRouter.use("/account", AccountRouter);

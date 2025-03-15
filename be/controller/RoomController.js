@@ -44,7 +44,6 @@ const RoomController = {
   updateRoomDetails: catchAsyncErrors(async (req, res) => {
     await RoomService.updateRoomDetails(req, res);
   }),
-
 };
 
 export default RoomController;

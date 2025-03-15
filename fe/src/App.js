@@ -68,7 +68,7 @@ function App() {
               path="/create-lodger-account"
               element={
                 <ManagerLayout>
-                  <CreateLodgerAccount />
+                  <CreateLodgerAccount accountType={accountType}/>
                 </ManagerLayout>
               }
             />

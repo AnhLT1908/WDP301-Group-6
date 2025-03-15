@@ -2,6 +2,7 @@ import Account from '../model/Account.js';
 import bcrypt from 'bcrypt';
 import Room from '../model/Room.js';
 import getCurrentUser from '../utils/getCurrentUser.js';
+import mongoose from 'mongoose';
 
 export const GetAll = async (req, res) => {
     try {
@@ -104,12 +105,12 @@ export const CreateAccount = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const roomData = await Room.findOne({ name: room });
+        const roomData = await Room.findById(room);
         if (!roomData) {
             return res.status(404).json({ message: "Phòng không tồn tại" });
         }
 
-        if (roomData.members && roomData.members.length >= roomData.quantityMember) {
+        if (roomData.members?.length >= roomData.quantityMember) {
             return res.status(400).json({ message: "Phòng đã đầy" });
         }
 
@@ -135,13 +136,14 @@ export const CreateAccount = async (req, res) => {
                 $push: { 
                     members: {
                         accountId: accountData._id,
-                        joinDate: rentalDate
+                        joinDate: rentalDate ? new Date(rentalDate) : new Date()
                     }
                 },
                 $set: { 
-                    status: roomData.members.length + 1 >= roomData.quantityMember ? "Full" : "Available" 
+                    status: roomData.members.length + 1 >= roomData.quantityMember ? "full" : "available"
                 }
-            }
+            },
+            { new: true, runValidators: true }
         );
 
         return res.status(201).json({
@@ -168,27 +170,24 @@ export const UpdateProfile = async (req, res) => {
     try {
         const accountId = getCurrentUser(req);
         const account = await Account.findById(accountId);
-        console.log(accountId);
         
         if (!account) {
             return res.status(404).json({ message: "Account không tìm thấy" });
         }
 
         const { 
-            name, 
+            firstName,
+            lastName, 
             phone, 
             avatar, 
-            // payosClientId, 
-            // payosAPIKey, 
-            // payosCheckSum 
         } = req.body;
-        const updatedAccount = await Account.findByIdAndUpdate(accountId, {
-            name,
+        const updatedAccount = await Account.findByIdAndUpdate
+        (
+            accountId, {
+            firstName,
+            lastName,
             phone,
             avatar,
-            // payosClientId,
-            // payosAPIKey,
-            // payosCheckSum,
         }, { new: true });
 
         const { password, _id, refreshToken, passwordResetCode, imageStores, ...other } = updatedAccount._doc;
@@ -210,7 +209,7 @@ export const ChangePassword = async (req, res) => {
         const { oldPassword, newPassword } = req.body;
         const account = await Account.findById(accountId);
         if (!account) {
-            res.status(200).json({
+            res.status(404).json({
                 success: false,
                 message: "Tài khoản không tồn tại !",
             });
@@ -293,7 +292,7 @@ export const getListLodger = async(req,res,next)=>{
             .limit(limitPerPage)
             .sort({ createdAt: -1 })
             .select("-password -refreshToken -passwordResetCode") // Ẩn thông tin nhạy cảm
-            .exec();
+            .lean()
 
         const totalPages = Math.ceil(totalLodger / limitPerPage);
 

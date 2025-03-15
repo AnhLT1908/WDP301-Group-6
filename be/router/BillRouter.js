@@ -12,7 +12,8 @@ BillRouter.get('/', BillController.getAllBill);
 
 BillRouter.get('/bill-detail/:billId', BillController.getOneBill);
 
+// BillRouter.get("/view-bill-details/:billId", BillController.viewBillDetails);
 
-//BillRouter.get("/view-bill-details/:billId", BillController.viewBillDetails);
 
 export default BillRouter;
+
