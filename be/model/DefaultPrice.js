@@ -9,6 +9,11 @@ const DefaultPriceSchema = new mongoose.Schema({
         type: String,
         enum: ["đồng/tháng", "đồng/quý", "đồng/kWh", "đồng/khối", "đồng/người"],
         default: ""
+    },
+    price: {
+        type: Number,
+        required: true, 
+        min: [0, "Price cannot be negative"]
     }
 })
 
