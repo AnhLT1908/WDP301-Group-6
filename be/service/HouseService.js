@@ -7,7 +7,7 @@ import Account from '../model/Account.js';
 
 export const addHouse = async (req, res, next) => { 
     try {
-        const { name, status, location, electricPrice, waterPrice, servicePrice, rules, hostId } = req.body;
+        const { name, status, location, electricPrice, waterPrice, servicePrice, internetPrice, rules, hostId } = req.body;
         
         if (!electricPrice || !waterPrice || !servicePrice) {
             return res.status(400).json({
@@ -44,11 +44,17 @@ export const addHouse = async (req, res, next) => {
         const house = new House({
             name,
             status,
-            location,
+            location: {
+                district: location?.district || "",
+                ward: location?.ward || "",
+                province: location?.province || "",
+                detailLocation: location?.detailLocation || ""
+            },
             DefaultPrice: [{
                 electricPrice,
                 waterPrice,
-                servicePrice
+                servicePrice,
+                internetPrice
             }],
             rules,
             hostId,

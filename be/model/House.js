@@ -11,11 +11,24 @@ import mongoose, { Schema } from "mongoose";
         enum: ["available", "full"],
         required: true,
       },
-      location:{
-          type: mongoose.Schema.Types.ObjectId,
-          ref:'Location',
-          default: null
-      },
+      location: {
+        district: {
+            type: String,
+            default: ""
+        },
+        ward: {
+            type: String,
+            default: ""
+        },
+        province: {
+            type: String,
+            default: ""
+        },
+        detailLocation: {
+            type: String,
+            default: ""
+        }
+    },
       numberOfRoom: {
         type: Number,
         default: 0,
