@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const CreateLodgerAccount = () => {
+const CreateLodgerAccount = ({accountType}) => {
   // Initial state to use for resetting the form
   const initialFormData = {
     firstName: "",
@@ -28,13 +28,19 @@ const CreateLodgerAccount = () => {
   // Fetch room data when component mounts
   useEffect(() => {
     fetchRooms();
-  }, []);
-
+    if (accountType !== "Lodger") {
+      setError("You do not have permission to create a lodger account.");
+    }
+  }, [accountType]);
+  
   // Function to fetch rooms from API
   const fetchRooms = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:5000/api/v1/room");
+      const token = localStorage.getItem("token"); // Assuming token is stored
+      const response = await axios.get("http://localhost:5000/api/v1/room", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       
       // Check the structure of the response and extract the array
       let roomsData = [];
@@ -56,6 +62,7 @@ const CreateLodgerAccount = () => {
     }
   };
 
+
   const handleAvatarChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -73,12 +80,17 @@ const CreateLodgerAccount = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (accountType !== "Lodger") {
+      setError("You do not have permission to create a lodger account.");
+      return;
+    }
     setLoading(true);
     setError(null);
     setSuccess(null);
   
     try {
       // Prepare data in the format expected by the API
+      const token = localStorage.getItem("token");      
       const requestData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -99,7 +111,10 @@ const CreateLodgerAccount = () => {
   
       await axios.post(
         "http://localhost:5000/api/v1/account/create",
-        requestData
+        requestData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
   
       setSuccess("Account created successfully!");
@@ -254,8 +269,8 @@ const CreateLodgerAccount = () => {
                       rooms.map((room) => (
                         <option 
                           key={room._id || room.id || Math.random().toString()}
-                          value={room.name}
-                          disabled={room.status === "Full"}
+                          value={room._id}
+                          disabled={room.status === "full"}
                         >
                           {room.name} ({room.status})
                         </option>
