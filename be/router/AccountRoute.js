@@ -19,7 +19,6 @@ AccountRouter.post(
   /*Token Manager*/ AccountController.CreateAccount
 );
 
-
 AccountRouter.put("/change-status", protect, AccountController.ChangeStatus);
 
 //AccountRouter.get("/manager", protect, AccountController.getManagerAccounts);

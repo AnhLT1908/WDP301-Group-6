@@ -23,6 +23,7 @@ import LodgerAccountList from "./page/LodgerAccountList.jsx";
 import ManagerLayout from "./components/layout/ManagerLayout.jsx";
 import CreateLodgerAccount from "./page/CreateLodgerAccount.jsx";
 import HouseList from "./page/HouseList.jsx";
+import RoomDetail from "./page/RoomDetail.jsx";
 //import NotFound from "./page/NotFound.jsx";
 
 function Dashboard() {
@@ -76,6 +77,14 @@ function App() {
               element={
                 <ManagerLayout>
                   <HouseList />
+                </ManagerLayout>
+              }
+            />
+            <Route
+              path="/room-detail"
+              element={
+                <ManagerLayout>
+                  <RoomDetail />
                 </ManagerLayout>
               }
             />
