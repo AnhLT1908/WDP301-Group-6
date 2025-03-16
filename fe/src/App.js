@@ -24,6 +24,8 @@ import ManagerLayout from "./components/layout/ManagerLayout.jsx";
 import CreateLodgerAccount from "./page/CreateLodgerAccount.jsx";
 import HouseList from "./page/HouseList.jsx";
 import RoomDetail from "./page/RoomDetail.jsx";
+import NewInvoice from "./page/NewInvoice.jsx";
+import RoomList from "./page/RoomList.jsx";
 //import NotFound from "./page/NotFound.jsx";
 
 function Dashboard() {
@@ -155,6 +157,22 @@ function App() {
             element={
               <DashboardLayout>
                 <InvoiceDetail />
+              </DashboardLayout>
+            }
+          />
+          <Route 
+            path = "/manager/invoice/new-invoice"
+            element = {
+              <DashboardLayout>
+                <NewInvoice/>
+              </DashboardLayout>
+            }
+            />
+          <Route
+            path = "manager/room/rooms-list"
+            element = {
+              <DashboardLayout>
+                <RoomList />
               </DashboardLayout>
             }
           />

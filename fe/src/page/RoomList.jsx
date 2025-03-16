@@ -26,7 +26,7 @@ export default function RoomList() {
 
   return (
     <section className="p-8 w-full">
-      <h2 className="text-yellow-500 text-2xl font-bold mb-4">Manager List</h2>
+      <h2 className="text-yellow-500 text-2xl font-bold mb-4">Room List</h2>
       <h3 className="text-yellow-400 text-xl font-bold mb-4">List</h3>
       <div className="bg-white p-4 rounded-lg shadow">
         {loading ? (
@@ -35,11 +35,11 @@ export default function RoomList() {
           <table className="w-full text-left">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>User Name</th>
-                <th>Email</th>
-                <th>Phone Number</th>
-                <th>Room</th>
+                <th>Room Name</th>
+                <th>Floor</th>
+                <th>Room Type</th>
+                <th>Quantity Member</th>
+                <th>Price</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -47,12 +47,12 @@ export default function RoomList() {
               {rooms.map((room, index) => (
                 <tr key={index} className="border-t">
                   <td>{room.name}</td>
-                  <td>{room.username}</td>
-                  <td>{room.email}</td>
-                  <td>{room.phone}</td>
-                  <td>{room.roomID}</td>
+                  <td>{room.floor}</td>
+                  <td>{room.roomType}</td>
+                  <td>{room.quantityMember}</td>
+                  <td>{room.roomPrice}</td>
                   <td className={room.status ? "text-green-500" : "text-red-500"}>
-                    {room.status ? "Active" : "Inactive"}
+                    {room.status ? "Available" : "Empty"}
                   </td>
                 </tr>
               ))}
