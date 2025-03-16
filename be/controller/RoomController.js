@@ -35,8 +35,8 @@ const RoomController = {
   getRoomService: catchAsyncErrors(async(req, res, next)=>{
     await RoomService.getRoomServices(req, res, next)
   }),
-  getRoomEquipment: catchAsyncErrors(async(req, res, next)=>{
-    await RoomService.getRoomEquipment(req, res, next)
+  getRoomEquipment: catchAsyncErrors(async (req, res, next) => {
+    await RoomService.getRoomEquipment(req, res, next);
   }),
   ChangeRoomStatus: catchAsyncErrors(async (req, res) => {
     await RoomService.ChangeRoomStatus(req, res);
