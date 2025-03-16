@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function NewInvoice({ roomId }) {
   const [invoice, setInvoice] = useState({
@@ -15,10 +16,19 @@ export default function NewInvoice({ roomId }) {
   });
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/v1/bill/room/${roomId}`)
-      .then((res) => res.json())
-      .then((data) => setInvoice(data))
-      .catch((err) => console.error("Error fetching invoice:", err));
+    const fetchData = async () => {
+      try {
+          const res = await axios.post(`http://localhost:5000/api/v1/bill/room/${roomId}`);
+          setInvoice(res.data.data);
+      }catch (error) {
+        console.error("Error fetching house data:", error)
+      }
+    }
+
+    // fetch(`http://localhost:5000/api/v1/bill/room/${roomId}`)
+    //   .then((res) => res.json())
+    //   .then((data) => setInvoice(data))
+    //   .catch((err) => console.error("Error fetching invoice:", err));
   }, [roomId]);
 
   return (
