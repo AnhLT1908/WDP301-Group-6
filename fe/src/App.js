@@ -145,7 +145,7 @@ function App() {
             }
           />
           <Route
-            path = "/manager/house-detail/:houseId"
+            path = "/manager/house-detail"
             element={
               <DashboardLayout>
                 <HouseDetail />
@@ -173,6 +173,15 @@ function App() {
             element = {
               <DashboardLayout>
                 <RoomList />
+              </DashboardLayout>
+            }
+          />
+
+          <Route
+            path = "manager/room/room-detail/:roomId"
+            element = {
+              <DashboardLayout>
+                <RoomDetail />
               </DashboardLayout>
             }
           />
