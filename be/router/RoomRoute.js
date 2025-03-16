@@ -12,7 +12,7 @@ RoomRouter.delete("/delete-room-equipment/:roomId/:utilityId", RoomController.De
 
 RoomRouter.get("/", RoomController.GetAllRoom);
 RoomRouter.post("/addRoom", protect, RoomController.addRoom);
-RoomRouter.get("/:roomId", protect, RoomController.getOne);
+RoomRouter.get("/:roomId", RoomController.getOne);
 RoomRouter.get("/member/:houseId", protect, RoomController.GetLodgerMemberOfHouse);
 RoomRouter.get("/manager/:houseId", protect, RoomController.GetMemberManagerOfHouse);
 RoomRouter.post("/:roomId/member", protect, RoomController.addMember);
