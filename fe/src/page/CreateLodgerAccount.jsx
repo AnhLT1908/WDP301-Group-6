@@ -35,7 +35,7 @@ const CreateLodgerAccount = () => {
     try {
       setLoading(true);
       const response = await axios.get("http://localhost:5000/api/v1/room");
-      
+      console.log("response", response.data)
       // Check the structure of the response and extract the array
       let roomsData = [];
       if (response.data && Array.isArray(response.data)) {
