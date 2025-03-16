@@ -13,13 +13,26 @@ export const GetAll = async (req, res) => {
 
     const { houseId } = req.params;
 
-    const rooms = await Room.find({ houseId });
+    const rooms = await Room.find({ house: houseId });
+    console.log("Rooms of house: ", rooms);
+
+    if (rooms.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No rooms found for the given house." });
+    }
+
     const totalAccounts = await Account.countDocuments({
       roomId: { $in: rooms.map((room) => room._id) },
     });
+
     const data = await Account.find({
       roomId: { $in: rooms.map((room) => room._id) },
     })
+      .populate({
+        path: "roomId",
+        //select: "name capacity price",
+      })
       .skip(skip)
       .limit(limitPerPage)
       .sort({ createdAt: -1 })
@@ -27,18 +40,19 @@ export const GetAll = async (req, res) => {
 
     const totalPages = Math.ceil(totalAccounts / limitPerPage);
 
-    return res.status(201).json({
+    return res.status(200).json({
       pagination: {
         currentPage: pageNumber,
         totalPages: totalPages,
         totalAccounts: totalAccounts,
         accountsPerPage: data.length,
       },
-      data: data,
+      memberOfHouse: data,
     });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({
-      message: "Lỗi Server Error",
+      message: "Server Error",
     });
   }
 };
@@ -369,7 +383,6 @@ export const ChangeStatus = async (req, res, next) => {
     next(error);
   }
 };
-
 
 export const getListLodger = async (req, res, next) => {
   try {
