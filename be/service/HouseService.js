@@ -24,7 +24,6 @@ export const addHouse = async (req, res, next) => {
                 message: "Không tìm thấy thông tin người dùng!",
             });
         }
-
         const adminUser = await Account.findById(adminId);
         if (!adminUser || adminUser.accountType !== "Admin") {
             return res.status(403).json({
@@ -48,7 +47,8 @@ export const addHouse = async (req, res, next) => {
                 district: location?.district || "",
                 ward: location?.ward || "",
                 province: location?.province || "",
-                detailLocation: location?.detailLocation || ""
+                detailLocation: location?.detailLocation || "",
+                srcMap: location?.srcMap || ""
             },
             DefaultPrice: [{
                 electricPrice,

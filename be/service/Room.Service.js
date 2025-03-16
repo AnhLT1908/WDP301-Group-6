@@ -496,7 +496,6 @@ export const updateRoomDetails = async (req, res) => {
   }
 };
 
-
 export const GetRoomByHouseId = async(req, res) =>{
   try {
     const { houseId } = req.params;

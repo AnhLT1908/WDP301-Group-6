@@ -105,7 +105,6 @@ const RoomSchema = new Schema({
         default: null
     }
 }, {
-  timestamps: true
+    timestamps: true
 });
-
 export default mongoose.model('Room', RoomSchema);

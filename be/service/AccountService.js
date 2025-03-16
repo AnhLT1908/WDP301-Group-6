@@ -116,7 +116,6 @@ export const CreateLodgerAccount = async (req, res) => {
     const checkEmailExists = await Account.findOne({ email: email });
     if (checkEmailExists !== null)
       return res.status(400).json({ message: "Email đã tồn tại" });
-
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -370,6 +369,7 @@ export const ChangeStatus = async (req, res, next) => {
     next(error);
   }
 };
+
 
 export const getListLodger = async (req, res, next) => {
   try {

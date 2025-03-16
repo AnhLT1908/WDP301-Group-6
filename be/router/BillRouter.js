@@ -10,3 +10,4 @@ BillRouter.put('/confirm/:billId', protect, BillController.confimBill);
 BillRouter.get('/', BillController.getAllBill);
 
 export default BillRouter;
+
