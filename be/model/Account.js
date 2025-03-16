@@ -45,9 +45,10 @@ const AccountSchema = new mongoose.Schema(
             required: true,
             minlength: [8, "Password must be at least 8 characters"],
         },
-        provider: {
+        accountType: {
             type: String,
-            default: "register",
+            enum: ["Lodger", "Manager", "Admin"],
+            default: "Lodger",
         },
         accountType: {
             type: String,
@@ -74,15 +75,6 @@ const AccountSchema = new mongoose.Schema(
         refreshToken: {
             type: String,
             default: null,
-        },
-        payosClientId: {
-            type: String,
-        },
-        payosAPIKey: {
-            type: String,
-        },
-        payosCheckSum: {
-            type: String,
         },
         passwordResetCode: {
             type: mongoose.Schema.Types.ObjectId,

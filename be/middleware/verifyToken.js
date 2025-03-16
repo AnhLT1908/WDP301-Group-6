@@ -16,6 +16,7 @@ const getAccountFromToken = async (token, next) => {
         
         return account;
     } catch (error) {
+        console.log("Error token: ", error)
         return next(new ErrorHandler('Token không hợp lệ hoặc đã hết hạn!', 401));
     }
 };
@@ -32,8 +33,15 @@ export const protect = catchAsyncErrors(async (req, res, next) => {
 
     // Giải mã token
     
+
     const account = await getAccountFromToken(token, next);
     if (!account) {
+        return next(new ErrorHandler('Không tìm thấy người dùng với token này!', 404));
+    }
+    req.user = account;
+
+    req.user = await getAccountFromToken(token, next);
+    if (!req.user) {
         return next(new ErrorHandler('Không tìm thấy người dùng với token này!', 404));
     }
     req.user = account;

@@ -1,128 +1,154 @@
-import DefaultPrice from "../model/DefaultPrice.js";
-import House from "../model/House.js";
-import Room from "../model/Room.js";
+import DefaultPrice from '../model/DefaultPrice.js';
+import House from '../model/House.js';
+import Room from '../model/Room.js';
 import mongoose from "mongoose";
-import getCurrentUser from "../utils/getCurrentUser.js";
-import ErrorHandler from "../middleware/ErrorHandler.js";
+import getCurrentUser from '../utils/getCurrentUser.js';
+import Account from '../model/Account.js';
 
-export const addHouse = async (req, res, next) => {
-  // Thêm next ở đây
-  try {
-    const {
-      name,
-      status,
-      location,
-      electricPrice,
-      waterPrice,
-      servicePrice,
-      rules,
-    } = req.body;
+export const addHouse = async (req, res, next) => { 
+    try {
+        const { name, status, location, electricPrice, waterPrice, servicePrice, internetPrice, rules, hostId } = req.body;
+        
+        if (!electricPrice || !waterPrice || !servicePrice) {
+            return res.status(400).json({
+                success: false,
+                message: "Thiếu electricPrice, waterPrice hoặc servicePrice!",
+            }); 
+        }
 
-    if (!servicePrice) {
-      return next(new ErrorHandler("Thiếu servicePrice", 400)); // ✅ Dùng next()
+        const adminId = getCurrentUser(req);
+        
+        if (!adminId) {
+            return res.status(401).json({
+                success: false,
+                message: "Không tìm thấy thông tin người dùng!",
+            });
+        }
+        const adminUser = await Account.findById(adminId);
+        if (!adminUser || adminUser.accountType !== "Admin") {
+            return res.status(403).json({
+                success: false,
+                message: "Bạn không có quyền tạo nhà!",
+            });
+        }
+
+        const hostUser = await Account.findById(hostId);
+        if (!hostUser || hostUser.accountType !== "Manager") {
+            return res.status(400).json({
+                success: false,
+                message: "hostId phải là một tài khoản có role Manager!",
+            });
+        }
+
+        const house = new House({
+            name,
+            status,
+            location: {
+                district: location?.district || "",
+                ward: location?.ward || "",
+                province: location?.province || "",
+                detailLocation: location?.detailLocation || "",
+                srcMap: location?.srcMap || ""
+            },
+            DefaultPrice: [{
+                electricPrice,
+                waterPrice,
+                servicePrice,
+                internetPrice
+            }],
+            rules,
+            hostId,
+        });
+
+        await house.save();
+        res.status(201).json({ success: true, data: house });
+    } catch (error) {
+        next(error);
     }
-
-    const defaultPriceWater = await DefaultPrice.findOne({
-      name: "Tiền nước theo khối",
-    });
-    if (!defaultPriceWater) {
-      return next(new ErrorHandler("Không tìm thấy giá tiền nước", 400));
-    }
-
-    const hostId = getCurrentUser(req);
-    const house = new House({
-      name,
-      location,
-      status,
-      electricPrice,
-      waterPrice,
-      servicePrice,
-      rules,
-      hostId,
-    });
-
-    await house.save();
-    res.status(201).json({ success: true, data: house });
-  } catch (error) {
-    next(error); // Đẩy lỗi vào middleware
-  }
 };
 
 export const updateOne = async (req, res, next) => {
-  try {
-    const { houseId } = req.params;
-    console.log("House ID received:", houseId);
+    try {
+        const { houseId } = req.params;
+        console.log("House ID received:", houseId);
 
-    // Kiểm tra ObjectId hợp lệ
-    if (!mongoose.Types.ObjectId.isValid(houseId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid House ID format",
-      });
+        // Kiểm tra ObjectId hợp lệ
+        if (!mongoose.Types.ObjectId.isValid(houseId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid House ID format",
+            });
+        }
+
+        console.log("Request Body:", req.body);
+
+        // Kiểm tra house có tồn tại không
+        const existingHouse = await House.findById(houseId);
+        if (!existingHouse) {
+            return res.status(404).json({
+                success: false,
+                message: "House not found!",
+            });
+        }
+
+        console.log("House before update:", existingHouse);
+
+        // Cập nhật thông tin
+        const updatedHouse = await House.findByIdAndUpdate(
+            houseId,
+            { ...req.body },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedHouse) {
+            return res.status(500).json({
+                success: false,
+                message: "Update failed!",
+            });
+        }
+
+        console.log("Updated House:", updatedHouse);
+
+        res.status(200).json({
+            success: true,
+            message: "House updated successfully",
+            data: updatedHouse,
+        });
+    } catch (error) {
+        console.error("Update House Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+            error: error.message,
+        });
     }
-
-    console.log("Request Body:", req.body);
-
-    // Kiểm tra house có tồn tại không
-    const existingHouse = await House.findById(houseId);
-    if (!existingHouse) {
-      return res.status(404).json({
-        success: false,
-        message: "House not found!",
-      });
-    }
-
-    console.log("House before update:", existingHouse);
-
-    // Cập nhật thông tin
-    const updatedHouse = await House.findByIdAndUpdate(
-      houseId,
-      { ...req.body },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedHouse) {
-      return res.status(500).json({
-        success: false,
-        message: "Update failed!",
-      });
-    }
-
-    console.log("Updated House:", updatedHouse);
-
-    res.status(200).json({
-      success: true,
-      message: "House updated successfully",
-      data: updatedHouse,
-    });
-  } catch (error) {
-    console.error("Update House Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-      error: error.message,
-    });
-  }
 };
 
 export const getOne = async (req, res) => {
-  try {
-    const { houseId } = req.params;
+    try {
+        const { houseId } = req.params;
 
-    const existHouse = await House.findById(houseId);
-    if (!existHouse) {
-      res.status(404).json({
-        message: "House don't exist",
-        error: error.message,
-      });
+        const existHouse = await House.findById(houseId);
+        if (!existHouse) {
+            return res.status(404).json({
+                success: false,
+                message: "House doesn't exist",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: existHouse,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+            error: error.message,
+        });
     }
-
-    return res.status(200).json({
-      success: true,
-      data: existHouse,
-    });
-  } catch (error) {}
 };
+
 
 export const ChangeHouseStatus = async (req, res, next) => {
   try {
@@ -135,6 +161,7 @@ export const ChangeHouseStatus = async (req, res, next) => {
         success: false,
         message: "Status must be either true or false",
       });
+
     }
 
     const existHouse = await House.findById(houseId);
@@ -167,7 +194,7 @@ export const getAll = async (req, res, next) => {
     res.status(200).json({
       success: true,
       count: houses.length,
-      data: houses,
+      houses,
     });
   } catch (error) {
     next(error);
@@ -190,32 +217,29 @@ export const viewServiceFee = async (req, res, next) => {
 };
 
 export const updateFee = async (req, res, next) => {
-  try {
-    const { houseId } = req.params;
-    const { electricPrice, waterPrice, servicePrice } = req.body;
+    try {
+        const { houseId } = req.params;
+        const { electricPrice, waterPrice, servicePrice } = req.body;
 
-    if (electricPrice < 0 || waterPrice < 0 || servicePrice < 0) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Fees must be greater than or equal to 0",
-        });
+        if ([electricPrice, waterPrice, servicePrice].some(price => price < 0)) {
+            return res.status(400).json({
+                success: false,
+                message: "Fees must be greater than or equal to 0",
+            });
+        }
+
+        const updatedHouse = await House.findByIdAndUpdate(
+            houseId,
+            { electricPrice, waterPrice, servicePrice },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedHouse) {
+            return res.status(404).json({ success: false, message: "House not found" });
+        }
+
+        res.json({ success: true, data: updatedHouse });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
-    const updatedHouse = await House.findByIdAndUpdate(
-      houseId,
-      { electricPrice, waterPrice, servicePrice },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedHouse) {
-      return res
-        .status(404)
-        .json({ success: false, message: "House not found" });
-    }
-
-    res.json({ success: true, data: updatedHouse });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
 };

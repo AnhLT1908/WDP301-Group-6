@@ -10,9 +10,6 @@ const BillController = {
     }),
     getAllBill: catchAsyncErrors(async(req, res, next)=>{
         await BillService.getAllBill(req, res, next)
-    }),
-    viewBillDetails: catchAsyncErrors(async(req,res,next)=>{
-        await BillService.viewBillDetails(req,res,next)
     })
 }
 

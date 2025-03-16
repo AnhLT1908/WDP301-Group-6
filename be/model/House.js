@@ -1,85 +1,89 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
-const priceItemSchema = new Schema({
-
-    //?
-    base: {
-        type: Schema.ObjectId,
-        ref: "DefaultPrice",
-    },
-
-    //?
-    price: {
-        type: Number,
-        required: true
-    }
-})
-
-const HouseSchema = new mongoose.Schema({
+const HouseSchema = new mongoose.Schema(
+  {
     name: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
-    status:{
-        type: String,
-        required: true
+    status: {
+      type: String,
+      enum: ["available", "full"],
+      required: true,
     },
-    location:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref:'Location',
-        default: null
+    location: {
+      district: {
+        type: String,
+        default: "",
+      },
+      ward: {
+        type: String,
+        default: "",
+      },
+      province: {
+        type: String,
+        default: "",
+      },
+      detailLocation: {
+        type: String,
+        default: "",
+      },
+      srcMap: {
+        type: String,
+        default: "",
+      },
     },
     numberOfRoom: {
-        type: Number,
-        default: 0,
+      type: Number,
+      default: 0,
     },
     numberOfMember: {
-        type: Number,
-        default: 0,
+      type: Number,
     },
-    electricPrice: {
-        type: Number,
-        required: true,
-    },
-    waterPrice: {
-        type: Number,
-        required: true,
-    },
-    servicePrice: {
-        type: Number,
-        required: true,
-    },
-
-    //?
-    priceList: [
-        {
-            type: priceItemSchema,
-            default: {},
-            unique: true,
-        }
+    DefaultPrice: [
+      {
+        electricPrice: {
+          type: Number,
+          required: true,
+        },
+        waterPrice: {
+          type: Number,
+          required: true,
+        },
+        servicePrice: {
+          type: Number,
+          required: true,
+        },
+        internetPrice: {
+          type: Number,
+          required: true,
+        },
+      },
     ],
     utilities: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "DefaultUtilities",
-        },
-    ],
-    hostId:{
+      {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Account'
+        ref: "DefaultUtilities",
+        default: [],
+      },
+    ],
+    hostId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Account",
     },
-    deleted:{
-        type: Boolean,
-        default: false
+    deleted: {
+      type: Boolean,
+      default: false,
     },
-    deleteAt:{
-        type: Date,
-        default: null
+    deleteAt: {
+      type: Date,
+      default: null,
     },
-    },
-    {
-    timestamps: true
-    }
+  },
+  {
+    timestamps: true,
+  }
 );
 
-export default mongoose.model('House', HouseSchema);
+export default mongoose.model("House", HouseSchema);
