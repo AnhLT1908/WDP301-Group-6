@@ -3,8 +3,6 @@ import catchAsyncErrors from "../middleware/asyncErrorCatch.js";
 
 const RoomController = {
   ViewListUtilitiesbyRoom: catchAsyncErrors(async (req, res) => {
-const RoomController = {
-  ViewListUtilitiesbyRoom: catchAsyncErrors(async (req, res) => {
     await RoomService.ViewListUtilities(req, res);
   }),
   AddNewUtilities: catchAsyncErrors(async (req, res) => {

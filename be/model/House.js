@@ -1,43 +1,48 @@
 import mongoose, { Schema } from "mongoose";
 import mongoose, { Schema } from "mongoose";
 
-  const HouseSchema = new mongoose.Schema(
-    {
-      name: {
-        type: String,
-        required: true,
-      },
-      status: {
-        type: String,
-        enum: ["available", "full"],
-        required: true,
-      },
-      location: {
-        district: {
-            type: String,
-            default: ""
-        },
-        ward: {
-            type: String,
-            default: ""
-        },
-        province: {
-            type: String,
-            default: ""
-        },
-        detailLocation: {
-            type: String,
-            default: ""
-        }
+const HouseSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
     },
-      numberOfRoom: {
-        type: Number,
-        default: 0,
+    status: {
+      type: String,
+      enum: ["available", "full"],
+      required: true,
+    },
+    location: {
+      district: {
+        type: String,
+        default: "",
       },
-      numberOfMember: {
-        type: Number,
+      ward: {
+        type: String,
+        default: "",
       },
-      DefaultPrice: [{
+      province: {
+        type: String,
+        default: "",
+      },
+      detailLocation: {
+        type: String,
+        default: "",
+      },
+      srcMap: {
+        type: String,
+        default: "",
+      },
+    },
+    numberOfRoom: {
+      type: Number,
+      default: 0,
+    },
+    numberOfMember: {
+      type: Number,
+    },
+    DefaultPrice: [
+      {
         electricPrice: {
           type: Number,
           required: true,
@@ -50,34 +55,35 @@ import mongoose, { Schema } from "mongoose";
           type: Number,
           required: true,
         },
-        internetPrice:{
+        internetPrice: {
           type: Number,
-          required: true
-        }
-    }],
-      utilities: [
-        {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "DefaultUtilities",
-          default: [],
+          required: true,
         },
-      ],
-      hostId: {
+      },
+    ],
+    utilities: [
+      {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Account",
+        ref: "DefaultUtilities",
+        default: [],
       },
-      deleted: {
-        type: Boolean,
-        default: false,
-      },
-      deleteAt: {
-        type: Date,
-        default: null,
-      },
+    ],
+    hostId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Account",
     },
-    {
-      timestamps: true,
-    }
-  );
+    deleted: {
+      type: Boolean,
+      default: false,
+    },
+    deleteAt: {
+      type: Date,
+      default: null,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-  export default mongoose.model("House", HouseSchema);
+export default mongoose.model("House", HouseSchema);
