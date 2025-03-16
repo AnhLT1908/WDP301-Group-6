@@ -25,13 +25,17 @@ const accountValidate = {
     password: Joi.string().min(8).required(),
     dateOfBirth: Joi.string().allow(null, ""),
     identityCard: Joi.string().allow(null, ""),
-    phone: Joi.string().allow(null, "").pattern(new RegExp("^(\\+84|0)[3-9][0-9]{8}$")),
+    phone: Joi.string()
+      .allow(null, "")
+      .pattern(new RegExp("^(\\+84|0)[3-9][0-9]{8}$")),
     room: Joi.string(),
     rentalDate: Joi.string().allow(null, ""),
     leaseTerminationDate: Joi.string().allow(null, ""),
     gender: Joi.string().valid("Male", "Female").required(),
     status: Joi.boolean().default(true),
-    accountType: Joi.string().valid("Lodger", "Manager", "Admin").default("Lodger")
+    accountType: Joi.string()
+      .valid("Lodger", "Manager", "Admin")
+      .default("Lodger"),
   }),
 
   validateNewPassword: Joi.object({
@@ -49,7 +53,10 @@ const accountValidate = {
     phone: Joi.string()
       .allow("", null)
       .pattern(new RegExp("^(\\+84|0)[3-9][0-9]{8}$")),
-    avatar: Joi.string().allow("", null).uri().max(2000),
+    avatar: Joi.string()
+      .allow("", null)
+      .uri()
+      .max(2000)
       .pattern(new RegExp("^(\\+84|0)[3-9][0-9]{8}$")),
     avatar: Joi.string().allow("", null).uri().max(2000),
     payosClientId: Joi.string().allow("", null),
