@@ -8,8 +8,6 @@ const getAccountFromToken = async (token, next) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
-        console.log("Decode id: ", decoded)
-
         if (!token) {
             return res.status(401).json({ message: "Bạn chưa đăng nhập!" });
         }
@@ -35,8 +33,15 @@ export const protect = catchAsyncErrors(async (req, res, next) => {
 
     // Giải mã token
     
+
     const account = await getAccountFromToken(token, next);
     if (!account) {
+        return next(new ErrorHandler('Không tìm thấy người dùng với token này!', 404));
+    }
+    req.user = account;
+
+    req.user = await getAccountFromToken(token, next);
+    if (!req.user) {
         return next(new ErrorHandler('Không tìm thấy người dùng với token này!', 404));
     }
     req.user = account;

@@ -60,6 +60,32 @@ const RoomSchema = new Schema({
                 type: String,
                 required: true
             }
+        }],
+        monthlyWaterUsage: [{
+            value: { 
+                type: Number, 
+                default: 0 
+            },
+            month: { 
+                type: String, 
+                required: true 
+            }
+        }],
+        monthlyServiceUsage: [{
+            value: { 
+                type: Number, 
+                default: 0 
+            },
+            month: { 
+                type: String, 
+                required: true 
+            }
+        }],
+        monthlyInternetUsage:[{
+            value: {
+                type: Number,
+                default: 0
+            }
         }]
     },
     roomBill: {

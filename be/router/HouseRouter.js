@@ -12,6 +12,6 @@ HouseRouter.put("/:houseId", protect, HouseController.updateOne);
 HouseRouter.get("/:houseId", HouseController.getOne);
 HouseRouter.put("/:houseId/change-status", protect, HouseController.ChangeHouseStatus);
 HouseRouter.get("/",  HouseController.getAll);
-HouseRouter.post("/create",  HouseController.addHouse);
+HouseRouter.post("/create", protect, HouseController.addHouse);
 
 export default HouseRouter;

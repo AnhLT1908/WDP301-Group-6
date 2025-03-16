@@ -7,32 +7,23 @@ import Account from '../model/Account.js';
 
 export const addHouse = async (req, res, next) => { 
     try {
-        const { name, status, location, electricPrice, waterPrice, servicePrice, rules, hostId } = req.body;
+        const { name, status, location, electricPrice, waterPrice, servicePrice, internetPrice, rules, hostId } = req.body;
         
-        if (!servicePrice) {
+        if (!electricPrice || !waterPrice || !servicePrice) {
             return res.status(400).json({
                 success: false,
-                message: "Thiếu servicePrice!",
+                message: "Thiếu electricPrice, waterPrice hoặc servicePrice!",
             }); 
         }
 
-        const defaultPriceWater = await DefaultPrice.findOne({ name: "Tiền nước theo khối" });
-        if (!defaultPriceWater) {
-            return res.status(400).json({
-                success: false,
-                message: "Không tìm thấy giá tiền nước!",
-            });
-        }
-
         const adminId = getCurrentUser(req);
+        
         if (!adminId) {
             return res.status(401).json({
                 success: false,
                 message: "Không tìm thấy thông tin người dùng!",
             });
         }
-
-        // Kiểm tra role của Admin (chỉ Admin mới có quyền tạo nhà)
         const adminUser = await Account.findById(adminId);
         if (!adminUser || adminUser.accountType !== "Admin") {
             return res.status(403).json({
@@ -41,7 +32,6 @@ export const addHouse = async (req, res, next) => {
             });
         }
 
-        // Kiểm tra nếu hostId có phải là Manager không
         const hostUser = await Account.findById(hostId);
         if (!hostUser || hostUser.accountType !== "Manager") {
             return res.status(400).json({
@@ -52,11 +42,20 @@ export const addHouse = async (req, res, next) => {
 
         const house = new House({
             name,
-            location,
             status,
-            electricPrice,
-            waterPrice,
-            servicePrice,
+            location: {
+                district: location?.district || "",
+                ward: location?.ward || "",
+                province: location?.province || "",
+                detailLocation: location?.detailLocation || "",
+                srcMap: location?.srcMap || ""
+            },
+            DefaultPrice: [{
+                electricPrice,
+                waterPrice,
+                servicePrice,
+                internetPrice
+            }],
             rules,
             hostId,
         });
@@ -64,7 +63,7 @@ export const addHouse = async (req, res, next) => {
         await house.save();
         res.status(201).json({ success: true, data: house });
     } catch (error) {
-        next(error); // Đẩy lỗi vào middleware
+        next(error);
     }
 };
 
