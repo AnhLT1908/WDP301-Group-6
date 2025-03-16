@@ -6,7 +6,12 @@ import {protect, isAuthorized} from "../middleware/verifyToken.js";
 const AccountRouter = express.Router();
 
 AccountRouter.get("/profile", protect, AccountController.getProfile);
+AccountRouter.get("/profile", protect, AccountController.getProfile);
 
+AccountRouter.get(
+  "/house/:houseId",
+  /*Token Manager*/ AccountController.GetAll
+);
 AccountRouter.get(
   "/house/:houseId",
   /*Token Manager*/ AccountController.GetAll
@@ -35,6 +40,15 @@ AccountRouter.get("/manager", AccountController.getManagerAccounts);
 
 AccountRouter.get("/lodger-accout-list", AccountController.getListLodger);
 
+
+AccountRouter.put("/change-status", protect, AccountController.ChangeStatus);
+
+//AccountRouter.get("/manager", protect, AccountController.getManagerAccounts);
+
+AccountRouter.get("/manager", AccountController.getManagerAccounts);
+
+AccountRouter.get("/lodger-accout-list", AccountController.getListLodger);
+
 AccountRouter.put(
   "/profile/change-password",
   validateData(accountValidate.validateChangePassword),
@@ -43,6 +57,7 @@ AccountRouter.put(
 
 AccountRouter.put(
   "/profile",
+  protect,
   protect,
   validateData(accountValidate.validateProfile),
   AccountController.UpdateProfile

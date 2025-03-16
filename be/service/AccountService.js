@@ -72,6 +72,39 @@ export const getManagerAccounts = async (req, res) => {
     }
 };
 
+export const getManagerAccounts = async (req, res) => {
+    try {
+        const { page, limit } = req.query;
+        const pageNumber = parseInt(page) || 1;
+        const limitPerPage = parseInt(limit) || 10;
+        const skip = (pageNumber - 1) * limitPerPage;
+
+        // Lọc các tài khoản có accountType là "Manager"
+        const totalManagers = await Account.countDocuments({ accountType: "Manager" });
+        const managers = await Account.find({ accountType: "Manager" })
+            .skip(skip)
+            .limit(limitPerPage)
+            .sort({ createdAt: -1 })
+            .select("-password -refreshToken -passwordResetCode") // Ẩn thông tin nhạy cảm
+            .exec();
+
+        const totalPages = Math.ceil(totalManagers / limitPerPage);
+
+        return res.status(200).json({
+            pagination: {
+                currentPage: pageNumber,
+                totalPages,
+                totalManagers,
+                accountsPerPage: managers.length,
+            },
+            data: managers,
+        });
+    } catch (error) {
+        console.error("Error fetching manager accounts:", error);
+        return res.status(500).json({ message: "Lỗi Server" });
+    }
+};
+
 export const getProfile = async (req, res) => {
     try {
         const accountId = getCurrentUser(req);
@@ -175,7 +208,18 @@ export const CreateManagerAccount = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
+        const roomData = await Room.findOne({ name: room });
+        if (!roomData) {
+            return res.status(404).json({ message: "Phòng không tồn tại" });
+        }
+
+        if (roomData.members && roomData.members.length >= roomData.quantityMember) {
+            return res.status(400).json({ message: "Phòng đã đầy" });
+        }
+
         const accountData = await Account.create({
+            firstName,
+            lastName,
             firstName,
             lastName,
             email,
@@ -190,7 +234,10 @@ export const CreateManagerAccount = async (req, res) => {
 
         return res.status(201).json({
             message: "Tạo tài khoản thành công",
+            message: "Tạo tài khoản thành công",
             data: {
+                firstName: accountData.firstName,
+                lastName: accountData.lastName,
                 firstName: accountData.firstName,
                 lastName: accountData.lastName,
                 email: accountData.email,
@@ -200,8 +247,10 @@ export const CreateManagerAccount = async (req, res) => {
         });
     } catch (error) {
         console.error(error);
+        console.error(error);
         return res.status(500).json({
             message: "Lỗi Server Error",
+            error: error.message
             error: error.message
         });
     }

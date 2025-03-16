@@ -16,6 +16,7 @@ const getAccountFromToken = async (token, next) => {
         
         return account;
     } catch (error) {
+        console.log("Error token: ", error)
         return next(new ErrorHandler('Token không hợp lệ hoặc đã hết hạn!', 401));
     }
 };
@@ -43,7 +44,7 @@ export const protect = catchAsyncErrors(async (req, res, next) => {
     if (!req.user) {
         return next(new ErrorHandler('Không tìm thấy người dùng với token này!', 404));
     }
-
+    req.user = account;
     next();
 });
 
