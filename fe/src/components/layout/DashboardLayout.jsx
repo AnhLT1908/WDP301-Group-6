@@ -1,15 +1,32 @@
 import DashboardHeader from './DashboardHeader';
 import DashboardSideBar from './DashboardSideBar';
-import Footer from './Footer';
+import { useEffect, useState } from 'react';
 
 export default function DashboardLayout({ children }) {
+  const [Height, setHeight] = useState("100vh");
+  useEffect(() => {
+    const updateHeight = () => {
+      const contentHeight = document.body.scrollHeight;
+      setHeight(`${contentHeight}px`);
+    }
+
+    updateHeight();
+
+    window.addEventListener("resize", updateHeight);
+    window.addEventListener("scroll", updateHeight);
+
+    return () => {
+      window.removeEventListener("resize", updateHeight);
+      window.removeEventListener("scroll", updateHeight);
+    }
+  }, []);
+
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-100" style={{ height: Height }}>
       <DashboardSideBar />
-      <div className="flex-1 flex flex-col justify-between ml-64 md:ml-0">
+      <div className="flex-1 flex flex-col">
         <DashboardHeader />
-        <div>{children}</div>
-        <Footer />
+        <div className="p-8">{children}</div>
       </div>
     </div>
   );

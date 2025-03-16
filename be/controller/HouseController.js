@@ -16,7 +16,15 @@ const HouseController = {
     }),
     getAll: catchAsyncErrors(async(req, res, next) =>{
         await HouseService.getAll(req, res, next)
-    })
+    }),
+    viewServiceFee: catchAsyncErrors(async(req, res, next) =>{
+        await HouseService.viewServiceFee(req, res, next)
+    }),
+    updateFee: catchAsyncErrors(async(req, res, next)=>{
+        await HouseService.updateFee(req, res, next)
+    }),
+
+
 }
 
 export default HouseController;

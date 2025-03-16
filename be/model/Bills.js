@@ -1,22 +1,22 @@
 import mongoose from 'mongoose';
 
 const priceItemSchema = new mongoose.Schema({
-    base: {
-        type:  mongoose.Schema.Types.ObjectId,
-        ref: "DefaultPrice",
+    name: {  
+        type: String,
+        required: true
     },
-    unitPrice: {
-        type: Number
-    },
-    startUnit: {
+    price: {
         type: Number,
+        required: true
     },
-    endUnit: {
+    usage: {  
         type: Number,
+        default: 0
     },
-    totalUnit: {
+    total: {
         type: Number,
-    } 
+        required: true
+    }
 });
 
 
@@ -30,7 +30,7 @@ const BillSchema = new mongoose.Schema({
         ref: "House"
     },
     billCode: {
-        type: Number
+        type: String
     },
     roomPrice: {
         type: Number,

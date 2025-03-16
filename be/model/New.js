@@ -33,16 +33,6 @@ const NewSchema = new Schema(
         message: 'Ảnh không hợp lệ, chỉ chấp nhận URL hình ảnh',
       },
     },
-    likedBy: {
-      type: [Schema.Types.ObjectId], // Đây là mảng các ObjectId
-      ref: 'Account',
-      default: [],
-    },
-    commentsId: {
-      type: [Schema.Types.ObjectId],
-      ref: 'Comments',
-      default: [],
-    },
     deleted: {
       type: Boolean,
       default: false,
