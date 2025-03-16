@@ -7,10 +7,10 @@ const BillRouter = express.Router();
 BillRouter.post("/room/:roomId", protect, BillController.addBillinRoom);
 // Xác nhận thanh toán hóa đơn
 BillRouter.put('/confirm/:billId', protect, BillController.confimBill);
-
 BillRouter.get('/', BillController.getAllBill);
 
 BillRouter.get('/bill-detail/:billId', BillController.getOneBill);
 
 
 export default BillRouter;
+

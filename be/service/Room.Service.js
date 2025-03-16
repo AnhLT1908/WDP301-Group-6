@@ -1,12 +1,10 @@
 // Room.Service.js
 import DefaultUtilities from "../model/DefaultUtilities.js";
 import Room from "../model/Room.js";
-import exceljs from 'exceljs';
-import bcrypt from 'bcrypt';
-import Account from "../model/Account.js";
-import Bills from "../model/Bills.js";
+import Bill from "../model/Bills.js";
 import House from "../model/House.js";
 import mongoose from 'mongoose';
+
 
 export const getAllRoom = async(req, res, next)=>{
   try {
@@ -15,11 +13,11 @@ export const getAllRoom = async(req, res, next)=>{
       success: true,
       count: rooms.length,
       data: rooms,
-  });
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 export const ViewListUtilities = async (req, res) => {
   try {
@@ -48,6 +46,9 @@ export const ViewListUtilities = async (req, res) => {
     });
   }
 };
+
+console.log(ViewListUtilities);
+
 
 export const AddNewUtilities = async (req, res) => {
   try {
@@ -182,6 +183,7 @@ export const DeleteUtilities = async (req, res) => {
     const updatedRoom = await Room.findByIdAndUpdate(
       roomId,
       { $pull: { utilities: utilityId } },
+      { $pull: { utilities: utilityId } },
       { new: true }
     );
 
@@ -211,10 +213,12 @@ export const getRoomEquipment = async (req, res) => {
     try {
         const { roomId } = req.params;
 
-        const room = await Room.findById(roomId)
-            .populate("utilities")
-            .populate("otherUtilities");
+        if (!mongoose.Types.ObjectId.isValid(roomId)) {
+          return res.status(400).json({ message: "Invalid roomId" });
+        }
 
+        const room = await Room.findById(roomId)
+            .populate("utilities");
         if (!room) {
             return res.status(404).json({ message: "Room not found" });
         }
@@ -222,7 +226,7 @@ export const getRoomEquipment = async (req, res) => {
         res.json({
             roomId: room._id,
             name: room.name,
-            equipment: [...room.utilities, ...room.otherUtilities]
+            equipment: room.utilities || [],
         });
 
     } catch (error) {
@@ -233,39 +237,42 @@ export const getRoomEquipment = async (req, res) => {
 
 export const addRoom = async (req, res, next) => {
   try {
-      const { houseId, name, floor, status, quantityMember, roomType, roomPrice, deposit, area } = req.body;
+      const { houseId, name, floor, status, roomType, roomPrice, deposit, area } = req.body;
 
-      if (!houseId || !name || !roomPrice || !quantityMember || !area ) {
+      if (!houseId || !name || !roomPrice || !area || !floor) {
           return res.status(400).json({
               success: false,
               message: "Thiếu thông tin bắt buộc! (houseId, name, roomPrice, quantityMember, area, email)",
           });
       }
 
-      const house = await House.findById(houseId);
+      if (!mongoose.Types.ObjectId.isValid(houseId)) {
+        return res.status(400).json({ success: false, message: "Invalid houseId" });
+      }
+      
+      const house = await House.findById(houseId);      
       if (!house) {
           return res.status(404).json({ success: false, message: "House không tồn tại!" });
       }
 
-      const existingRoom = await Room.findOne({ houseId, name });
+      const existingRoom = await Room.findOne({ house: houseId, name });
       if (existingRoom) {
           return res.status(400).json({ success: false, message: `Phòng '${name}' đã tồn tại.` });
       }
 
       const newRoom = await Room.create({
-          floor: floor || name.charAt(0),
-          name,
-          status: status || "Empty",
-          quantityMember,
-          roomType: roomType || "normal",
-          roomPrice,
+        name,
+        house: houseId, 
+        floor: floor,
+        area, 
+        priceList: {
+          roomPrice, 
           deposit: deposit || 0,
-          area,
-          houseId,
-          utilities: house.utilities || [],
-          otherUtilities: house.otherUtilities || [],
-          deleted: false,
-          deletedAt: null,
+        },
+        status: status && ["full", "available"].includes(status) ? status : "available",
+        utilities: house.utilities || [],
+        deleted: false,
+        deletedAt: null,
       });
 
       house.numberOfRoom += 1;
@@ -294,7 +301,7 @@ export const GetOne = async (req, res, next) => {
       .populate("utilities")
       .populate("houseId")
       .populate({
-        path: "houseId",
+        path: "house",
         populate: { path: "priceList", populate: "base" },
       });
 
@@ -323,53 +330,32 @@ export const getRoomServices = async (req, res, next) => {
     try {
         const { roomId } = req.params;
 
+        if (!mongoose.Types.ObjectId.isValid(roomId)) {
+          return res.status(400).json({ message: "Invalid roomId" });
+        }
         // Lấy thông tin phòng
-        const room = await Room.findById(roomId)
-            .populate("utilities")
+        const room = await Room.findById(roomId).populate("utilities")
 
         if (!room) {
             return res.status(404).json({ message: "Không tìm thấy phòng!" });
         }
 
         // Lấy hóa đơn mới nhất của phòng
-        const latestBill = await Bills.findOne({ roomId })
+        const latestBill = await Bill.findOne({ roomId })
             .sort({ createdAt: -1 }) // Lấy hóa đơn mới nhất
             .limit(1);
 
         // Tạo danh sách phí dịch vụ
-        const services = [];
-
-        // Thêm tiền phòng
-        services.push({
-            name: "Tiền thuê phòng",
-            price: room.roomPrice,
-        });
-
-        // Thêm các tiện ích mặc định
-        if (room.utilities.length > 0) {
-            room.utilities.forEach((utility) => {
-                services.push({
-                    name: utility.name,
-                    price: utility.price,
-                });
-            });
-        }
-
-        // Thêm các tiện ích khác
-        if (room.otherUtilities.length > 0) {
-            room.otherUtilities.forEach((utility) => {
-                services.push({
-                    name: utility.name,
-                    price: utility.price,
-                });
-            });
-        }
+        const services = [
+          { name: "Tiền thuê phòng", price: room.priceList.roomPrice },
+          ...(room.utilities || []).map(utility => ({
+            name: utility.name,
+            price: utility.price || 0,
+          })),
+        ];
 
         // Nếu có hóa đơn mới nhất, lấy tổng số tiền cần thanh toán
-        let totalAmount = room.roomPrice;
-        if (latestBill) {
-            totalAmount = latestBill.total;
-        }
+        const totalAmount = latestBill ? latestBill.total : room.priceList.roomPrice;
 
         res.json({
             room: room.name,
@@ -385,27 +371,40 @@ export const getRoomServices = async (req, res, next) => {
 export const addMember = async(req, res, next) =>{
   try {
     const { roomId } = req.params;
+    const { accountId, joinDate } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(roomId)) {
+      return res.status(400).json({ message: "Invalid roomId" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(accountId)) {
+      return res.status(400).json({ message: "Invalid accountId" });
+    }
+
+    if (!joinDate || isNaN(new Date(joinDate))) {
+      return res.status(400).json({ message: "Invalid joinDate" });
+    }
     const room = await Room.findById(roomId);
 
     if (!room) {
         throw new Error("Không tìm thấy phòng.");
     }
 
-    const existingMember = room.members.find(
-        (member) =>
-            member.phone === req.body.phone ||
-            member.cccd === req.body.cccd
-    );
-
+    const existingMember = room.members.some(member => member.accountId.toString() === accountId);
     if (existingMember) {
-        throw new Error("Số điện thoại hoặc số CCCD đã tồn tại trong phòng.");
+      return res.status(400).json({ message: "Thành viên đã tồn tại trong phòng." });
     }
 
     //  Bỏ qua xử lý hình ảnh
-    room.members.push(req.body);
+    room.members.push({ accountId, joinDate: new Date(joinDate) });
     await room.save();
 
-    return room.members[room.members.length - 1]._doc;
+    const newMember = room.members[room.members.length - 1];
+    return res.status(201).json({
+      success: true,
+      message: "Thêm thành viên thành công",
+      member: newMember,
+    });
   } catch (error) {
       throw error;
   }
@@ -413,18 +412,20 @@ export const addMember = async(req, res, next) =>{
 
 
 export const ChangeRoomStatus = async (req, res) => {
-  const validStatuses = ["Empty", "Full", "Available"];
+  const validStatuses = ["full", "available"];
   const { newStatus } = req.body;
 
   if (!validStatuses.includes(newStatus)) {
     return res.status(400).json({
-      error: `Invalid status value. Allowed values: ${validStatuses.join(
-        ", "
-      )}`,
+      error: `Invalid status value. Allowed values: ${validStatuses.join(", ")}`,
     });
   }
 
   const { roomId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(roomId)) {
+    return res.status(400).json({ message: "Invalid roomId" });
+  }
   const updatedRoom = await Room.findByIdAndUpdate(
     roomId,
     { status: newStatus },
@@ -443,60 +444,158 @@ export const ChangeRoomStatus = async (req, res) => {
 
 export const updateRoomDetails = async (req, res) => {
   try {
-      const { roomId } = req.params;
-      const updateData = req.body;
+    const { roomId } = req.params;
+    const updateData = req.body;
 
-      // Allowed fields for updating
-      const allowedFields = [
-          "floor",
-          "name",
-          "status",
-          "quantityMember",
-          "roomType",
-          "roomPrice",
-          "deposit",
-          "utilities",
-          "otherUtilities",
-          "area",
-          "houseId",
-          "members",
-          "deleted"
-      ];
+    // Allowed fields for updating
+    const allowedFields = [
+      "floor", "name", "status", "area", "utilities",
+      "priceList", "roomBill", "roomReport", "deleted", "members"
+    ];
 
-      // Validate if the provided keys are allowed
-      const updateKeys = Object.keys(updateData);
-      const isValidUpdate = updateKeys.every(key => allowedFields.includes(key));
+    // Validate if the provided keys are allowed
+    const updateKeys = Object.keys(updateData);
+    const isValidUpdate = updateKeys.every(key => allowedFields.includes(key));
+    if (!isValidUpdate) {
+      return res.status(400).json({ error: `Invalid update fields: ${updateKeys.join(", ")}` });
+    }
 
-      if (!isValidUpdate) {
-          return res.status(400).json({ error: `Invalid update fields: ${updateKeys.join(", ")}` });
-      }
+    if (updateData.status && !["full", "available"].includes(updateData.status)) {
+      return res.status(400).json({
+        error: "Invalid status value. Allowed values: full, available",
+      });
+    }
 
-      // Validate status if it's being updated
-      if (updateData.status) {
-          const validStatuses = ["Empty", "Full", "Available"];
-          if (!validStatuses.includes(updateData.status)) {
-              return res.status(400).json({ error: `Invalid status value. Allowed values: ${validStatuses.join(", ")}` });
-          }
-      }
+    // Validate status if it's being updated
+    if (updateData.members) {
+      updateData.members.forEach(member => {
+        if (!member.accountId || !member.joinDate) {
+          throw new Error("Members must include accountId and joinDate");
+        }
+      });
+    }
 
-      // Validate roomType if it's being updated
-      if (updateData.roomType) {
-          const validRoomTypes = ["normal", "premium"];
-          if (!validRoomTypes.includes(updateData.roomType)) {
-              return res.status(400).json({ error: `Invalid room type. Allowed values: ${validRoomTypes.join(", ")}` });
-          }
-      }
+    if (!mongoose.Types.ObjectId.isValid(roomId)) {
+      return res.status(400).json({ message: "Invalid roomId" });
+    }
 
-      // Update the room details
-      const updatedRoom = await Room.findByIdAndUpdate(roomId, updateData, { new: true });
 
-      if (!updatedRoom) {
-          return res.status(404).json({ error: "Room not found" });
-      }
+    // Update the room details
+    const updatedRoom = await Room.findByIdAndUpdate(roomId, updateData, { new: true });
+    if (!updatedRoom) {
+      return res.status(404).json({ error: "Room not found" });
+    }
 
-      return res.status(200).json({ message: "Room details updated successfully", room: updatedRoom });
+
+    return res.status(200).json({
+      message: "Room details updated successfully",
+      room: updatedRoom,
+    });
   } catch (error) {
-      return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 };
 
+export const GetRoomByHouseId = async(req, res) =>{
+  try {
+    const { houseId } = req.params;
+
+    if(!mongoose.Types.ObjectId.isValid(houseId)){
+      return res.status(400).json({
+        message: "Invalid HouseId"
+      })
+    }
+
+    const house = await House.findById(houseId);
+    if (!house) {
+      return res.status(404).json({
+        message: "House not found with the provided houseId",
+      });
+    }
+
+    const rooms = await Room.find({ house: houseId}).populate("house members.accountId utilities roomBill roomReport")
+    console.log(`Rooms found for houseId ${houseId}:`, rooms);
+    return res.status(200).json({
+      message: "Here your Room",
+      rooms
+    })
+  } catch (error) {
+    console.error("Error in GetRoomByHouseId:", error); // Log for debugging
+    return res.status(500).json({
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+}
+
+export const GetMemberLodgerOfHouse = async(req, res) =>{
+  try {
+    const {houseId} = req.params;
+
+    const house = await House.findById(houseId);
+    if(!house){
+      return res.status(404).json({ message: "Không tìm thấy nhà trọ"})
+    }
+    //Lấy danh sách phòng thuộc houseId
+    const rooms = await Room.find({house: houseId, deleted: false})
+      .populate({
+        path: "members.accountId",
+        match: {accountType: "Lodger"},
+        select: "firstName lastName email phone gender",
+      })
+
+    const lodgers = rooms
+      .flatMap(room => room.members)
+      .map(member => member.accountId) 
+      .filter(account => account !== null);
+
+    //Tìm danh sách tài khoản có accoutType = Lodger
+    if (lodgers.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No lodgers found for this house",
+        members: [],
+      });
+    }
+
+    return res.status(200).json({success: true, members: lodgers})
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+}
+
+export const GetMemberManagerOfHouse = async(req, res) =>{
+  try {
+    const {houseId} = req.params;
+
+    const house = await House.findById(houseId);
+    if(!house){
+      return res.status(404).json({ message: "Không tìm thấy nhà trọ"})
+    }
+    //Lấy danh sách phòng thuộc houseId
+    const rooms = await Room.find({house: houseId, deleted: false})
+      .populate({
+        path: "members.accountId",
+        match: {accountType: "Manager"},
+        select: "firstName lastName email phone gender",
+      })
+
+    const lodgers = rooms
+      .flatMap(room => room.members)
+      .map(member => member.accountId) 
+      .filter(account => account !== null);
+
+    //Tìm danh sách tài khoản có accoutType = Lodger
+    if (lodgers.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No manager found for this house",
+        members: [],
+      });
+    }
+
+    return res.status(200).json({success: true, members: lodgers})
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+}
