@@ -106,9 +106,8 @@ const CreateLodgerAccount = () => {
       );
 
       setSuccess("Account created successfully!");
-      // Clear success message after 3 seconds
       setTimeout(() => setSuccess(null), 3000);
-      handleDiscard(); // Clears the form data without affecting notifications
+      handleDiscard();
       setLoading(false);
     } catch (err) {
       console.error("Error creating account:", err);
@@ -121,7 +120,6 @@ const CreateLodgerAccount = () => {
     }
   };
 
-  // Modified handleDiscard: only resets form fields, avatar, and active state.
   const handleDiscard = () => {
     setFormData({ ...initialFormData });
     setAvatar(null);
@@ -133,11 +131,11 @@ const CreateLodgerAccount = () => {
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className="bg-gray-100 max-h-screen pt-6">
       <div className="max-w-6xl mx-auto p-4">
         <button
           onClick={handleTurnBack}
-          className="bg-green-600 text-white px-4 py-2 rounded-md mb-8"
+          className="bg-green-500 hover:bg-green-700 transition duration-200 text-white px-4 py-2 rounded-md mb-8"
         >
           Quay về
         </button>
@@ -158,11 +156,14 @@ const CreateLodgerAccount = () => {
           <div className="w-full lg:w-2/3 pr-0 lg:pr-8">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-gray-700 text-sm">Tên</label>
+                <label className="block text-gray-700 text-sm">
+                  Tên <span className="text-red-600">*</span>
+                </label>
                 <input
                   type="text"
                   name="firstName"
                   className="w-full border border-gray-300 p-2 rounded-md mt-1"
+                  placeholder="Nhập tên người thuê"
                   value={formData.firstName}
                   onChange={handleInputChange}
                   required
@@ -170,11 +171,14 @@ const CreateLodgerAccount = () => {
               </div>
 
               <div>
-                <label className="block text-gray-700 text-sm">Họ</label>
+                <label className="block text-gray-700 text-sm">
+                  Họ <span className="text-red-600">*</span>
+                </label>
                 <input
                   type="text"
                   name="lastName"
                   className="w-full border border-gray-300 p-2 rounded-md mt-1"
+                  placeholder="Nhập họ người thuê"
                   value={formData.lastName}
                   onChange={handleInputChange}
                   required
@@ -182,11 +186,14 @@ const CreateLodgerAccount = () => {
               </div>
 
               <div>
-                <label className="block text-gray-700 text-sm">Email</label>
+                <label className="block text-gray-700 text-sm">
+                  Email <span className="text-red-600">*</span>
+                </label>
                 <input
                   type="email"
                   name="email"
                   className="w-full border border-gray-300 p-2 rounded-md mt-1"
+                  placeholder="Nhập email người thuê"
                   value={formData.email}
                   onChange={handleInputChange}
                   required
@@ -194,12 +201,15 @@ const CreateLodgerAccount = () => {
               </div>
 
               <div>
-                <label className="block text-gray-700 text-sm">Mật khẩu</label>
+                <label className="block text-gray-700 text-sm">
+                  Mật khẩu <span className="text-red-600">*</span>
+                </label>
                 <div className="relative mt-1">
                   <input
                     type="password"
                     name="password"
                     className="w-full border border-gray-300 p-2 rounded-md pr-10"
+                    placeholder="Nhập mật khẩu"
                     value={formData.password}
                     onChange={handleInputChange}
                     required
@@ -221,6 +231,7 @@ const CreateLodgerAccount = () => {
                   type="text"
                   name="identityCard"
                   className="w-full border border-gray-300 p-2 rounded-md mt-1"
+                  placeholder="Nhập CCCD"
                   value={formData.identityCard}
                   onChange={handleInputChange}
                   required
@@ -235,6 +246,7 @@ const CreateLodgerAccount = () => {
                   type="text"
                   name="phone"
                   className="w-full border border-gray-300 p-2 rounded-md mt-1"
+                  placeholder="Nhập số điện thoại liên lạc"
                   value={formData.phone}
                   onChange={handleInputChange}
                   required
@@ -255,7 +267,9 @@ const CreateLodgerAccount = () => {
               </div>
 
               <div>
-                <label className="block text-gray-700 text-sm">Phòng</label>
+                <label className="block text-gray-700 text-sm">
+                  Phòng <span className="text-red-600">*</span>
+                </label>
                 <div className="relative mt-1">
                   <select
                     name="room"
@@ -285,7 +299,9 @@ const CreateLodgerAccount = () => {
               </div>
 
               <div>
-                <label className="block text-gray-700 text-sm">Ngày thuê</label>
+                <label className="block text-gray-700 text-sm">
+                  Ngày thuê <span className="text-red-600">*</span>
+                </label>
                 <input
                   type="date"
                   name="rentalDate"
@@ -331,7 +347,7 @@ const CreateLodgerAccount = () => {
                 </svg>
               )}
             </div>
-            <label className="bg-green-600 text-white px-4 py-2 rounded-md text-sm cursor-pointer">
+            <label className="bg-green-500 hover:bg-green-700 transition duration-200 text-white px-4 py-2 rounded-md text-sm cursor-pointer">
               Tải ảnh lên
               <input
                 id="avatar-upload"
@@ -383,7 +399,7 @@ const CreateLodgerAccount = () => {
                   checked={isActive}
                   onChange={() => setIsActive(!isActive)}
                 />
-                <div className="w-14 h-7 bg-gray-200 rounded-full peer peer-checked:bg-green-600 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all"></div>
+                <div className="w-14 h-7 bg-gray-200 rounded-full peer peer-checked:bg-green-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all"></div>
               </label>
             </div>
           </div>
@@ -391,7 +407,7 @@ const CreateLodgerAccount = () => {
           <div className="w-full flex justify-center space-x-8 mt-8">
             <button
               type="button"
-              className="bg-green-600 text-white px-8 py-2 rounded-md"
+              className="bg-green-500 hover:bg-green-700 transition duration-200 text-white px-8 py-2 rounded-md"
               onClick={handleDiscard}
               disabled={loading}
             >
@@ -399,7 +415,7 @@ const CreateLodgerAccount = () => {
             </button>
             <button
               type="submit"
-              className="bg-green-600 text-white px-8 py-2 rounded-md"
+              className="bg-green-500 hover:bg-green-700 transition duration-200 text-white px-8 py-2 rounded-md"
               disabled={loading}
             >
               {loading ? "Lưu..." : "Lưu"}
