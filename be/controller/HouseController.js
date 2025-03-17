@@ -11,6 +11,9 @@ const HouseController = {
   getOne: catchAsyncErrors(async (req, res, next) => {
     await HouseService.getOne(req, res, next);
   }),
+  getHouseByHostId: catchAsyncErrors(async (req, res, next) => {
+    await HouseService.getHouseByHostId(req, res, next);
+  }),
   ChangeHouseStatus: catchAsyncErrors(async (req, res, next) => {
     await HouseService.ChangeHouseStatus(req, res, next);
   }),

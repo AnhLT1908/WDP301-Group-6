@@ -77,7 +77,7 @@ const HouseList = () => {
                     {`Số lượng người thuê: ${house.numberOfMember}`}
                   </p>
                   <p className="text-sm text-gray-700">
-                    {`Địa chỉ: ${house.location[0].detailLocation}`}
+                    {`Địa chỉ: ${house.location[0]}`}
                   </p>
                 </div>
                 <div className="flex justify-around">

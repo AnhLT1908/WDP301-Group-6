@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 
-
-const CommentSchema = new mongoose.Schema({
+const ReportSchema = new mongoose.Schema({
     creatorId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Account'

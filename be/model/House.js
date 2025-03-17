@@ -1,18 +1,5 @@
 import mongoose, { Schema } from "mongoose";
 
-const priceItemSchema = new Schema({
-  //?
-  base: {
-    type: Schema.ObjectId,
-    ref: "DefaultPrice",
-  },
-
-  //?
-  price: {
-    type: Number,
-    required: true,
-  },
-});
 const HouseSchema = new mongoose.Schema(
   {
     name: {
@@ -24,21 +11,27 @@ const HouseSchema = new mongoose.Schema(
       enum: ["available", "full"],
       required: true,
     },
-    location: [
-      {
-        detailLocation: {
-          type: String,
-          default: "",
-        },
-        srcMap: {
-          type: String,
-          default: "",
-        },
+    location: {
+      district: {
+        type: String,
+        default: "",
       },
-    ],
-    rules: {
-      type: String,
-      default: null,
+      ward: {
+        type: String,
+        default: "",
+      },
+      province: {
+        type: String,
+        default: "",
+      },
+      detailLocation: {
+        type: String,
+        default: "",
+      },
+      srcMap: {
+        type: String,
+        default: "",
+      },
     },
     numberOfRoom: {
       type: Number,
@@ -46,31 +39,25 @@ const HouseSchema = new mongoose.Schema(
     },
     numberOfMember: {
       type: Number,
-      default: 0,
     },
-    numberOfMember: {
-      type: Number,
-      default: 0,
-    },
-    electricPrice: {
-      type: Number,
-      required: true,
-    },
-    waterPrice: {
-      type: Number,
-      required: true,
-    },
-    servicePrice: {
-      type: Number,
-      required: true,
-    },
-
-    //?
-    priceList: [
+    DefaultPrice: [
       {
-        type: priceItemSchema,
-        default: [],
-        unique: true,
+        electricPrice: {
+          type: Number,
+          required: true,
+        },
+        waterPrice: {
+          type: Number,
+          required: true,
+        },
+        servicePrice: {
+          type: Number,
+          required: true,
+        },
+        internetPrice: {
+          type: Number,
+          required: true,
+        },
       },
     ],
     utilities: [
