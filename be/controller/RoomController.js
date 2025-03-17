@@ -37,6 +37,7 @@ const RoomController = {
   }),
   getRoomEquipment: catchAsyncErrors(async(req, res, next)=>{
     await RoomService.getRoomEquipment(req, res, next)
+
   }),
   ChangeRoomStatus: catchAsyncErrors(async (req, res) => {
     await RoomService.ChangeRoomStatus(req, res);
@@ -44,7 +45,16 @@ const RoomController = {
   updateRoomDetails: catchAsyncErrors(async (req, res) => {
     await RoomService.updateRoomDetails(req, res);
   }),
-
+  GetRoomByHouseId: catchAsyncErrors(async(req, res) =>{
+    await RoomService.GetRoomByHouseId(req, res);
+  }),
+  GetLodgerMemberOfHouse: catchAsyncErrors(async(req, res)=>{
+    await RoomService.GetMemberLodgerOfHouse(req, res)
+  }),
+  GetMemberManagerOfHouse: catchAsyncErrors(async(req, res) =>{
+    await RoomService.GetMemberManagerOfHouse(req, res)
+  })
 };
+
 
 export default RoomController;

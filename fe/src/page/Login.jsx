@@ -64,7 +64,7 @@ const Login = ({ setAccountType }) => {
           navigate("/admin");
           break;
         case "Manager":
-          navigate("/manager");
+          navigate("/manager/lodger-account-list");
           break;
         case "Lodger":
           navigate("/home");
@@ -116,10 +116,9 @@ const Login = ({ setAccountType }) => {
               <input type="checkbox" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} />
               <span className="ml-2 text-sm">Ghi nhớ đăng nhập</span>
             </label>
-            <a href="#" className="text-sm text-red-500">Quên mật khẩu?</a>
+            <a href="/forgot-password" className="text-sm text-red-500">Quên mật khẩu?</a>
           </div>
           <button type="submit" className="w-full bg-green-500 text-white p-3 rounded-md font-semibold">Đăng nhập</button>
-          <p className="text-sm text-center mt-4">Chưa có tài khoản? <a href="#" className="text-red-500">Đăng ký</a></p>
         </form>
       </div>
       <div className="w-1/2 flex justify-center items-center mr-[180px]">

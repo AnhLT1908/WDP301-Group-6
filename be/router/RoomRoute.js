@@ -9,14 +9,15 @@ RoomRouter.put("/update-equipment/:id", RoomController.UpdateUtilities);
 RoomRouter.patch("/:id/equipment-status", RoomController.ChangeUtilitiesStatus);
 RoomRouter.delete("/delete-room-equipment/:roomId/:utilityId", RoomController.DeleteUtilities);
 
-//RoomRouter.get("/", protect, RoomController.GetAllRoom);
 RoomRouter.get("/", RoomController.GetAllRoom);
 RoomRouter.post("/addRoom", protect, RoomController.addRoom);
 RoomRouter.get("/:roomId", protect, RoomController.getOne);
+RoomRouter.get("/member/:houseId", protect, RoomController.GetLodgerMemberOfHouse);
+RoomRouter.get("/manager/:houseId", protect, RoomController.GetMemberManagerOfHouse);
 RoomRouter.post("/:roomId/member", protect, RoomController.addMember);
 RoomRouter.get("/:roomId/services", protect, RoomController.getRoomService);
 RoomRouter.get("/:roomId/equipment", protect, RoomController.getRoomEquipment);
-
+RoomRouter.get("/house/:houseId", RoomController.GetRoomByHouseId);
 RoomRouter.put("/:roomId/status", RoomController.ChangeRoomStatus);
 RoomRouter.put("/:roomId", RoomController.updateRoomDetails);
 

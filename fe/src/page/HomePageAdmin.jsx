@@ -18,7 +18,7 @@ const HomePageAdmin = () => {
     {
       title: "Chuỗi nhà trọ",
       icon: <HousePlus size={70} className="relative text-white" />,
-      link: "/admin/houses",
+      link: "/admin/house-list",
     },
     {
       title: "Dashboard",
@@ -68,7 +68,7 @@ const HomePageAdmin = () => {
                       <Link to={card.link}>
                         <Button
                           showIcon={true}
-                          className="px-4 py-2 bg-white text-green-500 rounded hover:bg-[#FDEE2A]"
+                          className="px-4 py-2 bg-white text-green-500 rounded font-semibold hover:bg-[#FDEE2A]"
                         >
                           View More
                         </Button>

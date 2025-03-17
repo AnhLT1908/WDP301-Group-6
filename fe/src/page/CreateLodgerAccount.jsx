@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const CreateLodgerAccount = () => {
-  // Initial state to use for resetting the form
+  const navigate = useNavigate();
+
   const initialFormData = {
     firstName: "",
     lastName: "",
@@ -14,7 +16,7 @@ const CreateLodgerAccount = () => {
     room: "",
     rentalDate: "",
     leaseTerminationDate: "",
-    gender: "",
+    gender: "Male",
   };
 
   const [avatar, setAvatar] = useState(null);
@@ -38,20 +40,17 @@ const CreateLodgerAccount = () => {
     try {
       setLoading(true);
       const response = await axios.get("http://localhost:5000/api/v1/room");
-
-      // Simplified and robust room data extraction
+      console.log("response", response.data);
       let roomsData = [];
-      if (response.data) {
-        if (Array.isArray(response.data)) {
-          roomsData = response.data;
-        } else if (response.data.data && Array.isArray(response.data.data)) {
-          roomsData = response.data.data;
-        } else if (typeof response.data === "object") {
-          console.log("API Response structure:", response.data);
-          roomsData = Object.values(response.data).filter(
-            (item) => typeof item === "object" && item !== null
-          );
-        }
+      if (response.data && Array.isArray(response.data)) {
+        roomsData = response.data;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        roomsData = response.data.data;
+      } else if (response.data && typeof response.data === "object") {
+        console.log("API Response structure:", response.data);
+        roomsData = Object.values(response.data).filter(
+          (item) => typeof item === "object"
+        );
       }
 
       setRooms(roomsData);
@@ -62,6 +61,7 @@ const CreateLodgerAccount = () => {
       );
     } finally {
       setLoading(false);
+      setTimeout(() => setError(null), 3000);
     }
   };
 
@@ -86,15 +86,7 @@ const CreateLodgerAccount = () => {
     setError(null);
     setSuccess(null);
 
-    // Validate token existence
-    if (!token) {
-      setError("Authentication required. Please log in again.");
-      setLoading(false);
-      return;
-    }
-
     try {
-      // Prepare data in the format expected by the API
       const requestData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -111,68 +103,44 @@ const CreateLodgerAccount = () => {
         accountType: "Lodger",
       };
 
-      // If avatar handling is required, use FormData approach
-      if (avatar) {
-        const formDataWithFile = new FormData();
-        formDataWithFile.append("avatar", avatar);
+      console.log("Sending data:", requestData);
 
-        // Append other form data
-        Object.entries(requestData).forEach(([key, value]) => {
-          formDataWithFile.append(key, value);
-        });
-
-        await axios.post(
-          "http://localhost:5000/api/v1/account/create",
-          formDataWithFile,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-      } else {
-        // JSON approach without file
-        await axios.post(
-          "http://localhost:5000/api/v1/account/create",
-          requestData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-      }
+      await axios.post(
+        "http://localhost:5000/api/v1/account/create-lodger",
+        requestData
+      );
 
       setSuccess("Account created successfully!");
+      setTimeout(() => setSuccess(null), 3000);
       handleDiscard();
     } catch (err) {
       console.error("Error creating account:", err);
       setError(
         err.response?.data?.message ||
-          "Failed to create account. Please check your input and try again."
+          "Failed to create account. Please try again."
       );
-    } finally {
+      setTimeout(() => setError(null), 3000);
       setLoading(false);
     }
   };
 
   const handleDiscard = () => {
-    // Clear form data by setting empty values
     setFormData({ ...initialFormData });
-
-    // Reset avatar and active state
     setAvatar(null);
     setIsActive(true);
-    setError(null);
-    setSuccess(null);
+  };
+
+  const handleTurnBack = () => {
+    navigate("/manager/lodger-account-list");
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className="bg-gray-100 max-h-screen pt-6">
       <div className="max-w-6xl mx-auto p-4">
-        <button className="bg-green-600 text-white px-4 py-2 rounded-md mb-8">
+        <button
+          onClick={handleTurnBack}
+          className="bg-green-500 hover:bg-green-700 transition duration-200 text-white px-4 py-2 rounded-md mb-8"
+        >
           Quay về
         </button>
 
@@ -192,11 +160,14 @@ const CreateLodgerAccount = () => {
           <div className="w-full lg:w-2/3 pr-0 lg:pr-8">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-gray-700 text-sm">Tên</label>
+                <label className="block text-gray-700 text-sm">
+                  Tên <span className="text-red-600">*</span>
+                </label>
                 <input
                   type="text"
                   name="firstName"
                   className="w-full border border-gray-300 p-2 rounded-md mt-1"
+                  placeholder="Nhập tên người thuê"
                   value={formData.firstName}
                   onChange={handleInputChange}
                   required
@@ -204,11 +175,14 @@ const CreateLodgerAccount = () => {
               </div>
 
               <div>
-                <label className="block text-gray-700 text-sm">Họ</label>
+                <label className="block text-gray-700 text-sm">
+                  Họ <span className="text-red-600">*</span>
+                </label>
                 <input
                   type="text"
                   name="lastName"
                   className="w-full border border-gray-300 p-2 rounded-md mt-1"
+                  placeholder="Nhập họ người thuê"
                   value={formData.lastName}
                   onChange={handleInputChange}
                   required
@@ -216,11 +190,14 @@ const CreateLodgerAccount = () => {
               </div>
 
               <div>
-                <label className="block text-gray-700 text-sm">Email</label>
+                <label className="block text-gray-700 text-sm">
+                  Email <span className="text-red-600">*</span>
+                </label>
                 <input
                   type="email"
                   name="email"
                   className="w-full border border-gray-300 p-2 rounded-md mt-1"
+                  placeholder="Nhập email người thuê"
                   value={formData.email}
                   onChange={handleInputChange}
                   required
@@ -228,12 +205,15 @@ const CreateLodgerAccount = () => {
               </div>
 
               <div>
-                <label className="block text-gray-700 text-sm">Mật khẩu</label>
+                <label className="block text-gray-700 text-sm">
+                  Mật khẩu <span className="text-red-600">*</span>
+                </label>
                 <div className="relative mt-1">
                   <input
                     type="password"
                     name="password"
                     className="w-full border border-gray-300 p-2 rounded-md pr-10"
+                    placeholder="Nhập mật khẩu"
                     value={formData.password}
                     onChange={handleInputChange}
                     required
@@ -255,6 +235,7 @@ const CreateLodgerAccount = () => {
                   type="text"
                   name="identityCard"
                   className="w-full border border-gray-300 p-2 rounded-md mt-1"
+                  placeholder="Nhập CCCD"
                   value={formData.identityCard}
                   onChange={handleInputChange}
                   required
@@ -269,6 +250,7 @@ const CreateLodgerAccount = () => {
                   type="text"
                   name="phone"
                   className="w-full border border-gray-300 p-2 rounded-md mt-1"
+                  placeholder="Nhập số điện thoại liên lạc"
                   value={formData.phone}
                   onChange={handleInputChange}
                   required
@@ -289,7 +271,9 @@ const CreateLodgerAccount = () => {
               </div>
 
               <div>
-                <label className="block text-gray-700 text-sm">Phòng</label>
+                <label className="block text-gray-700 text-sm">
+                  Phòng <span className="text-red-600">*</span>
+                </label>
                 <div className="relative mt-1">
                   <select
                     name="room"
@@ -303,7 +287,7 @@ const CreateLodgerAccount = () => {
                       rooms.map((room) => (
                         <option
                           key={room._id || room.id || Math.random().toString()}
-                          value={room.name}
+                          value={room._id}
                           disabled={room.status === "Full"}
                         >
                           {room.name} ({room.status})
@@ -319,7 +303,9 @@ const CreateLodgerAccount = () => {
               </div>
 
               <div>
-                <label className="block text-gray-700 text-sm">Ngày thuê</label>
+                <label className="block text-gray-700 text-sm">
+                  Ngày thuê <span className="text-red-600">*</span>
+                </label>
                 <input
                   type="date"
                   name="rentalDate"
@@ -365,7 +351,7 @@ const CreateLodgerAccount = () => {
                 </svg>
               )}
             </div>
-            <label className="bg-green-600 text-white px-4 py-2 rounded-md text-sm cursor-pointer">
+            <label className="bg-green-500 hover:bg-green-700 transition duration-200 text-white px-4 py-2 rounded-md text-sm cursor-pointer">
               Tải ảnh lên
               <input
                 id="avatar-upload"
@@ -417,7 +403,7 @@ const CreateLodgerAccount = () => {
                   checked={isActive}
                   onChange={() => setIsActive(!isActive)}
                 />
-                <div className="w-14 h-7 bg-gray-200 rounded-full peer peer-checked:bg-green-600 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all"></div>
+                <div className="w-14 h-7 bg-gray-200 rounded-full peer peer-checked:bg-green-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all"></div>
               </label>
             </div>
           </div>
@@ -425,7 +411,7 @@ const CreateLodgerAccount = () => {
           <div className="w-full flex justify-center space-x-8 mt-8">
             <button
               type="button"
-              className="bg-green-600 text-white px-8 py-2 rounded-md"
+              className="bg-green-500 hover:bg-green-700 transition duration-200 text-white px-8 py-2 rounded-md"
               onClick={handleDiscard}
               disabled={loading}
             >
@@ -433,7 +419,7 @@ const CreateLodgerAccount = () => {
             </button>
             <button
               type="submit"
-              className="bg-green-600 text-white px-8 py-2 rounded-md"
+              className="bg-green-500 hover:bg-green-700 transition duration-200 text-white px-8 py-2 rounded-md"
               disabled={loading}
             >
               {loading ? "Lưu..." : "Lưu"}
