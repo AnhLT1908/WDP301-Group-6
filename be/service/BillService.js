@@ -64,9 +64,6 @@ export const addBillinRoom = async(req, res, next) => {
       if (!room) {
           return res.status(404).json({ message: "Không tìm thấy phòng." });
       }
-      if (!room) {
-          return res.status(404).json({ message: "Không tìm thấy phòng." });
-      }
 
       if (!room.house || !mongoose.Types.ObjectId.isValid(room.house)) {
           return res.status(400).json({ message: `Phòng ${room.name} không có houseId!` });
