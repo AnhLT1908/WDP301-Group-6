@@ -22,6 +22,7 @@ import LodgerList from "./page/LodgerList.jsx";
 import LodgerAccountList from "./page/LodgerAccountList.jsx";
 import ManagerLayout from "./components/layout/ManagerLayout.jsx";
 import CreateLodgerAccount from "./page/CreateLodgerAccount.jsx";
+import HouseList from "./page/HouseList.jsx";
 //import NotFound from "./page/NotFound.jsx";
 
 function Dashboard() {
@@ -54,14 +55,6 @@ function App() {
         {accountType === "Lodger" ? (
           <>
             <Route path="/home" element={<HomePage />} />
-            <Route
-              path="/create-lodger-account"
-              element={
-                <ManagerLayout>
-                  <CreateLodgerAccount />
-                </ManagerLayout>
-              }
-            />
           </>
         ) : (
           <Route path="/home" element={<Navigate to="/login" replace />} />
@@ -94,6 +87,14 @@ function App() {
                 </DashboardLayout>
               }
             />
+            <Route
+              path="/admin/house-list"
+              element={
+                <DashboardLayout>
+                  <HouseList />
+                </DashboardLayout>
+              }
+            />
           </>
         ) : (
           <Route path="/admin/*" element={<Navigate to="/login" replace />} />
@@ -109,14 +110,14 @@ function App() {
                 </DashboardLayout>
               }
             />
-            <Route
+            {/* <Route
               path="/manager/lodger-list"
               element={
                 <DashboardLayout>
                   <LodgerList />
                 </DashboardLayout>
               }
-            />
+            /> */}
             <Route
               path="/manager/house-detail/:houseId"
               element={
@@ -134,10 +135,18 @@ function App() {
               }
             />
             <Route
-              path="manager/lodger-account-list"
+              path="/manager/lodger-account-list"
               element={
                 <ManagerLayout>
                   <LodgerAccountList />
+                </ManagerLayout>
+              }
+            />
+            <Route
+              path="/manager/create-lodger-account"
+              element={
+                <ManagerLayout>
+                  <CreateLodgerAccount />
                 </ManagerLayout>
               }
             />
