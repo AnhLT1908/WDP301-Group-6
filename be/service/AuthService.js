@@ -6,9 +6,9 @@ import sendEmail from "../utils/mailer.js";
 
 export const Login = async (req, res) => {
   try {
-    const findAccount = await Account.findOne({
-      $or: [{ email: req.body.email }, { username: req.body.username }],
-    });
+    console.log("Request login: ", req.body);
+    const findAccount = await Account.findOne({ email: req.body.email });
+    console.log("Find account: ", findAccount);
     if (!findAccount) {
       return res.status(401).json({ error: "Wrong email or Username" });
     }
@@ -41,12 +41,13 @@ export const Login = async (req, res) => {
       );
       return res.status(200).json({
         message: "Login Successfully",
-        data: { ...others },
+        data: { ...others, token: genAccessToken },
       });
     }
   } catch (error) {
     return res.status(500).json({
       message: "Internal Server Error",
+      error: error,
     });
   }
 };
@@ -133,7 +134,10 @@ export const verifyPasswordResetCode = async (req, res) => {
       "Code verify is not correct, please check in email again !!"
     );
   } else if (account.passwordResetCode.code === passwordResetCode) {
-    return res.status(200).json({ message: "Verify Successfully" });
+    return res.status(200).json({
+      message: "Verify Successfully",
+      data: { accountId: account._doc._id },
+    });
   }
 };
 

@@ -1,22 +1,35 @@
-import express from 'express';
-import AccountController from '../controller/AccountController.js';
-import validateData from '../validations/ValidateData.js';
-import accountValidate from '../validations/AccountValidate.js';
-
+import express from "express";
+import AccountController from "../controller/AccountController.js";
+import validateData from "../validations/ValidateData.js";
+import accountValidate from "../validations/AccountValidate.js";
+import { protect, isAuthorized } from "../middleware/verifyToken.js";
 const AccountRouter = express.Router();
 
-AccountRouter.get("/profile", AccountController.getProfile);
+AccountRouter.get("/profile", protect, AccountController.getProfile);
 
-AccountRouter.get("/house/:houseId", /*Token Manager*/ AccountController.GetAll);
-
-AccountRouter.post("/create", validateData(accountValidate.validateAccount), /*Token Manager*/ AccountController.CreateAccount);
+AccountRouter.get("/house/:houseId", protect, AccountController.GetAll);
 
 AccountRouter.post(
-  "/create",
+  "/create-manager",
+  // protect,
   validateData(accountValidate.validateAccount),
-  /*Token Manager*/
-  AccountController.CreateAccount
+  /*Token Manager*/ AccountController.CreateManagerAccount
 );
+
+AccountRouter.post(
+  "/create-lodger",
+  // protect,
+  validateData(accountValidate.validateAccount),
+  /*Token Manager*/ AccountController.CreateLodgerAccount
+);
+
+AccountRouter.put("/change-status", protect, AccountController.ChangeStatus);
+
+//AccountRouter.get("/manager", protect, AccountController.getManagerAccounts);
+
+AccountRouter.get("/manager", AccountController.getManagerAccounts);
+
+AccountRouter.get("/lodger-accout-list", AccountController.getListLodger);
 
 AccountRouter.put(
   "/profile/change-password",
@@ -26,6 +39,8 @@ AccountRouter.put(
 
 AccountRouter.put(
   "/profile",
+  protect,
+  protect,
   validateData(accountValidate.validateProfile),
   AccountController.UpdateProfile
 );
