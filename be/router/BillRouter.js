@@ -9,5 +9,8 @@ BillRouter.post("/room/:roomId", protect, BillController.addBillinRoom);
 BillRouter.put('/confirm/:billId', protect, BillController.confimBill);
 BillRouter.get('/', BillController.getAllBill);
 
+BillRouter.get('/bill-detail/:billId', BillController.getOneBill);
+
+
 export default BillRouter;
 

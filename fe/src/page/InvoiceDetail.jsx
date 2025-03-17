@@ -96,10 +96,10 @@ export default function InvoiceDetail() {
         </div>
       </div>
 
-      {/* QR Code*/}
+      {/* QR Code
       <div className="bg-white shadow-lg rounded-lg p-6 mt-4"> 
         <QRCodeCanvas value={bill.qrUrl} alt="QR Code" />
-      </div>
+      </div> */}
     </div>
   );
 }
