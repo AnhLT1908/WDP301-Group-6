@@ -60,11 +60,10 @@ const RoomDetail = () => {
     }));
   };
 
-  // Sửa handleMemberChange để không phá cấu trúc dữ liệu members
   const handleMemberChange = (index, accountId) => {
     setRoom((prev) => {
       const newMembers = [...prev.members];
-      newMembers[index] = { accountId }; // Đảm bảo member là object với accountId
+      newMembers[index] = { accountId };
       return { ...prev, members: newMembers };
     });
   };
@@ -101,10 +100,20 @@ const RoomDetail = () => {
 
   const handleUpdateRoom = async () => {
     try {
-      console.log("Dữ liệu gửi đi:", room); // Debug dữ liệu trước khi gửi
+      // Lọc chỉ gửi các trường cần thiết và được phép cập nhật
+      const updatedRoom = {
+        name: room.name,
+        floor: room.floor,
+        area: room.area,
+        status: room.status,
+        priceList: room.priceList,
+        roomBill: room.roomBill,
+        members: room.members,
+      };
 
-      // Gửi request PUT với dữ liệu room
-      const response = await axios.put(`http://localhost:5000/api/v1/room/${roomId}`, room);
+      console.log("Dữ liệu gửi đi:", updatedRoom); // Debug dữ liệu gửi đi
+
+      const response = await axios.put(`http://localhost:5000/api/v1/room/${roomId}`, updatedRoom);
       console.log("Phản hồi từ server:", response.data); // Debug phản hồi
 
       setIsEditing(false);
@@ -194,8 +203,8 @@ const RoomDetail = () => {
             <RoomInput
               key={index}
               label={`Thành viên ${index + 1}`}
-              value={getLodgerName(member.accountId)} // Hiển thị tên dựa trên accountId
-              onChange={(val) => handleMemberChange(index, val)} // Chỉ dùng khi cần thay đổi member
+              value={getLodgerName(member.accountId)}
+              onChange={(val) => handleMemberChange(index, val)}
               editable={false} // Không cho chỉnh sửa trực tiếp tên ở đây
             />
           ))}
