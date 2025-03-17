@@ -1,14 +1,40 @@
-import React from "react";
-
-const accounts = Array(6).fill({
-  name: "Lindsey Curtis",
-  role: "Web Designer",
-  project: "Agency Website",
-  status: "Active",
-  budget: "3.9K"
-});
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 export default function LodgerList() {
+  const [accounts, setAccounts] = useState([]);
+  const [rooms, setRooms] = useState({});
+
+  useEffect(() => {
+    try{
+      const fetchAccounts = async () => {
+
+        const resAccount = await axios.get("http://localhost:5000/api/v1/account/lodger-accout-list");
+
+        const resRoom = await axios.get("http://localhost:5000/api/v1/room/");
+
+        //if account.roomId === room._id
+        if(Array.isArray(resRoom.data.data)){
+          const filteredAccounts = resAccount.data.data.filter(account => resRoom.data.data.find(room => account.roomId === room._id));
+          setAccounts(filteredAccounts);
+        }
+
+        const roomMap = resRoom.data.data.reduce((acc, room) => {
+          acc[room._id] = room.roomNumber;
+          return acc;
+        }, {});
+
+        setRooms(roomMap);
+        console.log("Rooms:", rooms);
+        
+      }
+
+      fetchAccounts()
+    }catch(error){
+      console.error("Error fetching lodger data:", error);
+    }
+  },[])
+
   return (
     <section className="p-8 w-full">
       <h2 className="text-yellow-500 text-2xl font-bold mb-4">Lodger List</h2>
@@ -17,29 +43,21 @@ export default function LodgerList() {
         <table className="w-full text-left">
           <thead>
             <tr>
-              <th>User</th>
-              <th>Project Name</th>
-              <th>Team</th>
-              <th>Status</th>
-              <th>Budget</th>
+              <th>User Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Gender</th>
+              <th>Room</th>
             </tr>
           </thead>
           <tbody>
             {accounts.map((account, index) => (
               <tr key={index} className="border-t">
-                <td>
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
-                    <div>
-                      {account.name}<br/>
-                      <span className="text-sm text-gray-500">{account.role}</span>
-                    </div>
-                  </div>
-                </td>
-                <td>{account.project}</td>
-                <td>👥👥👥</td>
-                <td className="text-green-500">{account.status}</td>
-                <td>{account.budget}</td>
+                <td>{account.firstName + " " + account.lastName}</td>
+                <td>{account.email}</td>
+                <td>{account.phone}</td>
+                <td>{account.gender}</td>
+                <td>{rooms[account.roomId]}</td>
               </tr>
             ))}
           </tbody>

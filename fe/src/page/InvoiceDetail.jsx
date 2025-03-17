@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { QRCodeCanvas } from "qrcode.react";
 
 export default function InvoiceDetail() {
-  const { billId } = useParams(); // Lấy houseId từ URL
+  const { billId } = useParams(); 
   const [bill, setBill] = useState(null);
   const [house, setHouse] = useState([]);
   const [room, setRoom] = useState([]);

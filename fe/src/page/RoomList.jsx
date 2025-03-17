@@ -43,13 +43,16 @@ export default function RoomList() {
         }
 
         console.log("Manager House:", managerHouse);
+        console.log("Manager House ID:", managerHouse._id);
+        
 
         const response = await axios.get("http://localhost:5000/api/v1/room/");
         console.log("Room API Response:", response.data);
         
         if (Array.isArray(response.data.data)) {
-          const filteredRooms = response.data.data.filter(room => room.houseId === managerHouse.id);
+          const filteredRooms = response.data.data.filter(room => room.houseId === managerHouse._id);
           setRooms(filteredRooms);
+          console.log("Filtered Rooms:", filteredRooms)
         } else {
           setRooms([]);
         }
@@ -96,8 +99,8 @@ export default function RoomList() {
                     {room.status ? "Available" : "Empty"}
                   </td>
                   <td>
-                  <button 
-                      className="bg-green-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+                    <button 
+                      className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
                       onClick={() => navigate(`/manager/room/room-detail/${room._id}`)}
                     >
                       Detail

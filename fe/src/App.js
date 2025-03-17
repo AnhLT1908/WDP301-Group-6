@@ -145,7 +145,7 @@ function App() {
             }
           />
           <Route
-            path = "/manager/house-detail"
+            path = "manager/house-detail"
             element={
               <DashboardLayout>
                 <HouseDetail />
@@ -153,7 +153,7 @@ function App() {
             }
           />
           <Route
-            path = "/manager/invoice-detail/:invoiceId"
+            path = "manager/invoice-detail/:invoiceId"
             element={
               <DashboardLayout>
                 <InvoiceDetail />
@@ -161,7 +161,7 @@ function App() {
             }
           />
           <Route 
-            path = "/manager/invoice/new-invoice"
+            path = "manager/invoice/new-invoice"
             element = {
               <DashboardLayout>
                 <NewInvoice/>

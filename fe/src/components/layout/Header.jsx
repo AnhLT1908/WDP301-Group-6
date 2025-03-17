@@ -85,7 +85,7 @@ function Header() {
             onClick={() => setDropdownOpen(!dropdownOpen)}
           >
             <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
-            <span className="text-[#FDEE2A]">{user?.firstName + user?.lastName}</span>
+            <span className="text-[#FDEE2A]">{user?.firstName + "" + user?.lastName}</span>
           </div>
         {dropdownOpen && (
           <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded shadow-lg z-50">
