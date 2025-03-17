@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import authorsTableData from "../data/authors-table-data";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const LodgerAccountList = () => {
   const [houseManageId, setHouseManageId] = useState("");
   const [memberOfHouse, setMemberOfHouse] = useState([]);
+  const navigate = useNavigate();
 
   const hostId = JSON.parse(localStorage.getItem("user"))._id;
   console.log("Host id", hostId);
@@ -59,22 +61,26 @@ const LodgerAccountList = () => {
     fetchMemberOfHouse();
   }, [houseManageId]);
 
+  const handleCreateAccount = () => {
+    navigate("/manager/create-lodger-account")
+  }
+
   console.log("House Id", houseManageId);
   console.log("MemberList", memberOfHouse);
 
   return (
     <div className="mb-8 flex flex-col">
       {/* Card Container */}
-      <div className="m-6">
+      {/* <div className="m-6">
         <button className="flex justify-center items-center rounded-md font-medium text-white bg-green-600 p-6 w-[100px] h-[50px]">
           Back
         </button>
-      </div>
-      <div className="shadow overflow-hidden">
+      </div> */}
+      <div className="shadow overflow-hidden m-6">
         {/* Card Header */}
         <div className="flex justify-between items-center rounded-lg bg-gradient-to-r from-green-700 to-green-500 p-6 mx-6">
           <h6 className="text-white text-lg font-medium">Lodger List</h6>
-          <button className="bg-white text-green-500 font-bold px-6 py-2 rounded-xl shadow-md">
+          <button onClick={handleCreateAccount} className="bg-white text-green-500 font-bold px-6 py-2 rounded-xl shadow-md">
             Create new account
           </button>
         </div>

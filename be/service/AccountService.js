@@ -142,6 +142,8 @@ export const CreateLodgerAccount = async (req, res) => {
       return res.status(400).json({ message: "Phòng đã đầy" });
     }
 
+    console.log("roomData", roomData);
+
     const accountData = await Account.create({
       firstName,
       lastName,
@@ -198,6 +200,7 @@ export const CreateLodgerAccount = async (req, res) => {
     });
   }
 };
+
 export const CreateManagerAccount = async (req, res) => {
   const {
     firstName,
