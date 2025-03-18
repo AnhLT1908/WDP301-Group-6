@@ -80,7 +80,7 @@ const LodgerAccountList = () => {
         {/* Card Header */}
         <div className="flex justify-between items-center rounded-lg bg-gradient-to-r from-green-700 to-green-500 p-6 mx-6">
           <h6 className="text-white text-lg font-medium">Lodger List</h6>
-          <button onClick={handleCreateAccount} className="bg-white text-green-500 font-bold px-6 py-2 rounded-xl shadow-md">
+          <button onClick={handleCreateAccount} className="bg-white text-green-500 hover:bg-green-900  transition duration-300 font-bold px-6 py-2 rounded-xl shadow-md">
             Create new account
           </button>
         </div>
@@ -109,7 +109,7 @@ const LodgerAccountList = () => {
                     : "border-b border-blue-gray-50"
                 }`;
                 return (
-                  <tr key={member._id}>
+                  <tr key={member._id} className="hover:bg-gray-300 transition duration-100">
 
                     <td className={cellClass}>
                       <div className="flex items-center gap-4">

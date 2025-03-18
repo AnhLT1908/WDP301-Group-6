@@ -26,11 +26,9 @@ export default function DashboardHeader() {
   return (
     <header className="bg-green-800 text-white flex justify-between items-center p-4">
       <div className="flex items-center gap-4">
-        <input
-          type="text"
-          placeholder="Search Or Type Command..."
-          className="p-2 rounded w-80 text-black"
-        />
+        <span className="font-bold text-xl text-[#FDEE2A]">
+          Trang chủ quản trị viên
+        </span>
       </div>
       <div className="relative">
         <div
