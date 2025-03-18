@@ -46,11 +46,8 @@ const accountValidate = {
     phone: Joi.string()
       .allow("", null)
       .pattern(new RegExp("^(\\+84|0)[3-9][0-9]{8}$")),
-    avatar: Joi.string()
-      .allow("", null)
-      .uri()
-      .max(2000)
-      .pattern(new RegExp("^(\\+84|0)[3-9][0-9]{8}$")),
+    avatar: Joi.string().allow("", null).uri().max(2000),
+      //.pattern(new RegExp("^(\\+84|0)[3-9][0-9]{8}$")),
     avatar: Joi.string().allow("", null).uri().max(2000),
     payosClientId: Joi.string().allow("", null),
     payosAPIKey: Joi.string().allow("", null),

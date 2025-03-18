@@ -23,6 +23,10 @@ import LodgerAccountList from "./page/LodgerAccountList.jsx";
 import ManagerLayout from "./components/layout/ManagerLayout.jsx";
 import CreateLodgerAccount from "./page/CreateLodgerAccount.jsx";
 import HouseList from "./page/HouseList.jsx";
+import RoomDetail from "./page/RoomDetail.jsx";
+import NewInvoice from "./page/NewInvoice.jsx";
+import RoomList from "./page/RoomList.jsx";
+import LodgerInvoice from "./page/LodgerInvoice.jsx";
 //import NotFound from "./page/NotFound.jsx";
 
 function Dashboard() {
@@ -55,6 +59,44 @@ function App() {
         {accountType === "Lodger" ? (
           <>
             <Route path="/home" element={<HomePage />} />
+            <Route
+              path="/lodger-account-list"
+              element={
+                <ManagerLayout>
+                  <LodgerAccountList />
+                </ManagerLayout>
+              }
+            />
+            <Route
+              path="/create-lodger-account"
+              element={
+                <ManagerLayout>
+                  <CreateLodgerAccount accountType={accountType}/>
+                </ManagerLayout>
+              }
+            />
+            <Route
+              path="/house-list"
+              element={
+                <ManagerLayout>
+                  <HouseList />
+                </ManagerLayout>
+              }
+            />
+            <Route
+              path="/room-detail"
+              element={
+                <ManagerLayout>
+                  <RoomDetail />
+                </ManagerLayout>
+              }
+            />
+            <Route
+              path = "/lodger-invoice/:billId"
+              element = {
+                  <LodgerInvoice />
+              }
+            />
           </>
         ) : (
           <Route path="/home" element={<Navigate to="/login" replace />} />
@@ -110,46 +152,55 @@ function App() {
                 </DashboardLayout>
               }
             />
-            {/* <Route
-              path="/manager/lodger-list"
-              element={
-                <DashboardLayout>
-                  <LodgerList />
-                </DashboardLayout>
-              }
-            /> */}
-            <Route
-              path="/manager/house-detail/:houseId"
-              element={
-                <DashboardLayout>
-                  <HouseDetail />
-                </DashboardLayout>
-              }
+          <Route
+            path = "/manager/lodger-list"
+            element={
+              <DashboardLayout>
+                <LodgerList />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path = "manager/house-detail"
+            element={
+              <DashboardLayout>
+                <HouseDetail />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path = "manager/invoice-detail/:billId"
+            element={
+              <DashboardLayout>
+                <InvoiceDetail />
+              </DashboardLayout>
+            }
+          />
+          <Route 
+            path = "manager/invoice/new-invoice"
+            element = {
+              <DashboardLayout>
+                <NewInvoice/>
+              </DashboardLayout>
+            }
             />
-            <Route
-              path="/manager/invoice-detail/:invoiceId"
-              element={
-                <DashboardLayout>
-                  <InvoiceDetail />
-                </DashboardLayout>
-              }
-            />
-            <Route
-              path="/manager/lodger-account-list"
-              element={
-                <ManagerLayout>
-                  <LodgerAccountList />
-                </ManagerLayout>
-              }
-            />
-            <Route
-              path="/manager/create-lodger-account"
-              element={
-                <ManagerLayout>
-                  <CreateLodgerAccount />
-                </ManagerLayout>
-              }
-            />
+          <Route
+            path = "manager/room/rooms-list"
+            element = {
+              <DashboardLayout>
+                <RoomList />
+              </DashboardLayout>
+            }
+          />
+
+          <Route
+            path = "manager/room/room-detail/:roomId"
+            element = {
+              <DashboardLayout>
+                <RoomDetail />
+              </DashboardLayout>
+            }
+          />
           </>
         ) : (
           <Route path="/manager/*" element={<Navigate to="/login" replace />} />
