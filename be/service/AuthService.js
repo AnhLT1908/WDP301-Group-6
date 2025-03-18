@@ -6,11 +6,9 @@ import sendEmail from "../utils/mailer.js";
 
 export const Login = async (req, res) => {
   try {
-    console.log("Request login: ", req.body)
-    const findAccount = await Account.findOne({
-      email: req.body.email 
-    });
-    console.log("Find account: ",findAccount)
+    console.log("Request login: ", req.body);
+    const findAccount = await Account.findOne({ email: req.body.email });
+    console.log("Find account: ", findAccount);
     if (!findAccount) {
       return res.status(401).json({ error: "Wrong email or Username" });
     }

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-const CreateLodgerAccount = ({accountType}) => {
-  // Initial state to use for resetting the form
+const CreateLodgerAccount = () => {
+  const navigate = useNavigate();
+
   const initialFormData = {
     firstName: "",
     lastName: "",
@@ -14,7 +16,7 @@ const CreateLodgerAccount = ({accountType}) => {
     room: "",
     rentalDate: "",
     leaseTerminationDate: "",
-    gender: "",
+    gender: "Male",
   };
 
   const [avatar, setAvatar] = useState(null);
@@ -24,52 +26,39 @@ const CreateLodgerAccount = ({accountType}) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [token, setToken] = useState(() => localStorage.getItem("token"));
 
   // Fetch room data when component mounts
   useEffect(() => {
     fetchRooms();
-    if (accountType !== "Lodger") {
-      setError("You do not have permission to create a lodger account.");
-    }
-  }, [accountType]);
-  
+  }, []);
 
   // Function to fetch rooms from API
   const fetchRooms = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token"); // Assuming token is stored
-      const response = await axios.get("http://localhost:5000/api/v1/room", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
-      // Check the structure of the response and extract the array
+      const response = await axios.get("http://localhost:5000/api/v1/room");
+      console.log("response", response.data);
       let roomsData = [];
-      if (response.data) {
-        if (Array.isArray(response.data)) {
-          roomsData = response.data;
-        } else if (response.data.data && Array.isArray(response.data.data)) {
-          roomsData = response.data.data;
-        } else if (typeof response.data === "object") {
-          console.log("API Response structure:", response.data);
-          roomsData = Object.values(response.data).filter(
-            (item) => typeof item === "object" && item !== null
-          );
-        }
+      if (response.data && Array.isArray(response.data)) {
+        roomsData = response.data;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        roomsData = response.data.data;
+      } else if (response.data && typeof response.data === "object") {
+        console.log("API Response structure:", response.data);
+        roomsData = Object.values(response.data).filter(
+          (item) => typeof item === "object"
+        );
       }
 
       setRooms(roomsData);
+      setLoading(false);
     } catch (err) {
       console.error("Error fetching rooms:", err);
-      setError(
-        "Failed to load rooms: " + (err.response?.data?.message || err.message)
-      );
-    } finally {
+      setError("Failed to load rooms. Please try again later.");
       setLoading(false);
+      setTimeout(() => setError(null), 3000);
     }
   };
-
 
   const handleAvatarChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -88,24 +77,11 @@ const CreateLodgerAccount = ({accountType}) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (accountType !== "Lodger") {
-      setError("You do not have permission to create a lodger account.");
-      return;
-    }
     setLoading(true);
     setError(null);
     setSuccess(null);
 
-    // Validate token existence
-    if (!token) {
-      setError("Authentication required. Please log in again.");
-      setLoading(false);
-      return;
-    }
-
     try {
-      // Prepare data in the format expected by the API
-      const token = localStorage.getItem("token");      
       const requestData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -121,44 +97,48 @@ const CreateLodgerAccount = ({accountType}) => {
         status: isActive,
         accountType: "Lodger",
       };
+
       console.log("Sending data:", requestData);
-  
+
       await axios.post(
-        "http://localhost:5000/api/v1/account/create",
-        requestData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        "http://localhost:5000/api/v1/account/create-lodger",
+        requestData
       );
-  
+
       setSuccess("Account created successfully!");
-      handleDiscard();
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(null), 3000);
+      handleDiscard(); // Clears the form data without affecting notifications
+      setLoading(false);
     } catch (err) {
       console.error("Error creating account:", err);
       setError(
         err.response?.data?.message ||
-          "Failed to create account. Please check your input and try again."
+          "Failed to create account. Please try again."
       );
-    } finally {
+      setTimeout(() => setError(null), 3000);
       setLoading(false);
     }
   };
 
+  // Modified handleDiscard: only resets form fields, avatar, and active state.
   const handleDiscard = () => {
-    // Clear form data by setting empty values
     setFormData({ ...initialFormData });
-
-    // Reset avatar and active state
     setAvatar(null);
     setIsActive(true);
-    setError(null);
-    setSuccess(null);
+  };
+
+  const handleTurnBack = () => {
+    navigate("/manager/lodger-account-list");
   };
 
   return (
     <div className="bg-gray-100 min-h-screen">
       <div className="max-w-6xl mx-auto p-4">
-        <button className="bg-green-600 text-white px-4 py-2 rounded-md mb-8">
+        <button
+          onClick={handleTurnBack}
+          className="bg-green-600 text-white px-4 py-2 rounded-md mb-8"
+        >
           Quay về
         </button>
 
@@ -290,7 +270,7 @@ const CreateLodgerAccount = ({accountType}) => {
                         <option
                           key={room._id || room.id || Math.random().toString()}
                           value={room._id}
-                          disabled={room.status === "full"}
+                          disabled={room.status === "Full"}
                         >
                           {room.name} ({room.status})
                         </option>

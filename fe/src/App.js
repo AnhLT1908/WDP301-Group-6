@@ -15,10 +15,10 @@ import AccountList from "./page/AccountList";
 import SetNewPassword from "./page/SetNewPassword.jsx";
 import HomePageAdmin from "./page/HomePageAdmin.jsx";
 import InvoiceList from "./page/InvoiceList.jsx";
-import HouseDetail from './page/HouseDetail.jsx';
-import InvoiceDetail from './page/InvoiceDetail.jsx';
-import UserProfile from './page/UserProfile.jsx';
-import LodgerList from './page/LodgerList.jsx';
+import HouseDetail from "./page/HouseDetail.jsx";
+import InvoiceDetail from "./page/InvoiceDetail.jsx";
+import UserProfile from "./page/UserProfile.jsx";
+import LodgerList from "./page/LodgerList.jsx";
 import LodgerAccountList from "./page/LodgerAccountList.jsx";
 import ManagerLayout from "./components/layout/ManagerLayout.jsx";
 import CreateLodgerAccount from "./page/CreateLodgerAccount.jsx";
@@ -113,18 +113,27 @@ function App() {
               }
             />
             <Route
-            path="/admin/dashboard"
-            element={
-              <DashboardLayout>
-                <Dashboard />
-              </DashboardLayout>
-            }
+              path="/admin/dashboard"
+              element={
+                <DashboardLayout>
+                  <Dashboard />
+                </DashboardLayout>
+              }
             />
+
             <Route
               path="/admin/account-list"
               element={
                 <DashboardLayout>
                   <AccountList />
+                </DashboardLayout>
+              }
+            />
+            <Route
+              path="/admin/house-list"
+              element={
+                <DashboardLayout>
+                  <HouseList />
                 </DashboardLayout>
               }
             />
@@ -135,13 +144,13 @@ function App() {
 
         {accountType === "Manager" ? (
           <>
-          <Route
-            path="/manager/invoice-list"
-            element={
-              <DashboardLayout>
-                <InvoiceList />
-              </DashboardLayout>
-            }
+            <Route
+              path="/manager/invoice-list"
+              element={
+                <DashboardLayout>
+                  <InvoiceList />
+                </DashboardLayout>
+              }
             />
           <Route
             path = "/manager/lodger-list"
