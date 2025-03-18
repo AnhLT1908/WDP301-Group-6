@@ -20,7 +20,7 @@ export default function LodgerList() {
         }
 
         const roomMap = resRoom.data.data.reduce((acc, room) => {
-          acc[room._id] = room.roomNumber;
+          acc[room._id] = room.name;
           return acc;
         }, {});
 

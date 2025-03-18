@@ -16,7 +16,9 @@ const RoomDetail = () => {
   useEffect(() => {
     const fetchRoom = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/v1/room/${roomId}`);
+        const res = await axios.get(
+          `http://localhost:5000/api/v1/room/${roomId}`
+        );
         setRoom(res.data.data);
         setLoading(false);
       } catch (error) {
@@ -29,7 +31,9 @@ const RoomDetail = () => {
   useEffect(() => {
     const fetchLodgers = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/v1/account/lodger-accout-list");
+        const res = await axios.get(
+          "http://localhost:5000/api/v1/account/lodger-accout-list"
+        );
         setLodgers(res.data.data);
       } catch (error) {
         console.error("Error fetching lodger data:", error);
@@ -41,7 +45,9 @@ const RoomDetail = () => {
   const fetchBills = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/v1/bill/");
-      const filteredBills = res.data.data.filter(bill => bill.roomId === roomId);
+      const filteredBills = res.data.data.filter(
+        (bill) => bill.roomId === roomId
+      );
       setBills(filteredBills);
       setIsBillPopupOpen(true);
     } catch (error) {
@@ -113,19 +119,27 @@ const RoomDetail = () => {
 
       console.log("Dữ liệu gửi đi:", updatedRoom); // Debug dữ liệu gửi đi
 
-      const response = await axios.put(`http://localhost:5000/api/v1/room/${roomId}`, updatedRoom);
+      const response = await axios.put(
+        `http://localhost:5000/api/v1/room/${roomId}`,
+        updatedRoom
+      );
       console.log("Phản hồi từ server:", response.data); // Debug phản hồi
 
       setIsEditing(false);
       alert("Cập nhật phòng thành công!");
     } catch (error) {
-      console.error("Error updating room:", error.response ? error.response.data : error.message);
-      alert("Không thể cập nhật phòng. Vui lòng kiểm tra console để biết chi tiết.");
+      console.error(
+        "Error updating room:",
+        error.response ? error.response.data : error.message
+      );
+      alert(
+        "Không thể cập nhật phòng. Vui lòng kiểm tra console để biết chi tiết."
+      );
     }
   };
 
   const getLodgerName = (accountId) => {
-    const lodger = lodgers.find(l => l._id === accountId);
+    const lodger = lodgers.find((l) => l._id === accountId);
     return lodger ? `${lodger.firstName} ${lodger.lastName}` : "Không tìm thấy";
   };
 
@@ -217,7 +231,10 @@ const RoomDetail = () => {
                 className="border rounded p-2 w-full"
                 placeholder="Nhập email thành viên"
               />
-              <button onClick={handleAddMember} className="bg-blue-500 text-white px-4 py-2 rounded">
+              <button
+                onClick={handleAddMember}
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+              >
                 Thêm thành viên
               </button>
             </>
@@ -227,11 +244,17 @@ const RoomDetail = () => {
 
       <div className="mt-auto grid grid-cols-3 gap-4">
         {isEditing ? (
-          <button onClick={handleUpdateRoom} className="bg-green-500 text-white px-6 py-3 rounded w-full">
+          <button
+            onClick={handleUpdateRoom}
+            className="bg-green-500 text-white px-6 py-3 rounded w-full"
+          >
             Lưu
           </button>
         ) : (
-          <button onClick={() => setIsEditing(true)} className="bg-green-500 text-white px-6 py-3 rounded w-full">
+          <button
+            onClick={() => setIsEditing(true)}
+            className="bg-green-500 text-white px-6 py-3 rounded w-full"
+          >
             Edit
           </button>
         )}
@@ -241,7 +264,9 @@ const RoomDetail = () => {
         >
           Xem hóa đơn phòng
         </button>
-        <button className="bg-green-500 text-white px-6 py-3 rounded w-full">Xem báo cáo phòng</button>
+        <button className="bg-green-500 text-white px-6 py-3 rounded w-full">
+          Xem báo cáo phòng
+        </button>
       </div>
 
       {isBillPopupOpen && (
