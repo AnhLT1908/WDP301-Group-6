@@ -67,7 +67,7 @@ export default function NewInvoice({ roomId }) {
       );
       
       if (response.data.success) {
-        setQrUrl(response.data.qrUrl);
+        setQrUrl(response.data.paymentLink);
         setBillData(response.data.data);
         alert("Invoice created successfully!");
       }
