@@ -17,7 +17,7 @@ export default function LodgerInvoice() {
   const [qrUrl, setQrUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [paymentSuccess, setPaymentSuccess] = useState(false); // Trạng thái thanh toán thành công
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   useEffect(() => {
     const fetchBillData = async () => {
@@ -45,7 +45,7 @@ export default function LodgerInvoice() {
           total: billData.total || 0,
         });
         setQrUrl(billData.paymentLink || "");
-        setPaymentSuccess(billData.isPaid || false); // Giả sử API trả về trạng thái isPaid
+        setPaymentSuccess(billData.isPaid || false); // Kiểm tra trạng thái ban đầu
         setLoading(false);
       } catch (error) {
         console.error("Error fetching bill data:", error);
@@ -60,20 +60,22 @@ export default function LodgerInvoice() {
   const handlePaymentConfirmation = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.post(
+      const res = await axios.put(
         `http://localhost:5000/api/v1/bill/confirm/${billId}`,
-        {},
+        { paymentMethod: "qr" }, // Gửi paymentMethod là "qr" vì dùng QR code
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
+      // Backend trả về { success: true, data: bill } khi thành công
       if (res.data.success) {
         setPaymentSuccess(true);
       }
     } catch (error) {
       console.error("Error confirming payment:", error);
-      setError("Failed to confirm payment");
+      const errorMessage = error.response?.data?.message || "Failed to confirm payment";
+      setError(errorMessage); // Hiển thị thông báo lỗi từ server (ví dụ: "Hóa đơn đã được thanh toán rồi!")
     }
   };
 
@@ -92,7 +94,7 @@ export default function LodgerInvoice() {
             Hóa đơn của bạn đã được thanh toán. Cảm ơn bạn!
           </p>
           <button
-            onClick={() => navigate("/user-profile")} // Chuyển về trang profile hoặc trang khác
+            onClick={() => navigate("/user-profile")}
             className="bg-green-500 text-white px-6 py-3 rounded"
           >
             Quay lại
@@ -105,104 +107,107 @@ export default function LodgerInvoice() {
   // Màn hình xem hóa đơn với QR code
   return (
     <div>
-        <Header/>
-    <div className="h-screen bg-gray-100 flex flex-col p-6">
-      <h1 className="text-2xl font-bold text-yellow-500 ml-20">View Invoice</h1>
-      <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-3xl mt-4 ml-40">
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <div className="flex flex-col">
-            <label className="text-sm font-semibold text-gray-600">Note</label>
-            <input
-              type="text"
-              name="note"
-              value={invoice.note}
-              className="border p-2 rounded mt-1 text-gray-700 bg-gray-100"
-              disabled
-            />
-          </div>
-          <div className="flex flex-col">
-            <label className="text-sm font-semibold text-gray-600">Debt</label>
-            <input
-              type="number"
-              name="debt"
-              value={invoice.debt}
-              className="border p-2 rounded mt-1 text-gray-700 bg-gray-100"
-              disabled
-            />
-          </div>
-          <div className="flex flex-col">
-            <label className="text-sm font-semibold text-gray-600">Payment Method</label>
-            <input
-              type="text"
-              name="paymentMethod"
-              value={invoice.paymentMethod}
-              className="border p-2 rounded mt-1 text-gray-700 bg-gray-100"
-              disabled
-            />
-          </div>
+      <Header />
+      <div className="h-screen bg-gray-100 flex flex-col p-6">
+        <h1 className="text-2xl font-bold text-yellow-500 ml-20">View Invoice</h1>
+        <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-3xl mt-4 ml-40">
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold text-gray-600">Note</label>
+              <input
+                type="text"
+                name="note"
+                value={invoice.note}
+                className="border p-2 rounded mt-1 text-gray-700 bg-gray-100"
+                disabled
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold text-gray-600">Debt</label>
+              <input
+                type="number"
+                name="debt"
+                value={invoice.debt}
+                className="border p-2 rounded mt-1 text-gray-700 bg-gray-100"
+                disabled
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold text-gray-600">Payment Method</label>
+              <input
+                type="text"
+                name="paymentMethod"
+                value={invoice.paymentMethod}
+                className="border p-2 rounded mt-1 text-gray-700 bg-gray-100"
+                disabled
+              />
+            </div>
 
-          {invoice.customPriceList.map((item, index) => (
-            <div key={item.name} className="flex flex-col col-span-2 border-t pt-4">
-              <h3 className="text-md font-semibold capitalize">{item.name}</h3>
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <label className="text-sm font-semibold text-gray-600">Price</label>
-                  <input
-                    type="number"
-                    value={item.price}
-                    className="border p-2 rounded mt-1 text-gray-700 bg-gray-100 w-full"
-                    disabled
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-semibold text-gray-600">Usage</label>
-                  <input
-                    type="number"
-                    value={item.usage}
-                    className="border p-2 rounded mt-1 text-gray-700 bg-gray-100 w-full"
-                    disabled
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-semibold text-gray-600">Total</label>
-                  <input
-                    type="number"
-                    value={item.total}
-                    className="border p-2 rounded mt-1 text-gray-700 bg-gray-100 w-full"
-                    disabled
-                  />
+            {invoice.customPriceList.map((item, index) => (
+              <div key={item.name} className="flex flex-col col-span-2 border-t pt-4">
+                <h3 className="text-md font-semibold capitalize">{item.name}</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">Price</label>
+                    <input
+                      type="number"
+                      value={item.price}
+                      className="border p-2 rounded mt-1 text-gray-700 bg-gray-100 w-full"
+                      disabled
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">Usage</label>
+                    <input
+                      type="number"
+                      value={item.usage}
+                      className="border p-2 rounded mt-1 text-gray-700 bg-gray-100 w-full"
+                      disabled
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">Total</label>
+                    <input
+                      type="number"
+                      value={item.total}
+                      className="border p-2 rounded mt-1 text-gray-700 bg-gray-100 w-full"
+                      disabled
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        {qrUrl && (
-          <div className="mt-6 flex flex-col items-center">
-            <h3 className="text-lg font-semibold">Payment QR Code</h3>
-            <QRCodeCanvas value={qrUrl} size={200} />
-            <p className="mt-2 text-sm text-gray-600">
-              Total: {invoice.total} VND
-            </p>
+          {qrUrl && (
+            <div className="mt-6 flex flex-col items-center">
+              <h3 className="text-lg font-semibold">Payment QR Code</h3>
+              <QRCodeCanvas value={qrUrl} size={200} />
+              <p className="mt-2 text-sm text-gray-600">
+                Total: {invoice.total} VND
+              </p>
+              <button
+                onClick={handlePaymentConfirmation}
+                className={`mt-4 px-4 py-2 rounded text-white ${
+                  paymentSuccess ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
+                }`}
+                disabled={paymentSuccess} // Vô hiệu hóa nếu đã thanh toán
+              >
+                Xác nhận thanh toán
+              </button>
+            </div>
+          )}
+
+          <div className="flex justify-between mt-6">
             <button
-              onClick={handlePaymentConfirmation}
-              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+              onClick={() => navigate(-1)}
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
             >
-              Xác nhận thanh toán
+              Back
             </button>
           </div>
-        )}
-
-        <div className="flex justify-between mt-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="bg-green-500 text-white px-4 py-2 rounded"
-          >
-            Back
-          </button>
         </div>
       </div>
-    </div>
     </div>
   );
 }
