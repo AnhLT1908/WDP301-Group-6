@@ -1,30 +1,66 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
 import { QRCodeCanvas } from "qrcode.react";
+import Header from "../components/layout/Header";
 
-export default function LodgerInvoice(){
-    const { billId } = useParams();
-    const navigate = useNavigate();
-    const [invoice, setInvoice] = useState({})
+export default function LodgerInvoice() {
+  const { billId } = useParams();
+  const navigate = useNavigate();
+  const [invoice, setInvoice] = useState({
+    note: "",
+    debt: 0,
+    paymentMethod: "",
+    customPriceList: [],
+    total: 0,
+  });
+  const [qrUrl, setQrUrl] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const fetchBillData = async () => {
-            try{
-                const token = localStorage.getItem("token")
-                const res = await axios.get(`http://localhost:5000/api/v1/bill/bill-detail/${billId}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                setInvoice(res.data.data);
-            }catch(err){
-                console.log("Error fetching bill data:", err);
-            }
-        }
-        fetchBillData();
-    }, [billId]);
+  useEffect(() => {
+    const fetchBillData = async () => {
+      if (!billId) {
+        setError("Bill ID is missing");
+        setLoading(false);
+        return;
+      }
 
-    return(
-        <div className="h-screen bg-gray-100 flex flex-col p-6">
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          `http://localhost:5000/api/v1/bill/bill-detail/${billId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        const billData = res.data.data;
+
+        setInvoice({
+          note: billData.note || "",
+          debt: billData.debt || 0,
+          paymentMethod: billData.paymentMethod || "",
+          customPriceList: billData.priceList || [],
+          total: billData.total || 0,
+        });
+        setQrUrl(billData.paymentLink || "");
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching bill data:", error);
+        setError("Failed to load bill details");
+        setLoading(false);
+      }
+    };
+    fetchBillData();
+  }, [billId]);
+
+  if (loading) return <div className="text-center p-6">Loading...</div>;
+  if (error) return <div className="text-center p-6 text-red-500">{error}</div>;
+
+  return (
+    <div>
+        <Header/>
+    <div className="h-screen bg-gray-100 flex flex-col p-6">
       <h1 className="text-2xl font-bold text-yellow-500 ml-20">View Invoice</h1>
       <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-3xl mt-4 ml-40">
         <div className="grid grid-cols-2 gap-4 mt-4">
@@ -59,7 +95,6 @@ export default function LodgerInvoice(){
             />
           </div>
 
-          {/* Price List Display */}
           {invoice.customPriceList.map((item, index) => (
             <div key={item.name} className="flex flex-col col-span-2 border-t pt-4">
               <h3 className="text-md font-semibold capitalize">{item.name}</h3>
@@ -96,11 +131,10 @@ export default function LodgerInvoice(){
           ))}
         </div>
 
-        {/* QR Code Display */}
-        {invoice.paymentLink && (
+        {qrUrl && (
           <div className="mt-6 flex flex-col items-center">
             <h3 className="text-lg font-semibold">Payment QR Code</h3>
-            <QRCodeCanvas value={invoice.paymentLink} size={200} />
+            <QRCodeCanvas value={qrUrl} size={200} />
             <p className="mt-2 text-sm text-gray-600">
               Total: {invoice.total} VND
             </p>
@@ -109,7 +143,7 @@ export default function LodgerInvoice(){
 
         <div className="flex justify-between mt-6">
           <button
-            onClick={() => navigate(-1)} // Quay lại trang trước đó
+            onClick={() => navigate(-1)}
             className="bg-green-500 text-white px-4 py-2 rounded"
           >
             Back
@@ -117,6 +151,6 @@ export default function LodgerInvoice(){
         </div>
       </div>
     </div>
+    </div>
   );
-
 }

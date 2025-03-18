@@ -26,6 +26,7 @@ import HouseList from "./page/HouseList.jsx";
 import RoomDetail from "./page/RoomDetail.jsx";
 import NewInvoice from "./page/NewInvoice.jsx";
 import RoomList from "./page/RoomList.jsx";
+import LodgerInvoice from "./page/LodgerInvoice.jsx";
 //import NotFound from "./page/NotFound.jsx";
 
 function Dashboard() {
@@ -88,6 +89,12 @@ function App() {
                 <ManagerLayout>
                   <RoomDetail />
                 </ManagerLayout>
+              }
+            />
+            <Route
+              path = "/lodger-invoice/:billId"
+              element = {
+                  <LodgerInvoice />
               }
             />
           </>
@@ -153,7 +160,7 @@ function App() {
             }
           />
           <Route
-            path = "manager/invoice-detail/:invoiceId"
+            path = "manager/invoice-detail/:billId"
             element={
               <DashboardLayout>
                 <InvoiceDetail />

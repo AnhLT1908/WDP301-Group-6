@@ -21,12 +21,10 @@ export default function UserProfile() {
         setUser(JSON.parse(userData));
 
         const refRoom = await axios.get(`http://localhost:5000/api/v1/room`);
-
         const roomMap = refRoom.data.data.reduce((acc, room) => {
           acc[room._id] = room.name;
           return acc;
-        });
-
+        }, {});
         setRoom(roomMap);
       } catch (err) {
         console.error("Error fetching user data:", err);
@@ -49,19 +47,25 @@ export default function UserProfile() {
     }
   };
 
+  const handleViewBillDetail = (billId) => {
+    if (!billId) {
+      console.error("Bill ID is undefined");
+      return;
+    }
+    navigate(`/lodger-invoice/${billId}`);
+  };
+
   return (
     <div>
       <Header />
-
       <div className="max-w-4xl mx-auto p-8">
         <h1 className="text-2xl font-bold mb-6">User Profile</h1>
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div>
-            <div className="w-16 h-16 bg-gray-300 rounded-full flex-shrink-0"></div>{" "}
-            {/* Avatar */}
+          <div className="flex items-center">
+            <div className="w-16 h-16 bg-gray-300 rounded-full flex-shrink-0"></div>
             <div className="ml-4">
               <p className="text-lg font-medium">
-                {user?.firstName + user?.lastName}
+                {user?.firstName + " " + user?.lastName}
               </p>
               <p className="text-gray-600">{user?.accountType}</p>
             </div>
@@ -70,24 +74,14 @@ export default function UserProfile() {
 
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-lg font-bold mb-4">User Information</h2>
-          <p>
-            <strong>Identify Card:</strong> {user?.identityCard}
-          </p>
-          <p>
-            <strong>Email:</strong> {user?.email}
-          </p>
-          <p>
-            <strong>Phone:</strong> {user?.phone}
-          </p>
-          <p>
-            <strong>Gender:</strong> {user?.gender}
-          </p>
-          <p>
-            <strong>Room:</strong> {user[room.roomId]}
-          </p>
+          <p><strong>Identify Card:</strong> {user?.identityCard}</p>
+          <p><strong>Email:</strong> {user?.email}</p>
+          <p><strong>Phone:</strong> {user?.phone}</p>
+          <p><strong>Gender:</strong> {user?.gender}</p>
+          <p><strong>Room:</strong> {room[user?.roomId]}</p>
         </div>
 
-        <div className="mt-auto grid grid-cols-3 gap-4">
+        <div className="mt-4 grid grid-cols-3 gap-4">
           <button
             className="bg-green-500 text-white px-6 py-3 rounded w-full"
             onClick={fetchBills}
@@ -95,6 +89,7 @@ export default function UserProfile() {
             Xem hóa đơn phòng
           </button>
         </div>
+
         {isBillPopupOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
             <div className="bg-white p-6 rounded-lg w-96">
@@ -106,7 +101,7 @@ export default function UserProfile() {
                     <p>Total: {bill.total}</p>
                     <p>Status: {bill.status}</p>
                     <button
-                      onClick={() => navigate(`/bill/${bill._id}`)}
+                      onClick={() => handleViewBillDetail(bill._id)}
                       className="bg-blue-500 text-white px-4 py-2 rounded mt-2"
                     >
                       Xem chi tiết
