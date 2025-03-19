@@ -173,6 +173,7 @@ export const CreateManagerAccount = async (req, res) => {
         if (checkEmailExists !== null)
             return res.status(400).json({ message: "Email đã tồn tại" });
 
+        const password = "Admin@123";
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
         
@@ -186,7 +187,7 @@ export const CreateManagerAccount = async (req, res) => {
             phone,
             gender,
             status: status,
-            accountType: accountType || "Manager",
+            accountType: accountType,
         });
 
         return res.status(201).json({
