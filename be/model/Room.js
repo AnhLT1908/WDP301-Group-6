@@ -1,4 +1,40 @@
 import mongoose, { Schema } from 'mongoose';
+const imageCCCD = new Schema({
+    type: {
+        type: String,
+        enum: ['after', 'before']
+    },
+    url: {
+        type: String,
+    }
+});
+
+const member = new Schema({
+    name: {
+        type: String,
+        required: true,
+    },
+    phone: {
+        type: String,
+    },
+    dob: {
+        type: String,
+    },
+    gender: {
+        type: String,
+        enum: ["male", "female"]
+    },
+    identityCard: {
+        type: String,
+    },
+    avatar: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Upload"
+    },
+    note: {
+        type: String,
+    }
+});
 
 const RoomSchema = new Schema({
     name: {
@@ -7,8 +43,7 @@ const RoomSchema = new Schema({
     },
     house: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "House",
-        required: true
+        ref: "House"
     },
     floor: {
         type: Number,

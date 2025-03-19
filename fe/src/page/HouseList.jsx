@@ -4,10 +4,12 @@ import axios from "axios";
 import House1_img from "../assets/images/house_1.jpeg";
 import House2_img from "../assets/images/house_2.jpg";
 import House3_img from "../assets/images/house_3.jpg";
+import { useNavigate } from "react-router-dom";
 
 const HouseList = () => {
   const [houseList, setHouseList] = useState([]);
   const [selectedHouse, setSelectedHouse] = useState(null);
+  const navigate = useNavigate();
 
   console.log("House list: ", houseList);
   console.log("Selected house: ", selectedHouse);
@@ -36,10 +38,17 @@ const HouseList = () => {
     setSelectedHouse(house);
   };
 
+  const handleTurnBack = () => {
+    navigate("/admin");
+  };
+
   return (
     <div className="grid grid-cols-6 gap-4 p-8">
       <div className="col-span-1 flex flex-col gap-4 w-[50%]">
-        <button className="bg-green-500 text-white w-full px-4 py-2 rounded">
+        <button
+          onClick={handleTurnBack}
+          className="bg-green-500 hover:bg-green-700 text-white w-full px-4 py-2 rounded"
+        >
           Back
         </button>
       </div>
@@ -71,13 +80,13 @@ const HouseList = () => {
                 <h2 className="font-bold">{house.name || `Nhà trọ`}</h2>
                 <div className="flex flex-col">
                   <p className="text-sm text-gray-700">
-                    {`Số lượng phòng: ${house.numberOfRoom}`}
+                    {`Số lượng phòng: ${house.numberOfRoom} phòng`}
                   </p>
                   <p className="text-sm text-gray-700">
-                    {`Số lượng người thuê: ${house.numberOfMember}`}
+                    {`Số lượng người thuê: ${house.numberOfMember} người`}
                   </p>
                   <p className="text-sm text-gray-700">
-                    {`Địa chỉ: ${house.location[0].detailLocation}`}
+                    {`Địa chỉ: ${house.location.detailLocation}, ${house.location.ward}, ${house.location.district}, ${house.location.province}`}
                   </p>
                 </div>
                 <div className="flex justify-around">
@@ -90,9 +99,7 @@ const HouseList = () => {
                       Hết phòng
                     </button>
                   )}
-                  <button
-                    className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 mt-2 rounded"
-                  >
+                  <button className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 mt-2 rounded">
                     View more
                   </button>
                 </div>
@@ -108,8 +115,8 @@ const HouseList = () => {
         <div className="relative w-full h-full bg-gray-300 rounded-3xl shadow-xl">
           {selectedHouse ? (
             <iframe
-              className="absolute w-full h-full rounded-3xl shadow-xl"
-              src={`${selectedHouse.location[0].srcMap}`}
+              className="absolute w-full h-[800px] rounded-3xl shadow-xl"
+              src={`${selectedHouse.location.srcMap}`}
               title="Map"
               allowFullScreen
               loading="lazy"

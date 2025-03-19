@@ -190,7 +190,6 @@ export const addBillinRoom = async(req, res, next) => {
   }
 };
 
-
 export const confirmBill = async(req, res, next) =>{
     try {
         const { billId } = req.params;

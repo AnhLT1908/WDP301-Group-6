@@ -298,12 +298,12 @@ export const GetOne = async (req, res, next) => {
     }
 
     const room = await Room.findById(roomId)
-      .populate("utilities")
-      .populate("houseId")
-      .populate({
-        path: "house",
-        populate: { path: "priceList", populate: "base" },
-      });
+      .populate("utilities");
+      // .populate("houseId")
+      // .populate({
+      //   path: "house",
+      //   populate: { path: "priceList", populate: "base" },
+      // });
 
     // Nếu không tìm thấy phòng
     if (!room) {
