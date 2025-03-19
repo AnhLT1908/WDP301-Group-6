@@ -96,7 +96,7 @@ export const getProfile = async (req, res) => {
 };
 
 export const CreateLodgerAccount = async (req, res) => {
-    const { firstName, lastName, email, password, dateOfBirth, identityCard, phone, room, rentalDate, leaseTerminationDate, gender, status, accountType } = req.body;
+    const { firstName, lastName, email, password, dateOfBirth, identityCard, phone, room, rentalDate, leaseTerminationDate, status, accountType } = req.body;
     try {
         const checkEmailExists = await Account.findOne({ email: email });
         if (checkEmailExists !== null)
@@ -125,7 +125,7 @@ export const CreateLodgerAccount = async (req, res) => {
             roomId: roomData._id,
             rentalDate: rentalDate ? new Date(rentalDate) : null,
             leaseTerminationDate: leaseTerminationDate ? new Date(leaseTerminationDate) : null,
-            gender,
+            // gender,
             status: status,
             accountType: accountType || "Lodger",
         });

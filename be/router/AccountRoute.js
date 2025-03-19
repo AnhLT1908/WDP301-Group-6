@@ -3,6 +3,8 @@ import AccountController from "../controller/AccountController.js";
 import validateData from "../validations/ValidateData.js";
 import accountValidate from "../validations/AccountValidate.js";
 import {protect, isAuthorized} from "../middleware/verifyToken.js";
+
+
 const AccountRouter = express.Router();
 
 AccountRouter.get("/profile", protect, AccountController.getProfile);
@@ -25,7 +27,6 @@ AccountRouter.post(
   validateData(accountValidate.validateAccount),
   /*Token Manager*/ AccountController.CreateManagerAccount
 );
-
 
 AccountRouter.put("/change-status", protect, AccountController.ChangeStatus);
 
