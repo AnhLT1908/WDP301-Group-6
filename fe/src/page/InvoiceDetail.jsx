@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const RoomDetail = () => {
+const RoomDetail1 = () => {
   const { roomId } = useParams();
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -132,8 +132,8 @@ const RoomDetail = () => {
     navigate(`/manager/invoice/new-invoice/${roomId}`);
   };
 
-  if (loading) return <p>Loading...</p>;
-  if (!room) return <p>Không tìm thấy thông tin phòng.</p>;
+  // if (loading) return <p>Loading...</p>;
+  // if (!room) return <p>Không tìm thấy thông tin phòng.</p>;
 
   return (
     <div className="container mx-auto p-4 flex flex-col min-h-screen">
@@ -305,4 +305,4 @@ const RoomInput = ({ label, value, onChange, editable }) => {
   );
 };
 
-export default RoomDetail;
+export default RoomDetail1;
