@@ -17,7 +17,6 @@ export default function InvoiceDetail() {
         console.error("Error fetching house data:", error);
       }
     };
-
     fetchBill();
   }, [billId]);
 
