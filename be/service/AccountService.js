@@ -3,6 +3,11 @@ import bcrypt from 'bcrypt';
 import Room from '../model/Room.js';
 import getCurrentUser from '../utils/getCurrentUser.js';
 import mongoose from 'mongoose';
+import Account from '../model/Account.js';
+import bcrypt from 'bcrypt';
+import Room from '../model/Room.js';
+import getCurrentUser from '../utils/getCurrentUser.js';
+import mongoose from 'mongoose';
 
 export const GetAll = async (req, res) => {
     try {
@@ -22,6 +27,7 @@ export const GetAll = async (req, res) => {
                 .sort({ createdAt: -1 })
                 .exec();
 
+        const totalPages = Math.ceil(totalAccounts / limitPerPage);
         const totalPages = Math.ceil(totalAccounts / limitPerPage);
 
         return res.status(201).json({
@@ -153,7 +159,20 @@ export const getManagerAccounts = async (req, res) => {
         const pageNumber = parseInt(page) || 1;
         const limitPerPage = parseInt(limit) || 10;
         const skip = (pageNumber - 1) * limitPerPage;
+    try {
+        const { page, limit } = req.query;
+        const pageNumber = parseInt(page) || 1;
+        const limitPerPage = parseInt(limit) || 10;
+        const skip = (pageNumber - 1) * limitPerPage;
 
+        // Lọc các tài khoản có accountType là "Manager"
+        const totalManagers = await Account.countDocuments({ accountType: "Manager" });
+        const managers = await Account.find({ accountType: "Manager" })
+            .skip(skip)
+            .limit(limitPerPage)
+            .sort({ createdAt: -1 })
+            .select("-password -refreshToken -passwordResetCode") // Ẩn thông tin nhạy cảm
+            .exec();
         // Lọc các tài khoản có accountType là "Manager"
         const totalManagers = await Account.countDocuments({ accountType: "Manager" });
         const managers = await Account.find({ accountType: "Manager" })
@@ -164,7 +183,21 @@ export const getManagerAccounts = async (req, res) => {
             .exec();
 
         const totalPages = Math.ceil(totalManagers / limitPerPage);
+        const totalPages = Math.ceil(totalManagers / limitPerPage);
 
+        return res.status(200).json({
+            pagination: {
+                currentPage: pageNumber,
+                totalPages,
+                totalManagers,
+                accountsPerPage: managers.length,
+            },
+            data: managers,
+        });
+    } catch (error) {
+        console.error("Error fetching manager accounts:", error);
+        return res.status(500).json({ message: "Lỗi Server" });
+    }
         return res.status(200).json({
             pagination: {
                 currentPage: pageNumber,
@@ -201,10 +234,38 @@ export const getProfile = async (req, res) => {
         console.log(error.message);
         res.status(500).json({ message: error.message });
     }
+    try {
+        const accountId = getCurrentUser(req);
+        const profile = await Account.findById(accountId);
+        if (!profile) {
+            return res.send("Account không thấy");
+        }
+        const {
+            password,
+            refreshToken,
+            passwordResetCode,
+            imageStores,
+            ...other
+        } = profile._doc;
+        return res.status(200).json({
+            data: other,
+        });
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: error.message });
+    }
 };
 
 
 export const CreateLodgerAccount = async (req, res) => {
+    const { firstName, lastName, email, password, dateOfBirth, identityCard, phone, room, rentalDate, leaseTerminationDate, status, accountType } = req.body;
+    try {
+        const checkEmailExists = await Account.findOne({ email: email });
+        if (checkEmailExists !== null)
+            return res.status(400).json({ message: "Email đã tồn tại" });
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
     const { firstName, lastName, email, password, dateOfBirth, identityCard, phone, room, rentalDate, leaseTerminationDate, status, accountType } = req.body;
     try {
         const checkEmailExists = await Account.findOne({ email: email });
@@ -218,7 +279,14 @@ export const CreateLodgerAccount = async (req, res) => {
         if (!roomData) {
             return res.status(404).json({ message: "Phòng không tồn tại" });
         }
+        const roomData = await Room.findById(room);
+        if (!roomData) {
+            return res.status(404).json({ message: "Phòng không tồn tại" });
+        }
 
+        if (roomData.members?.length >= roomData.quantityMember) {
+            return res.status(400).json({ message: "Phòng đã đầy" });
+        }
         if (roomData.members?.length >= roomData.quantityMember) {
             return res.status(400).json({ message: "Phòng đã đầy" });
         }
@@ -238,7 +306,37 @@ export const CreateLodgerAccount = async (req, res) => {
             status: status,
             accountType: accountType || "Lodger",
         });
+        const accountData = await Account.create({
+            firstName,
+            lastName,
+            email,
+            password: hashedPassword,
+            dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+            identityCard,
+            phone,
+            roomId: roomData._id,
+            rentalDate: rentalDate ? new Date(rentalDate) : null,
+            leaseTerminationDate: leaseTerminationDate ? new Date(leaseTerminationDate) : null,
+            // gender,
+            status: status,
+            accountType: accountType || "Lodger",
+        });
 
+        await Room.findByIdAndUpdate(
+            roomData._id,
+            { 
+                $push: { 
+                    members: {
+                        accountId: accountData._id,
+                        joinDate: rentalDate ? new Date(rentalDate) : new Date()
+                    }
+                },
+                $set: { 
+                    status: roomData.members.length + 1 >= roomData.quantityMember ? "full" : "available"
+                }
+            },
+            { new: true, runValidators: true }
+        );
         await Room.findByIdAndUpdate(
             roomData._id,
             { 
@@ -273,6 +371,24 @@ export const CreateLodgerAccount = async (req, res) => {
             error: error.message
         });
     }
+        return res.status(201).json({
+            message: "Tạo tài khoản thành công",
+            data: {
+                firstName: accountData.firstName,
+                lastName: accountData.lastName,
+                email: accountData.email,
+                accountType: accountData.accountType,
+                room: roomData.name,
+                gender: accountData.gender
+            },
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message: "Lỗi Server Error",
+            error: error.message
+        });
+    }
 };
 
 export const CreateManagerAccount = async (req, res) => {
@@ -281,7 +397,28 @@ export const CreateManagerAccount = async (req, res) => {
         const checkEmailExists = await Account.findOne({ email: email });
         if (checkEmailExists !== null)
             return res.status(400).json({ message: "Email đã tồn tại" });
+    const { firstName, lastName, email, password, dateOfBirth, identityCard, phone, gender, status, accountType } = req.body;
+    try {
+        const checkEmailExists = await Account.findOne({ email: email });
+        if (checkEmailExists !== null)
+            return res.status(400).json({ message: "Email đã tồn tại" });
 
+        const password = "Admin@123";
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        
+        const accountData = await Account.create({
+            firstName,
+            lastName,
+            email,
+            password: hashedPassword,
+            dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+            identityCard,
+            phone,
+            gender,
+            status: status,
+            accountType: accountType,
+        });
         const password = "Admin@123";
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
@@ -316,8 +453,32 @@ export const CreateManagerAccount = async (req, res) => {
             error: error.message
         });
     }
+        return res.status(201).json({
+            message: "Tạo tài khoản thành công",
+            data: {
+                firstName: accountData.firstName,
+                lastName: accountData.lastName,
+                email: accountData.email,
+                accountType: accountData.accountType,
+                gender: accountData.gender
+            },
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message: "Lỗi Server Error",
+            error: error.message
+        });
+    }
 };
 export const UpdateProfile = async (req, res) => {
+    try {
+        const accountId = getCurrentUser(req);
+        const account = await Account.findById(accountId);
+        
+        if (!account) {
+            return res.status(404).json({ message: "Account không tìm thấy" });
+        }
     try {
         const accountId = getCurrentUser(req);
         const account = await Account.findById(accountId);
@@ -340,7 +501,32 @@ export const UpdateProfile = async (req, res) => {
             phone,
             avatar,
         }, { new: true });
+        const { 
+            firstName,
+            lastName, 
+            phone, 
+            avatar, 
+        } = req.body;
+        const updatedAccount = await Account.findByIdAndUpdate
+        (
+            accountId, {
+            firstName,
+            lastName,
+            phone,
+            avatar,
+        }, { new: true });
 
+        const { password, _id, refreshToken, passwordResetCode, imageStores, ...other } = updatedAccount._doc;
+        return res.status(200).json({
+            message: "Cập nhật thành công",
+            data: other,
+        });
+    } catch (error) {
+        console.error(error.message);
+        return res.status(500).json({
+            message: "Lỗi Server Error",
+        });
+    }
         const { password, _id, refreshToken, passwordResetCode, imageStores, ...other } = updatedAccount._doc;
         return res.status(200).json({
             message: "Cập nhật thành công",
@@ -399,7 +585,17 @@ export const ChangeStatus = async (req, res, next) => {
     try {
         const accountId = getCurrentUser(req);
         const { status } = req.body;
+    try {
+        const accountId = getCurrentUser(req);
+        const { status } = req.body;
 
+        // Kiểm tra status phải là Boolean (true/false)
+        if (typeof status !== "boolean") {
+            return res.status(400).json({
+                success: false,
+                message: "Status must be either true or false",
+            });
+        }
         // Kiểm tra status phải là Boolean (true/false)
         if (typeof status !== "boolean") {
             return res.status(400).json({
@@ -415,13 +611,33 @@ export const ChangeStatus = async (req, res, next) => {
                 message: "Tài khoản không tồn tại!",
             });
         }
+        const existAccount = await Account.findById(accountId);
+        if (!existAccount) {
+            return res.status(404).json({
+                success: false,
+                message: "Tài khoản không tồn tại!",
+            });
+        }
 
         const updatedAccount = await Account.findByIdAndUpdate(
             accountId,
             { status },
             { new: true }
         );
+        const updatedAccount = await Account.findByIdAndUpdate(
+            accountId,
+            { status },
+            { new: true }
+        );
 
+        return res.status(200).json({
+            success: true,
+            message: `Account changed to ${status}`,
+            data: updatedAccount,
+        });
+    } catch (error) {
+        next(error);
+    }
         return res.status(200).json({
             success: true,
             message: `Account changed to ${status}`,
@@ -438,6 +654,12 @@ export const getListLodger = async(req,res,next)=>{
         const pageNumber = parseInt(page) || 1;
         const limitPerPage = parseInt(limit) || 10;
         const skip = (pageNumber - 1) * limitPerPage;
+export const getListLodger = async(req,res,next)=>{
+    try {
+        const { page, limit } = req.query;
+        const pageNumber = parseInt(page) || 1;
+        const limitPerPage = parseInt(limit) || 10;
+        const skip = (pageNumber - 1) * limitPerPage;
 
         // Lọc các tài khoản có accountType là "Manager"
         const totalLodger = await Account.countDocuments({ accountType: "Lodger" });
@@ -447,7 +669,16 @@ export const getListLodger = async(req,res,next)=>{
             .sort({ createdAt: -1 })
             .select("-password -refreshToken -passwordResetCode") // Ẩn thông tin nhạy cảm
             .lean()
+        // Lọc các tài khoản có accountType là "Manager"
+        const totalLodger = await Account.countDocuments({ accountType: "Lodger" });
+        const lodger = await Account.find({ accountType: "Lodger" })
+            .skip(skip)
+            .limit(limitPerPage)
+            .sort({ createdAt: -1 })
+            .select("-password -refreshToken -passwordResetCode") // Ẩn thông tin nhạy cảm
+            .lean()
 
+        const totalPages = Math.ceil(totalLodger / limitPerPage);
         const totalPages = Math.ceil(totalLodger / limitPerPage);
 
         return res.status(200).json({

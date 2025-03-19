@@ -41,7 +41,7 @@ const RoomSchema = new Schema({
         type: String,
         required: true
     },
-    house: {
+    houseId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "House"
     },

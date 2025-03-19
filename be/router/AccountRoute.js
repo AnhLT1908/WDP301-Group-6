@@ -5,6 +5,9 @@ import accountValidate from "../validations/AccountValidate.js";
 import {protect, isAuthorized} from "../middleware/verifyToken.js";
 
 
+import {protect, isAuthorized} from "../middleware/verifyToken.js";
+
+
 const AccountRouter = express.Router();
 
 AccountRouter.get("/profile", protect, AccountController.getProfile);
