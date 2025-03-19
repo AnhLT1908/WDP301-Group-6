@@ -149,40 +149,6 @@ export const getOne = async (req, res) => {
     }
 };
 
-export const getHouseByHostId = async (req, res) => {
-    try {
-        // Retrieve hostId from request headers (you could pass it via Authorization header or another method)
-        const hostId = req.headers['host-id']; // Example: send the hostId in the headers from the frontend
-
-        if (!hostId) {
-            return res.status(400).json({
-                success: false,
-                message: "Host ID is required.",
-            });
-        }
-
-        // Find the house by hostId (accountId in this case)
-        const houses = await House.find({ hostId: hostId, deleted: false }); // Make sure to only get non-deleted houses
-
-        if (houses.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "No houses found for this host.",
-            });
-        }
-
-        return res.status(200).json({
-            data: houses,
-        });
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error",
-            error: error.message,
-        });
-    }
-};
-
 
 export const ChangeHouseStatus = async (req, res, next) => {
   try {

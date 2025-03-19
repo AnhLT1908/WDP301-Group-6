@@ -29,10 +29,7 @@ import RoomList from "./page/RoomList.jsx";
 import LodgerInvoice from "./page/LodgerInvoice.jsx";
 import UpdateLodgerAccount from "./page/UpdateLodgerAccount.jsx";
 //import NotFound from "./page/NotFound.jsx";
-
-function Dashboard() {
-  return <div>Welcome to Dashboard</div>;
-}
+import Dashboard from "./page/Dashboard.jsx";
 
 function App() {
   const [accountType, setAccountType] = useState(
@@ -197,6 +194,23 @@ function App() {
                 </ManagerLayout>
               }
             />
+          <Route
+            path = "manager/room/rooms-list"
+            element = {
+              <DashboardLayout>
+                <RoomList />
+              </DashboardLayout>
+            }
+          />
+
+          <Route
+            path = "manager/room/room-detail/:roomId"
+            element = {
+              <DashboardLayout>
+                <RoomDetail />
+              </DashboardLayout>
+            }
+          />
           </>
         ) : (
           <Route path="/manager/*" element={<Navigate to="/login" replace />} />

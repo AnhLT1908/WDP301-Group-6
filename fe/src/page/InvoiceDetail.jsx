@@ -2,16 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const RoomDetail = () => {
-  const { roomId } = useParams();
-  const [room, setRoom] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
-  const [lodgers, setLodgers] = useState([]);
-  const [newMemberEmail, setNewMemberEmail] = useState("");
-  const [bills, setBills] = useState([]);
-  const [isBillPopupOpen, setIsBillPopupOpen] = useState(false);
-  const navigate = useNavigate();
+export default function InvoiceDetail() {
+  const { billId } = useParams(); 
+  const [bill, setBill] = useState(null);
+  const [house, setHouse] = useState([]);
+  const [room, setRoom] = useState([]);
 
   useEffect(() => {
     const fetchRoom = async () => {
@@ -303,6 +298,5 @@ const RoomInput = ({ label, value, onChange, editable }) => {
       )}
     </div>
   );
-};
+}
 
-export default RoomDetail;
