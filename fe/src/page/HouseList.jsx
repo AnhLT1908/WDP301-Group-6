@@ -50,7 +50,7 @@ const HouseList = () => {
           className="bg-green-500 hover:bg-green-700 text-white w-full px-4 py-2 rounded"
         >
           Back
-        </button>
+        </button>``
       </div>
 
       <div className="col-span-2 flex flex-col gap-8 ml-[-70px] mr-[60px]">

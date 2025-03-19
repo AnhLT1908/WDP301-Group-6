@@ -8,6 +8,7 @@ export default function InvoiceDetail() {
   const [house, setHouse] = useState([]);
   const [room, setRoom] = useState([]);
 
+  // Fetch bill data
   useEffect(() => {
     const fetchBill = async () => {
       try {

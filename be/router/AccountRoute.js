@@ -10,7 +10,7 @@ const AccountRouter = express.Router();
 AccountRouter.get("/profile", protect, AccountController.getProfile);
 
 AccountRouter.get(
-  "/house/:houseId",
+  "/lodgerAccount/:house",
   /*Token Manager*/ AccountController.GetAll
 );
 
