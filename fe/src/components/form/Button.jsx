@@ -12,7 +12,7 @@ const Button = ({
     <button
       type={type}
       onClick={onClick}
-      className={`${className} hover:bg-green-700 transition duration-300 sm:px-6 sm:py-3 px-4 py-2 text-sm sm:text-base`}
+      className={`${className} hover:bg-green-800 transition duration-300 sm:px-6 sm:py-3 px-4 py-2 text-sm sm:text-base`}
     >
       <div className="flex items-center">
         {children}

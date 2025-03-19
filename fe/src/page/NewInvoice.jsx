@@ -175,3 +175,4 @@ export default function NewInvoice({ roomId }) {
     </div>
   );
 }
+
