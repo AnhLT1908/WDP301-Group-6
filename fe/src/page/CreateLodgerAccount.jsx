@@ -26,11 +26,14 @@ const CreateLodgerAccount = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [token, setToken] = useState(() => localStorage.getItem("token"));
 
   // Fetch room data when component mounts
   useEffect(() => {
     fetchRooms();
+    console.log("Get token: ", token);
   }, []);
+
 
   // Function to fetch rooms from API
   const fetchRooms = async () => {
@@ -51,10 +54,12 @@ const CreateLodgerAccount = () => {
       }
 
       setRooms(roomsData);
-      setLoading(false);
     } catch (err) {
       console.error("Error fetching rooms:", err);
-      setError("Failed to load rooms. Please try again later.");
+      setError(
+        "Failed to load rooms: " + (err.response?.data?.message || err.message)
+      );
+    } finally {
       setLoading(false);
       setTimeout(() => setError(null), 3000);
     }
@@ -108,7 +113,6 @@ const CreateLodgerAccount = () => {
       setSuccess("Account created successfully!");
       setTimeout(() => setSuccess(null), 3000);
       handleDiscard();
-      setLoading(false);
     } catch (err) {
       console.error("Error creating account:", err);
       setError(
@@ -127,7 +131,7 @@ const CreateLodgerAccount = () => {
   };
 
   const handleTurnBack = () => {
-    navigate("/manager/lodger-account-list");
+    navigate("/manager/lodger-list");
   };
 
   return (

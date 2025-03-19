@@ -57,6 +57,113 @@ export const GetAll = async (req, res) => {
   }
 };
 
+export const getLodgerAccount = async (req, res) => {
+  const { accountId } = req.params;
+  console.log("Lodger account id", accountId)
+  try {
+    const accountData = await Account.findById(accountId)
+      .populate('roomId', 'name status') // Populate room name and status
+      .exec();
+
+    if (!accountData) {
+      return res.status(404).json({ message: 'Tài khoản không tồn tại' });
+    }
+
+    return res.status(200).json({
+      message: 'Lấy thông tin tài khoản thành công',
+      data: accountData,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: 'Lỗi Server Error',
+      error: error.message,
+    });
+  }
+};
+
+export const updateLodgerAccount = async (req, res) => {
+  const { accountId } = req.params;
+  const {
+    firstName,
+    lastName,
+    email,
+    password,
+    dateOfBirth,
+    identityCard,
+    phone,
+    room,
+    rentalDate,
+    leaseTerminationDate,
+    gender,
+    status,
+  } = req.body;
+
+  console.log("Received update data: ", req.body);
+
+
+  try {
+    const accountData = await Account.findById(accountId);
+    if (!accountData) {
+      return res.status(404).json({ message: 'Tài khoản không tồn tại' });
+    }
+
+    if (email && email !== accountData.email) {
+      const checkEmailExists = await Account.findOne({ email: email });
+      if (checkEmailExists !== null) {
+        return res.status(400).json({ message: 'Email đã tồn tại' });
+      }
+    }
+
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      accountData.password = await bcrypt.hash(password, salt);
+    }
+
+    // Update room data if room has changed
+    if (room) {
+      const roomData = await Room.findById(room);
+      if (!roomData) {
+        return res.status(404).json({ message: 'Phòng không tồn tại' });
+      }
+
+      if (roomData.members?.length >= roomData.quantityMember) {
+        return res.status(400).json({ message: 'Phòng đã đầy' });
+      }
+
+      accountData.roomId = roomData._id;
+    }
+
+    // Update account data
+    accountData.firstName = firstName || accountData.firstName;
+    accountData.lastName = lastName || accountData.lastName;
+    accountData.email = email || accountData.email;
+    accountData.dateOfBirth = dateOfBirth ? new Date(dateOfBirth) : accountData.dateOfBirth;
+    accountData.identityCard = identityCard || accountData.identityCard;
+    accountData.phone = phone || accountData.phone;
+    accountData.rentalDate = rentalDate ? new Date(rentalDate) : accountData.rentalDate;
+    accountData.leaseTerminationDate = leaseTerminationDate
+      ? new Date(leaseTerminationDate)
+      : accountData.leaseTerminationDate;
+    accountData.gender = gender || accountData.gender;
+    accountData.status = status !== undefined ? status : accountData.status;
+
+    // Save updated account
+    await accountData.save();
+
+    return res.status(200).json({
+      message: 'Cập nhật tài khoản thành công',
+      data: accountData,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: 'Lỗi Server Error',
+      error: error.message,
+    });
+  }
+};
+
 export const getManagerAccounts = async (req, res) => {
   try {
     const { page, limit } = req.query;
@@ -109,6 +216,7 @@ export const getProfile = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 export const CreateLodgerAccount = async (req, res) => {
   const {
@@ -316,7 +424,7 @@ export const ChangePassword = async (req, res) => {
   try {
     const accountId = getCurrentUser(req);
     const { oldPassword, newPassword } = req.body;
-    const account = await Account.findById(accountId);
+    const account = await Account.findById(accountId);Q
     if (!account) {
       res.status(404).json({
         success: false,
