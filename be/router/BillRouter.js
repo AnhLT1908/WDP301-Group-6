@@ -13,4 +13,3 @@ BillRouter.get('/bill-detail/:billId', BillController.getOneBill);
 
 
 export default BillRouter;
-

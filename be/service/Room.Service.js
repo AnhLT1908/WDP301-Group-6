@@ -183,7 +183,6 @@ export const DeleteUtilities = async (req, res) => {
     const updatedRoom = await Room.findByIdAndUpdate(
       roomId,
       { $pull: { utilities: utilityId } },
-      { $pull: { utilities: utilityId } },
       { new: true }
     );
 
