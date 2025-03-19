@@ -35,7 +35,7 @@ AccountRouter.put(
 
 AccountRouter.post(
   "/create-manager",
-  // protect,
+   protect,
   validateData(accountValidate.validateAccount),
   /*Token Manager*/ AccountController.CreateManagerAccount
 );
@@ -44,9 +44,9 @@ AccountRouter.put("/change-status", protect, AccountController.ChangeStatus);
 
 //AccountRouter.get("/manager", protect, AccountController.getManagerAccounts);
 
-AccountRouter.get("/manager", AccountController.getManagerAccounts);
+AccountRouter.get("/manager", protect, AccountController.getManagerAccounts);
 
-AccountRouter.get("/lodger-accout-list", AccountController.getListLodger);
+AccountRouter.get("/lodger-accout-list", protect, AccountController.getListLodger);
 
 AccountRouter.put(
   "/profile/change-password",

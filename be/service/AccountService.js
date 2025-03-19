@@ -202,7 +202,6 @@ export const getProfile = async (req, res) => {
     }
 };
 
-
 export const CreateLodgerAccount = async (req, res) => {
     const { firstName, lastName, email, password, dateOfBirth, identityCard, phone, room, rentalDate, leaseTerminationDate, status, accountType } = req.body;
     try {
@@ -384,6 +383,13 @@ export const ChangePassword = async (req, res) => {
         });
     }
 };
+  }catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Lỗi Server Error",
+    });
+  }
+}
 
 export const ChangeStatus = async (req, res, next) => {
     try {

@@ -30,6 +30,7 @@ import LodgerInvoice from "./page/LodgerInvoice.jsx";
 import UpdateLodgerAccount from "./page/UpdateLodgerAccount.jsx";
 //import NotFound from "./page/NotFound.jsx";
 import Dashboard from "./page/Dashboard.jsx";
+import ManagerList from "./page/ManagerList.jsx";
 
 function App() {
   const [accountType, setAccountType] = useState(
@@ -111,6 +112,14 @@ function App() {
               element={
                 <DashboardLayout>
                   <HouseList />
+                </DashboardLayout>
+              }
+            />
+            <Route
+              path="/admin/manager-list"
+              element={
+                <DashboardLayout>
+                  <ManagerList />
                 </DashboardLayout>
               }
             />
