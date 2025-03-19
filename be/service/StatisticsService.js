@@ -22,10 +22,15 @@ export const statisticGeneral = async (req, res, next) => {
 
     // Lấy số phòng & số phòng trống trong 1 query
     const roomsData = await Room.aggregate([
-      { $match: { houseId: { $in: houses.map(h => h._id) }, deleted: false } },
-      { $group: { _id: "$houseId", totalRooms: { $sum: 1 }, emptyRooms: { $sum: { $cond: [{ $eq: [{ $size: "$members" }, 0] }, 1, 0] } } } },
+      { $match: { house: { $in: houses.map(h => h._id) }, deleted: false } }, 
+      {
+        $group: {
+          _id: "$house",
+          totalRooms: { $sum: 1 },
+          emptyRooms: { $sum: { $cond: [{ $eq: [{ $size: "$members" }, 0] }, 1, 0] } },
+        },
+      },
     ]);
-
     const roomNumber = roomsData.reduce((sum, data) => sum + data.totalRooms, 0);
     const roomNumberEmpty = roomsData.reduce((sum, data) => sum + data.emptyRooms, 0);
 
@@ -45,8 +50,8 @@ export const statisticAllBills = async (req, res, next) => {
   try {
     const currentUserId = getCurrentUser(req);
     const { month } = req.query;
-    const query = { deleted: false, ...(req.user.accountType === "Admin" && { hostId: currentUserId }) };
-    
+    const query = { ...(req.user.accountType === "Admin" && { hostId: currentUserId }) }; 
+
     const houses = await House.find(query);
     const houseIds = houses.map(h => h._id);
 
@@ -76,6 +81,7 @@ export const statisticAllBills = async (req, res, next) => {
 
     res.json(billStats);
   } catch (error) {
+    console.error("Error in statisticAllBills:", error);
     next(error);
   }
 };
@@ -101,14 +107,16 @@ export const statisticProblem = async (req, res, next) => {
 
     const problemStats = problems.reduce(
       (acc, problem) => {
-        acc[`numberProblem${problem.status.charAt(0).toUpperCase() + problem.status.slice(1)}`]++;
+        acc[`numberProblem${problem.status.charAt(0).toUpperCase() + problem.status.slice(1)}`] =
+          (acc[`numberProblem${problem.status.charAt(0).toUpperCase() + problem.status.slice(1)}`] || 0) + 1;
         return acc;
       },
-      { numberProblemNone: 0, numberProblemDoing: 0, numberProblemDone: 0 }
+      { numberProblemNone: 0, numberProblemDoing: 0, numberProblemPending: 0, numberProblemDone: 0 } 
     );
 
     res.json(problemStats);
   } catch (error) {
+    console.error("Error in statisticProblem:", error);
     next(error);
   }
 };
@@ -116,7 +124,7 @@ export const statisticProblem = async (req, res, next) => {
 export const statisticRevenue = async (req, res, next) => {
   try {
     const currentUserId = getCurrentUser(req);
-    const query = { deleted: false, ...(req.user.accountType === "Admin" && { hostId: currentUserId }) };
+    const query = { deleted: false, ...(req.user.accountType === "Admin" && { hostId: currentUserId }) }; 
 
     const houses = await House.find(query);
     const houseIds = houses.map(h => h._id);
@@ -137,6 +145,7 @@ export const statisticRevenue = async (req, res, next) => {
 
     res.json({ year: currentYear, revenueByMonth });
   } catch (error) {
+    console.error("Error in statisticRevenue:", error);
     next(error);
   }
 };

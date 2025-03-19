@@ -29,10 +29,7 @@ import RoomList from "./page/RoomList.jsx";
 import LodgerInvoice from "./page/LodgerInvoice.jsx";
 import UpdateLodgerAccount from "./page/UpdateLodgerAccount.jsx";
 //import NotFound from "./page/NotFound.jsx";
-
-function Dashboard() {
-  return <div>Welcome to Dashboard</div>;
-}
+import Dashboard from "./page/Dashboard.jsx";
 
 function App() {
   const [accountType, setAccountType] = useState(

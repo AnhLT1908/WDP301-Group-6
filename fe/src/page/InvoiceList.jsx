@@ -17,7 +17,9 @@ export default function InvoiceList() {
           axios.get("http://localhost:5000/api/v1/room/")
         ]);
 
-        const houseMap = houseRes.data.data.reduce((acc, house) => {
+        console.log(roomRes.data.data);
+        
+        const houseMap = houseRes.data.houses.reduce((acc, house) => {
           acc[house._id] = house.name;
           return acc;
         }, {});
@@ -29,6 +31,7 @@ export default function InvoiceList() {
 
         setBills(billRes.data.data || []);
         setHouses(houseMap);
+        console.log(houses);
         setRooms(roomMap);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -39,7 +42,7 @@ export default function InvoiceList() {
   }, []);
 
   const handleViewDetail = (billId) => {
-    navigate(`/manager/bill-detail/${billId}`);
+    navigate(`/manager/invoice-detail/${billId}`);
   };
 
   return (

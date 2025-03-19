@@ -5,6 +5,8 @@ export default function DashboardHeader() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [userName, setUserName] = useState("Admin");
   const [accountId, setAccountId] = useState("");
+  const [accountType, setAccountType] = useState("");
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -13,6 +15,7 @@ export default function DashboardHeader() {
       const parsedUser = JSON.parse(userData);
       setUserName(parsedUser.name || "Admin");
       setAccountId(parsedUser._id);
+      setAccountType(parsedUser.accountType);
     }
   }, []);
 

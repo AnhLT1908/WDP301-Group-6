@@ -52,24 +52,37 @@ export default function DashboardSideBar() {
             )}
             <span className="ml-2">Menu</span>
           </li>
-          <ul
-            className={`ml-12 overflow-hidden transition-all duration-300 ${
-              menuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-            }`}
-          >
-            <li className="mb-2 hover:text-white text-[#FDEE2A]">
-              <Link to="/admin">Home</Link>
-            </li>
-            <li className="mb-2 hover:text-white text-[#FDEE2A]">
-              <Link to="/admin/dashboard">Dashboard</Link>
-            </li>
-            <li className="mb-2 hover:text-white text-[#FDEE2A]">
-              <Link to="/admin/house-list">House List</Link>
-            </li>
-            <li className="mb-2 hover:text-white text-[#FDEE2A]">
-              <Link to="/admin/account-list">Account List</Link>
-            </li>
-          </ul>
+          {menuOpen && (
+            <ul className="ml-4">
+              <li className="mb-2 text-[#FDEE2A]">
+                <Link to="/admin">Home</Link>
+              </li>
+              <li className="mb-2 text-[#FDEE2A]">
+                <Link to="/admin/dashboard">Dashboard</Link>
+              </li>
+              <li className="mb-2 text-[#FDEE2A]">
+                <Link to="/admin/account-list">Account List</Link>
+              </li>
+              <li className="mb-2 text-[#FDEE2A]">
+                <Link to="/admin/house-list">House List</Link>
+              </li>
+              <li className="mb-2 text-[#FDEE2A]">
+                <Link to="manager/house-detail">Account Detail</Link>
+              </li>
+              <li className="mb-2 text-[#FDEE2A]">
+                <Link to="/manager/lodger-list">Lodger List</Link>
+              </li>
+              <li className="mb-2 text-[#FDEE2A]">
+                <Link to="/manager/invoice-list">Invoice List</Link>
+              </li>
+              <li className="mb-2 text-[#FDEE2A]">
+                <Link to="manager/room/rooms-list">Room List</Link>
+              </li>
+              <li className="mb-2 text-[#FDEE2A]">
+                <Link to="manager/invoice/new-invoice">New Invoice</Link>
+              </li>
+            </ul>
+          )}
         </ul>
       </nav>
     </aside>
