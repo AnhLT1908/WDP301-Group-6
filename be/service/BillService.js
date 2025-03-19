@@ -147,11 +147,11 @@ export const addBillinRoom = async(req, res, next) => {
 
       const utilitiesTotal = priceList.reduce((sum, item) => sum + item.total, 0);
       const totalAmount = room.priceList.roomPrice + utilitiesTotal + debt;
-      console.log("Tổng số tiền:", totalAmount);
 
       const transactionId = generateTransactionId();
       const billCode = `BILL-${roomId}-${Date.now()}-${transactionId}`;
-      const { qrUrl } = generateVietQR(totalAmount, "Thanh toán tiền phòng " + room.name);
+      const paymentDescription = `Thanh toán tiền phòng ${room.house.name} - ${room.name}`;      
+      const { qrUrl } = generateVietQR(totalAmount, paymentDescription);
 
       const bill = new Bills({
           roomId,
@@ -181,7 +181,8 @@ export const addBillinRoom = async(req, res, next) => {
           success: true,
            data: bill, 
            qrUrl, 
-           transactionId 
+           transactionId,
+           paymentDescription,
           }
         );
 
