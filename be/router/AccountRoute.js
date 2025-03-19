@@ -9,6 +9,18 @@ AccountRouter.get("/profile", protect, AccountController.getProfile);
 
 AccountRouter.get("/house/:houseId", protect, AccountController.GetAll);
 
+AccountRouter.get(
+  "/lodger/:accountId",
+  protect,
+  AccountController.getLodgerAccount
+);
+
+AccountRouter.put(
+  "/updateLodgerAccount/:accountId",
+  protect,
+  AccountController.updateLodgerAccount
+);
+
 AccountRouter.post(
   "/create-manager",
   // protect,

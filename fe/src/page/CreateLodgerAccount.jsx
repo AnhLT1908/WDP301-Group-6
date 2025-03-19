@@ -131,7 +131,7 @@ const CreateLodgerAccount = () => {
   };
 
   const handleTurnBack = () => {
-    navigate("/manager/lodger-account-list");
+    navigate("/manager/lodger-list");
   };
 
   return (
