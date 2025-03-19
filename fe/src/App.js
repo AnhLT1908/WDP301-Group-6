@@ -194,23 +194,6 @@ function App() {
                 </ManagerLayout>
               }
             />
-          <Route
-            path = "manager/room/rooms-list"
-            element = {
-              <DashboardLayout>
-                <RoomList />
-              </DashboardLayout>
-            }
-          />
-
-          <Route
-            path = "manager/room/room-detail/:roomId"
-            element = {
-              <DashboardLayout>
-                <RoomDetail />
-              </DashboardLayout>
-            }
-          />
           </>
         ) : (
           <Route path="/manager/*" element={<Navigate to="/login" replace />} />

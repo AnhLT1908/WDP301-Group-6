@@ -33,6 +33,18 @@ AccountRouter.put(
   AccountController.updateLodgerAccount
 );
 
+AccountRouter.get(
+  "/lodger/:accountId",
+  protect,
+  AccountController.getLodgerAccount
+);
+
+AccountRouter.put(
+  "/updateLodgerAccount/:accountId",
+  protect,
+  AccountController.updateLodgerAccount
+);
+
 AccountRouter.post(
   "/create-manager",
   // protect,
