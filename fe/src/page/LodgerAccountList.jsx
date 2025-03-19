@@ -67,10 +67,10 @@ const LodgerAccountList = () => {
       }
     };
     fetchMemberOfHouse();
-  }, [houseManageId]);
+  }, [houseManageId, currentPage]);
 
   const handleChangePages = (newPage) => {
-    if(newPage > 0 && newPage < totalPages){
+    if(newPage > 0 && newPage <= totalPages){
       setCurrentPage(newPage)
     }
   }
@@ -179,12 +179,12 @@ const LodgerAccountList = () => {
             </tbody>
           </table>
         </div>
-        
-        <div className="flex justify-center items-center mt-6">
+      </div>
+      <div className="flex justify-center items-center mt-6">
           <button
             onClick={() => handleChangePages(currentPage - 1)}
             disabled={currentPage === 1}
-            className="flex items-center justify-center w-[80px] bg-green-500 hover:bg-green-700 p-2 rounded-lg text-base font-semibold text-white"
+            className="flex items-center justify-center mr-2 w-[80px] bg-green-500 hover:bg-green-700 p-2 rounded-lg text-base font-semibold text-white"
             >
             Previous
           </button>
@@ -194,7 +194,7 @@ const LodgerAccountList = () => {
                   return(
                     <button key={pageNum}
                     onClick={() => handleChangePages(pageNum)}
-                    className={`px-3 py-1 text-sm font-semibold rounded-md ${pageNum === currentPage ? "bg-green-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                    className={`flex items-center justify-center px-3 py-1 text-lg font-semibold rounded-md ${pageNum === currentPage ? "bg-green-600 text-white" : "bg-gray-200 text-green-500 hover:bg-gray-300"}`}
                     >
                       {pageNum}
                     </button>
@@ -204,11 +204,10 @@ const LodgerAccountList = () => {
           <button 
             onClick={() => handleChangePages(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="flex justify-center items-center w-[80px] bg-green-500 hover:bg-green-700 p-2 rounded-lg text-base font-semibold text-white">
+            className="flex justify-center items-center ml-2 w-[80px] bg-green-500 hover:bg-green-700 p-2 rounded-lg text-base font-semibold text-white">
             Next
           </button>
         </div>
-      </div>
     </div>
   );
 };
