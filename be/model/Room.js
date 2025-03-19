@@ -43,8 +43,7 @@ const RoomSchema = new Schema({
     },
     house: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "House",
-        required: true
+        ref: "House"
     },
     floor: {
         type: Number,

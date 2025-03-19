@@ -23,7 +23,7 @@ export default function InvoiceList() {
         }, {});
 
         const roomMap = roomRes.data.data.reduce((acc, room) => {
-          acc[room._id] = room.roomNumber;
+          acc[room._id] = room.name;
           return acc;
         }, {});
 
