@@ -24,7 +24,7 @@ export default function ManagerSideBar() {
           {menuOpen && (
             <ul className="ml-4">
               <li className="mb-2 text-[#FDEE2A]">
-                <Link to="/admin">Home</Link>
+                <Link to="/manager/lodger-list">Home</Link>
               </li>
               <li className="mb-2 text-[#FDEE2A]">
                 <Link to="/admin/dashboard">Dashboard</Link>
