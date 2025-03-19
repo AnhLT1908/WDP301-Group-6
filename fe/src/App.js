@@ -147,58 +147,58 @@ function App() {
             <Route
               path="/manager/invoice-list"
               element={
-                <DashboardLayout>
+                <ManagerLayout>
                   <InvoiceList />
-                </DashboardLayout>
+                </ManagerLayout>
               }
             />
           <Route
             path = "/manager/lodger-list"
             element={
-              <DashboardLayout>
-                <LodgerList />
-              </DashboardLayout>
+              <ManagerLayout>
+                <LodgerAccountList />
+              </ManagerLayout>
             }
           />
           <Route
             path = "manager/house-detail"
             element={
-              <DashboardLayout>
+              <ManagerLayout>
                 <HouseDetail />
-              </DashboardLayout>
+              </ManagerLayout>
             }
           />
           <Route
             path = "manager/invoice-detail/:billId"
             element={
-              <DashboardLayout>
+              <ManagerLayout>
                 <InvoiceDetail />
-              </DashboardLayout>
+              </ManagerLayout>
             }
           />
           <Route 
             path = "manager/invoice/new-invoice"
             element = {
-              <DashboardLayout>
+              <ManagerLayout>
                 <NewInvoice/>
-              </DashboardLayout>
+              </ManagerLayout>
             }
             />
           <Route
             path = "manager/room/rooms-list"
             element = {
-              <DashboardLayout>
+              <ManagerLayout>
                 <RoomList />
-              </DashboardLayout>
+              </ManagerLayout>
             }
           />
 
           <Route
             path = "manager/room/room-detail/:roomId"
             element = {
-              <DashboardLayout>
+              <ManagerLayout>
                 <RoomDetail />
-              </DashboardLayout>
+              </ManagerLayout>
             }
           />
           </>
