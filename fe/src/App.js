@@ -162,7 +162,7 @@ function App() {
               }
             />
             <Route
-              path="manager/invoice-detail"
+              path="manager/invoice-detail/:billId"
               element={
                 <ManagerLayout>
                   <InvoiceDetail />

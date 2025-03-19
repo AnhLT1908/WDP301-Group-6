@@ -2,38 +2,54 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-<<<<<<< HEAD
-const RoomDetail1 = () => {
-  const { roomId } = useParams();
-  const [room, setRoom] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
-  const [lodgers, setLodgers] = useState([]);
-  const [newMemberEmail, setNewMemberEmail] = useState("");
-  const [bills, setBills] = useState([]);
-  const [isBillPopupOpen, setIsBillPopupOpen] = useState(false);
-  const navigate = useNavigate();
-=======
 export default function InvoiceDetail() {
-  const { billId } = useParams(); 
+  // Component state initialization
+  const { billId } = useParams();
+  const navigate = useNavigate();
   const [bill, setBill] = useState(null);
-  const [house, setHouse] = useState([]);
-  const [room, setRoom] = useState([]);
->>>>>>> bccd1c314dccdaef792caddaf39e1ed44efb8f1a
+  const [room, setRoom] = useState(null);
+  const [house, setHouse] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [lodgers, setLodgers] = useState([]);
+  const [bills, setBills] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isBillPopupOpen, setIsBillPopupOpen] = useState(false);
+  const [newMemberEmail, setNewMemberEmail] = useState("");
 
+  // Fetch bill data
   useEffect(() => {
-    const fetchRoom = async () => {
+    const fetchBillData = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/v1/room/${roomId}`);
-        setRoom(res.data.data);
-        setLoading(false);
+        const res = await axios.get(`http://localhost:5000/api/v1/bill/bill-detail/${billId}`);
+        setBill(res.data.data);
+        
+        // Once we have the bill data, fetch the associated room
+        if (res.data.data?.roomId) {
+          fetchRoomData(res.data.data.roomId);
+        }
+        
       } catch (error) {
-        console.error("Error fetching room data:", error);
+        console.error("Error fetching bill data:", error);
+        setLoading(false);
       }
     };
-    fetchRoom();
-  }, [roomId]);
+    
+    fetchBillData();
+  }, [billId]);
 
+  // Function to fetch room data
+  const fetchRoomData = async (roomId) => {
+    try {
+      const res = await axios.get(`http://localhost:5000/api/v1/room/${roomId}`);
+      setRoom(res.data.data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching room data:", error);
+      setLoading(false);
+    }
+  };
+
+  // Fetch lodgers data
   useEffect(() => {
     const fetchLodgers = async () => {
       try {
@@ -46,10 +62,13 @@ export default function InvoiceDetail() {
     fetchLodgers();
   }, []);
 
+  // Fetch bills for a specific room
   const fetchBills = async () => {
+    if (!room?._id) return;
+    
     try {
       const res = await axios.get("http://localhost:5000/api/v1/bill/");
-      const filteredBills = res.data.data.filter(bill => bill.roomId === roomId);
+      const filteredBills = res.data.data.filter(bill => bill.roomId === room._id);
       setBills(filteredBills);
       setIsBillPopupOpen(true);
     } catch (error) {
@@ -77,7 +96,7 @@ export default function InvoiceDetail() {
   };
 
   const handleAddMember = async () => {
-    if (!newMemberEmail) return;
+    if (!newMemberEmail || !room?._id) return;
 
     const member = lodgers.find((lodger) => lodger.email === newMemberEmail);
     if (!member) {
@@ -89,7 +108,7 @@ export default function InvoiceDetail() {
     const joinDate = new Date().toISOString();
 
     try {
-      await axios.post(`http://localhost:5000/api/v1/room/${roomId}/member`, {
+      await axios.post(`http://localhost:5000/api/v1/room/${room._id}/member`, {
         accountId: accountId,
         joinDate: joinDate,
       });
@@ -107,6 +126,8 @@ export default function InvoiceDetail() {
   };
 
   const handleUpdateRoom = async () => {
+    if (!room?._id) return;
+    
     try {
       const updatedRoom = {
         name: room.name,
@@ -119,13 +140,19 @@ export default function InvoiceDetail() {
       };
 
       console.log("Dữ liệu gửi đi:", updatedRoom);
-      const response = await axios.put(`http://localhost:5000/api/v1/room/${roomId}`, updatedRoom);
+      const response = await axios.put(
+        `http://localhost:5000/api/v1/room/${room._id}`, 
+        updatedRoom
+      );
       console.log("Phản hồi từ server:", response.data);
 
       setIsEditing(false);
       alert("Cập nhật phòng thành công!");
     } catch (error) {
-      console.error("Error updating room:", error.response ? error.response.data : error.message);
+      console.error(
+        "Error updating room:", 
+        error.response ? error.response.data : error.message
+      );
       alert("Không thể cập nhật phòng. Vui lòng kiểm tra console để biết chi tiết.");
     }
   };
@@ -135,13 +162,17 @@ export default function InvoiceDetail() {
     return lodger ? `${lodger.firstName} ${lodger.lastName}` : "Không tìm thấy";
   };
 
-  // Hàm xử lý chuyển hướng đến trang tạo hóa đơn mới
+  // Navigate to create new invoice page
   const handleCreateNewInvoice = () => {
-    navigate(`/manager/invoice/new-invoice/${roomId}`);
+    if (room?._id) {
+      navigate(`/manager/invoice/new-invoice/${room._id}`);
+    } else {
+      alert("Không thể tạo hóa đơn mới: Thiếu thông tin phòng");
+    }
   };
 
-  // if (loading) return <p>Loading...</p>;
-  // if (!room) return <p>Không tìm thấy thông tin phòng.</p>;
+  if (loading) return <div className="container mx-auto p-4">Loading...</div>;
+  if (!room) return <div className="container mx-auto p-4">Không tìm thấy thông tin phòng.</div>;
 
   return (
     <div className="container mx-auto p-4 flex flex-col min-h-screen">
@@ -189,7 +220,7 @@ export default function InvoiceDetail() {
       <div className="bg-gray-300 rounded-lg p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4">Thông tin tài chính</h2>
         <div className="flex flex-col space-y-4">
-          {Object.keys(room.priceList).map((key) => (
+          {room.priceList && Object.keys(room.priceList).map((key) => (
             <RoomInput
               key={key}
               label={key}
@@ -210,7 +241,7 @@ export default function InvoiceDetail() {
       <div className="bg-gray-300 rounded-lg p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4">Thông tin thành viên</h2>
         <div className="flex flex-col space-y-4">
-          {room.members.map((member, index) => (
+          {room.members && room.members.map((member, index) => (
             <RoomInput
               key={index}
               label={`Thành viên ${index + 1}`}
@@ -228,7 +259,10 @@ export default function InvoiceDetail() {
                 className="border rounded p-2 w-full"
                 placeholder="Nhập email thành viên"
               />
-              <button onClick={handleAddMember} className="bg-blue-500 text-white px-4 py-2 rounded">
+              <button 
+                onClick={handleAddMember} 
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+              >
                 Thêm thành viên
               </button>
             </>
@@ -238,11 +272,17 @@ export default function InvoiceDetail() {
 
       <div className="mt-auto grid grid-cols-4 gap-4">
         {isEditing ? (
-          <button onClick={handleUpdateRoom} className="bg-green-500 text-white px-6 py-3 rounded w-full">
+          <button 
+            onClick={handleUpdateRoom} 
+            className="bg-green-500 text-white px-6 py-3 rounded w-full"
+          >
             Lưu
           </button>
         ) : (
-          <button onClick={() => setIsEditing(true)} className="bg-green-500 text-white px-6 py-3 rounded w-full">
+          <button 
+            onClick={() => setIsEditing(true)} 
+            className="bg-green-500 text-white px-6 py-3 rounded w-full"
+          >
             Edit
           </button>
         )}
@@ -258,7 +298,9 @@ export default function InvoiceDetail() {
         >
           Tạo hóa đơn mới
         </button>
-        <button className="bg-green-500 text-white px-6 py-3 rounded w-full">
+        <button 
+          className="bg-green-500 text-white px-6 py-3 rounded w-full"
+        >
           Xem báo cáo phòng
         </button>
       </div>
@@ -293,7 +335,7 @@ export default function InvoiceDetail() {
       )}
     </div>
   );
-};
+}
 
 const RoomInput = ({ label, value, onChange, editable }) => {
   return (
@@ -302,14 +344,13 @@ const RoomInput = ({ label, value, onChange, editable }) => {
       {editable ? (
         <input
           type="text"
-          value={value}
+          value={value || ""}
           onChange={(e) => onChange(e.target.value)}
           className="border rounded p-2 w-3/4"
         />
       ) : (
-        <span>{value}</span>
+        <span>{value || ""}</span>
       )}
     </div>
   );
-}
-
+};

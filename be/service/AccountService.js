@@ -11,9 +11,10 @@ export const GetAll = async (req, res) => {
         const limitPerPage = parseInt(limit) || 10;
         const skip = (pageNumber - 1) * limitPerPage;
         
-        const { houseId } = req.params;
-
-        const rooms = await Room.find({ houseId });
+        const { house } = req.params;
+        console.log("House id find room", house)
+        const rooms = await Room.find({ house });
+        console.log("Room list", rooms)
         const totalAccounts = await Account.countDocuments({ roomId: { $in: rooms.map((room) => room._id) } });
         const data = await Account.find({ roomId: { $in: rooms.map((room) => room._id) } })
                 .skip(skip)
@@ -30,7 +31,7 @@ export const GetAll = async (req, res) => {
                 totalAccounts: totalAccounts,
                 accountsPerPage: data.length,
             },
-            data: data,
+            memberOfHouse: data,
         });
     } catch (error) {
         return res.status(500).json({
@@ -354,36 +355,45 @@ export const UpdateProfile = async (req, res) => {
 };
 
 export const ChangePassword = async (req, res) => {
-  try {
-    const accountId = getCurrentUser(req);
-    const { oldPassword, newPassword } = req.body;
-    const account = await Account.findById(accountId);Q
-    if (!account) {
-      res.status(404).json({
-        success: false,
-        message: "Tài khoản không tồn tại !",
-      });
-    } else {
-      const comparePassword = await bcrypt.compare(
-        oldPassword,
-        account.password
-      );
-      if (!comparePassword) {
-        return res.status(200).json({
+    try {
+      const accountId = getCurrentUser(req);
+      const { oldPassword, newPassword } = req.body;
+      const account = await Account.findById(accountId); // Remove the 'Q' typo here
+      if (!account) {
+        res.status(404).json({
           success: false,
-          message: "Mật khẩu cũ không đúng",
+          message: "Tài khoản không tồn tại !",
         });
       } else {
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(newPassword, salt);
-        account.password = hashedPassword;
-        await account.save();
-        return res.status(200).json({
-          success: true,
-          message: "Đổi mật khẩu thành công",
-        });
+        const comparePassword = await bcrypt.compare(
+          oldPassword,
+          account.password
+        );
+        if (!comparePassword) {
+          return res.status(200).json({
+            success: false,
+            message: "Mật khẩu cũ không đúng",
+          });
+        } else {
+          const salt = await bcrypt.genSalt(10);
+          const hashedPassword = await bcrypt.hash(newPassword, salt);
+          account.password = hashedPassword;
+          await account.save();
+          return res.status(200).json({
+            success: true,
+            message: "Đổi mật khẩu thành công",
+          });
+        }
+      }
+    } catch (error) {
+      console.error(error.message);
+      return res.status(500).json({
+        success: false,
+        message: "Lỗi server",
+        error: error.message
+      });
     }
-};
+  };
 
 export const ChangeStatus = async (req, res, next) => {
     try {
@@ -454,4 +464,3 @@ export const getListLodger = async(req,res,next)=>{
         return res.status(500).json({ message: "Lỗi Server" });
     }
 }
-
