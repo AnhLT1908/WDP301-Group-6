@@ -13,6 +13,7 @@ const RoomDetail = () => {
   const [isBillPopupOpen, setIsBillPopupOpen] = useState(false);
   const navigate = useNavigate();
 
+  const token = localStorage.getItem("token");
   useEffect(() => {
     const fetchRoom = async () => {
       try {
@@ -32,7 +33,12 @@ const RoomDetail = () => {
     const fetchLodgers = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:5000/api/v1/account/lodger-accout-list"
+          "http://localhost:5000/api/v1/account/lodger-accout-list",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         setLodgers(res.data.data);
       } catch (error) {
@@ -280,7 +286,7 @@ const RoomDetail = () => {
                   <p>Total: {bill.total}</p>
                   <p>Status: {bill.status}</p>
                   <button
-                    onClick={() => navigate(`/bill/${bill._id}`)}
+                    onClick={() => navigate(`/manager/invoice-detail/${bill._id}`)}
                     className="bg-blue-500 text-white px-4 py-2 rounded mt-2"
                   >
                     Xem chi tiết
