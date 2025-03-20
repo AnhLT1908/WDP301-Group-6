@@ -10,20 +10,19 @@ export default function ManagerList() {
     firstName: "",
     lastName: "",
     email: "",
+    password: "", // Added password field
     dateOfBirth: "",
     identityCard: "",
     phone: "",
     gender: "",
     status: true,
-    accountType: "manager",
+    accountType: "Manager", // Capitalized to match validation
   });
 
-  // Function to get token from localStorage
   const getToken = () => {
     return localStorage.getItem("token");
   };
 
-  // Axios instance with default headers
   const axiosInstance = axios.create({
     baseURL: "http://localhost:5000/api/v1",
     headers: {
@@ -31,7 +30,6 @@ export default function ManagerList() {
     },
   });
 
-  // Request interceptor to add token to headers
   axiosInstance.interceptors.request.use(
     (config) => {
       const token = getToken();
@@ -51,7 +49,6 @@ export default function ManagerList() {
     try {
       const response = await axiosInstance.get("/account/manager");
       const resHouse = await axiosInstance.get("/house");
-      // manager._id = house.hostID
       const houseMap = resHouse.data.houses.reduce((acc, house) => {
         acc[house.hostID] = house.name;
         return acc;
@@ -68,13 +65,11 @@ export default function ManagerList() {
       console.error("Error fetching managers:", error);
       if (error.response?.status === 401) {
         alert("Unauthorized access. Please login again.");
-        // You might want to redirect to login page here
       }
       setManagers([]);
       setLoading(false);
     }
   };
-
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -96,12 +91,13 @@ export default function ManagerList() {
           firstName: "",
           lastName: "",
           email: "",
+          password: "",
           dateOfBirth: "",
           identityCard: "",
           phone: "",
           gender: "",
           status: true,
-          accountType: "manager",
+          accountType: "Manager",
         });
         fetchManagers();
       }
@@ -182,6 +178,17 @@ export default function ManagerList() {
               />
             </div>
             <div>
+              <label className="block mb-1">Password</label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded"
+                required
+              />
+            </div>
+            <div>
               <label className="block mb-1">Date of Birth</label>
               <input
                 type="date"
@@ -210,6 +217,8 @@ export default function ManagerList() {
                 value={formData.phone}
                 onChange={handleInputChange}
                 className="w-full p-2 border rounded"
+                pattern="^(\+84|0)[3-9][0-9]{9}$"
+                title="Phone number must start with +84 or 0 followed by 3-9 and 9 digits"
                 required
               />
             </div>
@@ -223,9 +232,8 @@ export default function ManagerList() {
                 required
               >
                 <option value="">Select Gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
               </select>
             </div>
             <div>
@@ -237,8 +245,9 @@ export default function ManagerList() {
                 className="w-full p-2 border rounded"
                 required
               >
-                <option value="manager">Manager</option>
-                <option value="admin">Admin</option>
+                <option value="Lodger">Lodger</option>
+                <option value="Manager">Manager</option>
+                <option value="Admin">Admin</option>
               </select>
             </div>
             <div className="col-span-2">
@@ -274,7 +283,7 @@ export default function ManagerList() {
                   <td>{manager.firstName + " " + manager.lastName}</td>
                   <td>{manager.email}</td>
                   <td>{manager.phone}</td>
-                  <td>{houses[manager.house]}</td>
+                  <td>{houses[manager._id] || "Not assigned"}</td>
                   <td>
                     <button
                       onClick={() => handleChangeStatus(manager._id, manager.status)}
@@ -284,7 +293,7 @@ export default function ManagerList() {
                           : "bg-red-500 hover:bg-red-600"
                       }`}
                     >
-                      {manager.status ? "Active" : "Deactive"}
+                      {manager.status ? "Active" : "Inactive"}
                     </button>
                   </td>
                 </tr>
