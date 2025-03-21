@@ -18,7 +18,6 @@ export default function InvoiceList() {
         ]);
 
         console.log(roomRes.data.data);
-
         const houseMap = houseRes.data.houses.reduce((acc, house) => {
           acc[house._id] = house.name;
           return acc;

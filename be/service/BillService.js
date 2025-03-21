@@ -175,7 +175,6 @@ export const addBillinRoom = async (req, res, next) => {
             break;
           }
         }
-
         console.log("Total", total);
         return { name: item.name, price, usage, total };
       });
