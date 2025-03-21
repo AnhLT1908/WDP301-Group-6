@@ -179,7 +179,7 @@ function App() {
               }
             />
             <Route
-              path="manager/invoice/new-invoice"
+              path="manager/invoice/new-invoice/:roomId"
               element={
                 <ManagerLayout>
                   <NewInvoice />
@@ -194,7 +194,6 @@ function App() {
                 </ManagerLayout>
               }
             />
-
             <Route
               path="manager/room/room-detail/:roomId"
               element={
@@ -203,23 +202,6 @@ function App() {
                 </ManagerLayout>
               }
             />
-          <Route
-            path = "manager/room/rooms-list"
-            element = {
-              <DashboardLayout>
-                <RoomList />
-              </DashboardLayout>
-            }
-          />
-
-          <Route
-            path = "manager/room/room-detail/:roomId"
-            element = {
-              <DashboardLayout>
-                <RoomDetail />
-              </DashboardLayout>
-            }
-          />
           </>
         ) : (
           <Route path="/manager/*" element={<Navigate to="/login" replace />} />

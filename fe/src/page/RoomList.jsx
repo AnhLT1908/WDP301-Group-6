@@ -47,10 +47,10 @@ export default function RoomList() {
         
 
         const response = await axios.get("http://localhost:5000/api/v1/room/");
-        console.log("Room API Response:", response.data);
+        console.log("Room API Response:", response.data.data);
         
         if (Array.isArray(response.data.data)) {
-          const filteredRooms = response.data.data.filter(room => room.houseId === managerHouse._id);
+          const filteredRooms = response.data.data.filter(room => room.house === managerHouse._id);
           setRooms(filteredRooms);
           console.log("Filtered Rooms:", filteredRooms)
         } else {
