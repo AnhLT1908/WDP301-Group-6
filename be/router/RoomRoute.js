@@ -20,6 +20,7 @@ RoomRouter.get("/:roomId/equipment", protect, RoomController.getRoomEquipment);
 RoomRouter.get("/house/:houseId", RoomController.GetRoomByHouseId);
 RoomRouter.put("/:roomId/status", RoomController.ChangeRoomStatus);
 RoomRouter.put("/:roomId", RoomController.updateRoomDetails);
+RoomRouter.patch("/accountId/:accountId/change-room", RoomController.ChangeRoom);
 
 
 export default RoomRouter;

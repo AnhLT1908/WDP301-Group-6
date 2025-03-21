@@ -61,7 +61,12 @@ const BillSchema = new mongoose.Schema({
         type: String,
         enum: ["Banking", "Cash", "Unknown"],
         default: ""
-    }
+    },
+    transactionId: {
+        type: String,
+        required: true,
+        unique: true,
+    },
 },  
     { 
     timestamps: true 

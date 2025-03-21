@@ -1,4 +1,4 @@
-import * as RoomService from "../service/Room.Service.js";
+import * as RoomService from "../service/RoomService.js";
 import catchAsyncErrors from "../middleware/asyncErrorCatch.js";
 
 const RoomController = {
@@ -53,6 +53,9 @@ const RoomController = {
   }),
   GetMemberManagerOfHouse: catchAsyncErrors(async(req, res) =>{
     await RoomService.GetMemberManagerOfHouse(req, res)
+  }),
+  ChangeRoom: catchAsyncErrors(async(req, res, next) =>{
+    await RoomService.changeRoom(req, res, next)
   })
 };
 

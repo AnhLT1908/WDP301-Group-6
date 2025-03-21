@@ -27,6 +27,9 @@ AccountRouter.get(
   AccountController.getLodgerAccount
 );
 
+AccountRouter.patch("/:accountId/contact-status", protect, AccountController.updateAccountContactStatus)
+AccountRouter.post("/transfer-manager",protect, AccountController.transferManagerToHouse);
+
 AccountRouter.put(
   "/updateLodgerAccount/:accountId",
   protect,
@@ -40,7 +43,7 @@ AccountRouter.post(
   /*Token Manager*/ AccountController.CreateManagerAccount
 );
 
-AccountRouter.put("/change-status", protect, AccountController.ChangeStatus);
+AccountRouter.patch("/accounts/:accountId/status", protect, AccountController.ChangeStatus);
 
 //AccountRouter.get("/manager", protect, AccountController.getManagerAccounts);
 
