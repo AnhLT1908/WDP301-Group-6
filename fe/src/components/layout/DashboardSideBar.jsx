@@ -60,26 +60,11 @@ export default function DashboardSideBar() {
               <li className="mb-2 text-[#FDEE2A]">
                 <Link to="/admin/dashboard">Dashboard</Link>
               </li>
-              <li className="mb-2 text-[#FDEE2A]">
+              {/* <li className="mb-2 text-[#FDEE2A]">
                 <Link to="/admin/account-list">Account List</Link>
-              </li>
+              </li> */}
               <li className="mb-2 text-[#FDEE2A]">
                 <Link to="/admin/house-list">House List</Link>
-              </li>
-              <li className="mb-2 text-[#FDEE2A]">
-                <Link to="manager/house-detail">Account Detail</Link>
-              </li>
-              <li className="mb-2 text-[#FDEE2A]">
-                <Link to="/manager/lodger-list">Lodger List</Link>
-              </li>
-              <li className="mb-2 text-[#FDEE2A]">
-                <Link to="/manager/invoice-list">Invoice List</Link>
-              </li>
-              <li className="mb-2 text-[#FDEE2A]">
-                <Link to="manager/room/rooms-list">Room List</Link>
-              </li>
-              <li className="mb-2 text-[#FDEE2A]">
-                <Link to="manager/invoice/new-invoice">New Invoice</Link>
               </li>
             </ul>
           )}

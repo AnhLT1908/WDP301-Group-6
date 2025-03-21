@@ -61,6 +61,8 @@ const RoomDetail = () => {
     }
   };
 
+  console.log("Bill", bills)
+
   const handleInputChange = (field, value) => {
     setRoom((prev) => ({ ...prev, [field]: value }));
   };
@@ -147,6 +149,10 @@ const RoomDetail = () => {
   const getLodgerName = (accountId) => {
     const lodger = lodgers.find((l) => l._id === accountId);
     return lodger ? `${lodger.firstName} ${lodger.lastName}` : "Không tìm thấy";
+  };
+
+  const handleCreateInvoice = (roomId) => {
+    navigate(`/manager/invoice/new-invoice/${roomId}`);
   };
 
   if (loading) return <p>Loading...</p>;
@@ -273,6 +279,12 @@ const RoomDetail = () => {
         <button className="bg-green-500 text-white px-6 py-3 rounded w-full">
           Xem báo cáo phòng
         </button>
+        <button
+          onClick={() => handleCreateInvoice(roomId)}
+          className="bg-green-500 text-white px-6 py-3 rounded w-full"
+        >
+          Tạo hóa đơn phòng
+        </button>
       </div>
 
       {isBillPopupOpen && (
@@ -286,7 +298,9 @@ const RoomDetail = () => {
                   <p>Total: {bill.total}</p>
                   <p>Status: {bill.status}</p>
                   <button
-                    onClick={() => navigate(`/manager/invoice-detail/${bill._id}`)}
+                    onClick={() =>
+                      navigate(`/manager/invoice-detail/${bill._id}`)
+                    }
                     className="bg-blue-500 text-white px-4 py-2 rounded mt-2"
                   >
                     Xem chi tiết

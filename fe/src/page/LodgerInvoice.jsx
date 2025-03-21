@@ -132,16 +132,6 @@ export default function LodgerInvoice() {
                 disabled
               />
             </div>
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold text-gray-600">Payment Method</label>
-              <input
-                type="text"
-                name="paymentMethod"
-                value={invoice.paymentMethod}
-                className="border p-2 rounded mt-1 text-gray-700 bg-gray-100"
-                disabled
-              />
-            </div>
 
             {invoice.customPriceList.map((item, index) => (
               <div key={item.name} className="flex flex-col col-span-2 border-t pt-4">

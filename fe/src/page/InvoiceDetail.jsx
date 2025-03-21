@@ -8,6 +8,7 @@ export default function InvoiceDetail() {
   const [house, setHouse] = useState([]);
   const [room, setRoom] = useState([]);
 
+  // Fetch bill data
   useEffect(() => {
     const fetchBill = async () => {
       try {
@@ -90,7 +91,6 @@ export default function InvoiceDetail() {
         <div className="grid grid-cols-2 gap-4">
           <p><strong>Total Price:</strong> {bill.total} VND</p>
           <p><strong>Status:</strong> {bill.isPaid ? "Paid" : "Unpaid"} VND</p>
-          <p><strong>Payment Method:</strong> {bill.paymentMethod} VND</p>
         </div>
       </div>
 
