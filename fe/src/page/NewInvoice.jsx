@@ -1,21 +1,81 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { QRCodeCanvas } from "qrcode.react";
+import { useParams } from "react-router-dom";
 
-export default function NewInvoice({ roomId }) {
+export default function NewInvoice() {
   const [invoice, setInvoice] = useState({
     note: "",
     debt: 0,
     paymentMethod: "",
     customPriceList: [
-      { name: "electricity", price: 0, usage: 0 },
-      { name: "water", price: 0, usage: 0 },
-      { name: "service", price: 0, usage: 0 },
-      { name: "internet", price: 0, usage: 0 },
+      { name: "electricity", price: 0, currentUsage: 0 },
+      { name: "water", price: 0, currentUsage: 0 },
+      { name: "service", price: 0, currentUsage: 0 },
+      { name: "internet", price: 0, currentUsage: 0 },
     ],
   });
   const [qrUrl, setQrUrl] = useState("");
   const [billData, setBillData] = useState(null);
+  const [roomPreviosMonthBill, setRoomPreviosMonthBill] = useState("");
+  const { roomId } = useParams();
+  const [room, setRoom] = useState("");
+  const [house, setHouse] = useState("");
+  const [formErrors, setFormErrors] = useState({});
+  console.log("Room Id", roomId);
+
+  useEffect(() => {
+    const fetchHouseData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          `http://localhost:5000/api/v1/house/${room.house}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (res.data.data) {
+          setHouse(res.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching house data:", error);
+      }
+    };
+    if (room.house) {
+      fetchHouseData();
+    }
+  }, [room.house]);
+
+  console.log("House fetching: ", house);
+
+  useEffect(() => {
+    const fetchRoomData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          `http://localhost:5000/api/v1/room/${roomId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (res.data.data) {
+          setRoom(res.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching room data:", error);
+      }
+    };
+    if (roomId) {
+      fetchRoomData();
+    }
+  }, [roomId]);
+
+  console.log("Room", room);
 
   useEffect(() => {
     const fetchRoomData = async () => {
@@ -38,6 +98,62 @@ export default function NewInvoice({ roomId }) {
     fetchRoomData();
   }, [roomId]);
 
+  useEffect(() => {
+    const fetchBillDetails = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const response = await axios.get(
+          `http://localhost:5000/api/v1/bill/roomBill/${roomId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        console.log("Lastest bill", response.data.data[0]);
+        if (response.data.success) {
+          setRoomPreviosMonthBill(response.data.data[0]);
+          console.log("Bill details fetched successfully:", response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching bill details:", error);
+      }
+    };
+    // Only fetch if roomId exists
+    if (roomId) {
+      fetchBillDetails();
+    }
+
+    // Add roomId as a dependency so the effect runs whenever roomId changes
+  }, [roomId]);
+
+      console.log("roomPreviosMonthBill ", roomPreviosMonthBill)
+
+
+  const validateForm = () => {
+    const errors = {};
+    if (isNaN(invoice.debt) || invoice.debt === "") {
+      errors.debt = "Debt must be a number";
+    }
+
+    invoice.customPriceList.forEach((item, index) => {
+      if (isNaN(item.currentUsage) || item.currentUsage === "") {
+        errors[`currentUsage_${index}`] = `${item.name} usage must be a number`;
+      } else if (
+        item.currentUsage <=
+        roomPreviosMonthBill?.priceList?.find(
+          (prevItem) => prevItem.name === item.name
+        )?.usage
+      ) {
+        errors[
+          `currentUsage_${index}`
+        ] = `${item.name} usage must be greater than the previous month's usage`;
+      }
+    });
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setInvoice((prev) => ({ ...prev, [name]: value }));
@@ -47,17 +163,39 @@ export default function NewInvoice({ roomId }) {
     const newPriceList = [...invoice.customPriceList];
     newPriceList[index] = {
       ...newPriceList[index],
-      [field]: field === "price" || field === "usage" ? Number(value) : value,
+      [field]: value,
     };
     setInvoice((prev) => ({ ...prev, customPriceList: newPriceList }));
   };
 
+  console.log("Invoice", invoice.customPriceList);
+
   const handleSubmit = async () => {
+    if (!validateForm()) return;
     try {
       const token = localStorage.getItem("token");
+
+      // Lấy giá trị "Previous month's usage" từ roomPreviosMonthBill
+      const previousMonthUsage = roomPreviosMonthBill?.priceList?.reduce(
+        (acc, item) => {
+          acc[item.name] = item.usage || 0;
+          return acc;
+        },
+        {}
+      );
+
+      console.log("previousMonthUsage", previousMonthUsage)
+
+      // Thêm roomId và previous month's usage vào trong requestBody
+      const requestBody = {
+        ...invoice,
+        roomId, // Thêm roomId vào body
+        previousMonthUsage, // Thêm previous month's usage vào body
+      };
+
       const response = await axios.post(
         `http://localhost:5000/api/v1/bill/room/${roomId}`,
-        invoice,
+        requestBody,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -65,9 +203,9 @@ export default function NewInvoice({ roomId }) {
           },
         }
       );
-      
+
       if (response.data.success) {
-        setQrUrl(response.data.paymentLink);
+        setQrUrl(response.data.qrUrl);
         setBillData(response.data.data);
         alert("Invoice created successfully!");
       }
@@ -76,6 +214,24 @@ export default function NewInvoice({ roomId }) {
       alert("Failed to create invoice.");
     }
   };
+
+  useEffect(() => {
+    if (house?.DefaultPrice?.length) {
+      const updatedPriceList = invoice.customPriceList.map((item) => {
+        const defaultPrice = house.DefaultPrice[0];
+        if (item.name === "electricity")
+          item.price = defaultPrice.electricPrice;
+        if (item.name === "internet") item.price = defaultPrice.internetPrice;
+        if (item.name === "service") item.price = defaultPrice.servicePrice;
+        if (item.name === "water") item.price = defaultPrice.waterPrice;
+        return item;
+      });
+      setInvoice((prev) => ({
+        ...prev,
+        customPriceList: updatedPriceList,
+      }));
+    }
+  }, [house]);
 
   return (
     <div className="h-screen bg-gray-100 flex flex-col p-6">
@@ -95,52 +251,80 @@ export default function NewInvoice({ roomId }) {
           <div className="flex flex-col">
             <label className="text-sm font-semibold text-gray-600">Debt</label>
             <input
-              type="number"
+              type="text"
               name="debt"
               value={invoice.debt}
               onChange={handleInputChange}
               className="border p-2 rounded mt-1 text-gray-700"
             />
+            {formErrors.debt && (
+              <span className="text-red-500 text-xs">{formErrors.debt}</span>
+            )}
           </div>
           <div className="flex flex-col">
-            <label className="text-sm font-semibold text-gray-600">Payment Method</label>
-            <select
-              name="paymentMethod"
-              value={invoice.paymentMethod}
-              onChange={handleInputChange}
+            <label className="text-sm font-semibold text-gray-600">Room</label>
+            <input
+              type="text"
+              name="roomName"
+              value={room.name}
               className="border p-2 rounded mt-1 text-gray-700"
-            >
-              <option value="">Select payment method</option>
-              <option value="cash">Cash</option>
-              <option value="bank">Bank Transfer</option>
-              <option value="qr">QR Code</option>
-            </select>
+              readOnly
+            />
           </div>
-          
+
           {/* Price List Inputs */}
           {invoice.customPriceList.map((item, index) => (
-            <div key={item.name} className="flex flex-col col-span-2 border-t pt-4">
+            <div
+              key={item.name}
+              className="flex flex-col col-span-3 border-t pt-4"
+            >
               <h3 className="text-md font-semibold capitalize">{item.name}</h3>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-sm font-semibold text-gray-600">Price</label>
+                  <label className="text-sm font-semibold text-gray-600">
+                    Price
+                  </label>
                   <input
                     type="number"
                     value={item.price}
-                    onChange={(e) =>
-                      handlePriceListChange(index, "price", e.target.value)
-                    }
+                    readOnly
                     className="border p-2 rounded mt-1 text-gray-700 w-full"
                   />
                 </div>
-                <div>
-                  <label className="text-sm font-semibold text-gray-600">Usage</label>
+                <div className="flex flex-col">
+                  <label className="text-sm font-semibold text-gray-600">
+                    Current month's usage
+                  </label>
                   <input
-                    type="number"
-                    value={item.usage}
+                    type="text"
+                    value={item.currentUsage}
                     onChange={(e) =>
-                      handlePriceListChange(index, "usage", e.target.value)
+                      handlePriceListChange(
+                        index,
+                        "currentUsage",
+                        e.target.value
+                      )
                     }
+                    className="border p-2 rounded mt-1 text-gray-700 w-full"
+                  />
+                  {formErrors[`currentUsage_${index}`] && (
+                    <span className="text-red-500 text-xs">
+                      {formErrors[`currentUsage_${index}`]}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-gray-600">
+                    Previous month's usage
+                  </label>
+                  <input
+                    type="text"
+                    value={
+                      roomPreviosMonthBill?.priceList?.find(
+                        (prevItem) => prevItem.name === item.name
+                      )?.usage || 0
+                    }
+                    readOnly
                     className="border p-2 rounded mt-1 text-gray-700 w-full"
                   />
                 </div>
@@ -175,4 +359,3 @@ export default function NewInvoice({ roomId }) {
     </div>
   );
 }
-

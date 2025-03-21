@@ -14,10 +14,11 @@ export default function InvoiceList() {
         const [billRes, houseRes, roomRes] = await Promise.all([
           axios.get("http://localhost:5000/api/v1/bill/"),
           axios.get("http://localhost:5000/api/v1/house/"),
-          axios.get("http://localhost:5000/api/v1/room/")
+          axios.get("http://localhost:5000/api/v1/room/"),
         ]);
 
-        const houseMap = houseRes.data.data.reduce((acc, house) => {
+        console.log(roomRes.data.data);
+        const houseMap = houseRes.data.houses.reduce((acc, house) => {
           acc[house._id] = house.name;
           return acc;
         }, {});
@@ -29,6 +30,7 @@ export default function InvoiceList() {
 
         setBills(billRes.data.data || []);
         setHouses(houseMap);
+        console.log(houses);
         setRooms(roomMap);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -39,13 +41,23 @@ export default function InvoiceList() {
   }, []);
 
   const handleViewDetail = (billId) => {
-    navigate(`/manager/bill-detail/${billId}`);
+    navigate(`/manager/invoice-detail/${billId}`);
   };
+
+  const handleCreateInvoice = () => {
+    navigate("/manager/invoice/new-invoice")
+  }
 
   return (
     <section className="p-8 w-full">
-      <h2 className="text-yellow-500 text-2xl font-bold mb-4">Invoice List</h2>
-      <h3 className="text-yellow-400 text-xl font-bold mb-4">List</h3>
+      <h2 className="text-yellow-500 text-2xl font-bold">Invoice List</h2>
+
+      <div className="flex justify-between my-4">
+        <h3 className="text-yellow-400 text-xl font-bold mb-4">List</h3>
+        <button className="bg-green-500 text-white w-[50%] px-4 py-2 rounded">
+          Create new invoice
+        </button>
+      </div>
       <div className="bg-white p-4 rounded-lg shadow">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -68,7 +80,11 @@ export default function InvoiceList() {
                   <td className="p-2">{bill.note}</td>
                   <td className="p-2">{bill.total}</td>
                   <td className="p-2">{bill.paymentMethod}</td>
-                  <td className={`p-2 ${bill.isPaid ? "text-green-500" : "text-red-500"}`}>
+                  <td
+                    className={`p-2 ${
+                      bill.isPaid ? "text-green-500" : "text-red-500"
+                    }`}
+                  >
                     {bill.isPaid ? "Paid" : "Unpaid"}
                   </td>
                   <td className="p-2">
