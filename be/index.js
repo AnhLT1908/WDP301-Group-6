@@ -9,6 +9,7 @@ import morgan from "morgan";
 import indexRouter from "./router/IndexRoute.js";
 import helmet from "helmet";
 import ConnectDB from "./config/connectDB.js";
+import './cron.js'
 
 dotenv.config();
 

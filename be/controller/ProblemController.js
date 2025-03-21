@@ -2,6 +2,9 @@ import * as ProblemService from '../service/ProblemService.js';
 import catchAsyncErrors from '../middleware/asyncErrorCatch.js';
 
 const ProblemController = {
+    createTransferRequest: catchAsyncErrors(async(req, res, next) =>{
+        await ProblemService.createTransferRequest(req, res, next)
+    }),
     addOne: catchAsyncErrors(async(req, res, next)=>{
         await ProblemService.addOne(req, res, next);
     }),

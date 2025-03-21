@@ -5,6 +5,55 @@ import getCurrentUser from '../utils/getCurrentUser.js';
 import getPaginationData from '../utils/getPaginationData.js';
 import Notification from '../model/Notification.js';
 
+export const createTransferRequest = async (req, res, next) => {
+    try {
+        const { roomId, content } = req.body;
+        const creatorId = getCurrentUser(req); // Người gửi yêu cầu
+
+        // Kiểm tra tài khoản
+        const account = await Account.findById(creatorId);
+        if (!account || account.accountType !== "Lodger") {
+            return res.status(403).json({ success: false, message: "Chỉ Lodger mới có thể tạo yêu cầu chuyển phòng!" });
+        }
+
+        // Kiểm tra xem người này có trong phòng không (dựa trên Room.members)
+        const room = await Room.findById(roomId);
+        if (!room || !room.members.some(member => member.accountId.toString() === creatorId)) {
+            return res.status(400).json({ success: false, message: "Bạn không thuộc phòng này!" });
+        }
+
+        // Tạo báo cáo chuyển phòng
+        const problem = new Problem({
+            type: "other", 
+            status: "none",
+            title: "Yêu cầu chuyển phòng",
+            content: content || "Tôi muốn chuyển sang phòng khác.",
+            roomId,
+            creatorId,
+            houseId: room.house,
+        });
+        await problem.save();
+
+        // Gửi thông báo cho Manager
+        const manager = await Account.findOne({ accountType: "Manager" });
+        await Notification.create({
+            sender: creatorId,
+            recipients: [{ user: manager._id, isRead: false }],
+            message: `${account.firstName} ${account.lastName} yêu cầu chuyển phòng từ ${room.name}.`,
+            type: "problem",
+            link: `/problems/${problem._id}`,
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: "Yêu cầu chuyển phòng đã được gửi!",
+            data: problem,
+        });
+    } catch (error) {
+        console.error("Lỗi trong createTransferRequest:", error);
+        next(error);
+    }
+};
 export const addOne = async(req, res, next)=>{
     try {
         const {roomId} = req.body;

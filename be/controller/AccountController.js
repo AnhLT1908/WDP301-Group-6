@@ -35,6 +35,12 @@ const AccountController = {
   getListLodger: catchAsyncErrors(async (req, res) => {
     await AccountService.getListLodger(req, res);
   }),
+  transferManagerToHouse: catchAsyncErrors(async(req, res, next) =>{
+    await AccountService.transferManagerToHouse(req, res, next);
+  }),
+  updateAccountContactStatus: catchAsyncErrors(async(req, res, next) =>{
+    await AccountService.updateAccountContactStatus(req, res, next)
+  })
 };
 
 export default AccountController;
