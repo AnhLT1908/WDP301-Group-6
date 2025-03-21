@@ -57,11 +57,11 @@ export const getBillsByRoom = async (req, res, next) => {
   try {
     const { roomId } = req.params;
     console.log("roomBills roomId", roomId);
-    
+
     const roomBills = await Bills.find({ roomId }).sort({ createdAt: -1 });
-    
+
     console.log("roomBills", roomBills);
-    
+
     res.status(200).json({
       success: true,
       count: roomBills.length,
@@ -76,7 +76,14 @@ export const getBillsByRoom = async (req, res, next) => {
 export const addBillinRoom = async (req, res, next) => {
   try {
     // Destructuring các thông tin từ request body
-    const { note, debt, paymentMethod, customPriceList, previousMonthUsage, roomId } = req.body;
+    const {
+      note,
+      debt,
+      paymentMethod,
+      customPriceList,
+      previousMonthUsage,
+      roomId,
+    } = req.body;
     console.log("CustomPriceList", req.body);
 
     // Tìm phòng theo ID và populate thông tin nhà (house) liên quan
@@ -118,24 +125,28 @@ export const addBillinRoom = async (req, res, next) => {
           price: item.price || 0,
           unit: "",
         };
-        
+
         // Tính usage = previousMonthUsage[name] - currentUsage
         const previousUsage = previousMonthUsage[item.name] || 0;
-        console.log("previousUsage", previousMonthUsage[item.name])
+        console.log("previousUsage", previousMonthUsage[item.name]);
         const strUsage = item.currentUsage || "0"; // usage is now a string (strUsage)
-        
+
         const usage = parseInt(strUsage); // Create a separate variable for usage
         const differentUsage = usage - previousUsage; // Calculate the difference in usage
-        console.log("previousUsage", previousUsage)
-        console.log("usage", usage);  // log usage for debugging
-        console.log("differentUsage", differentUsage);  // log differentUsage for debugging
+        console.log("previousUsage", previousUsage);
+        console.log("usage", usage); // log usage for debugging
+        console.log("differentUsage", differentUsage); // log differentUsage for debugging
 
         const price =
           item.price !== undefined ? item.price : defaultPrice.price;
         let total;
 
         // Log thông tin để debug
-        console.log(`Processing ${item.name}:`, { defaultPrice, price, differentUsage });
+        console.log(`Processing ${item.name}:`, {
+          defaultPrice,
+          price,
+          differentUsage,
+        });
 
         // Tính toán tổng tiền dựa trên đơn vị
         switch (defaultPrice.unit) {
@@ -232,6 +243,7 @@ export const addBillinRoom = async (req, res, next) => {
 
     // Sinh mã giao dịch và mã hóa đơn
     const transactionId = generateTransactionId();
+    console.log("transactionId", transactionId);
     const billCode = `BILL-${roomId}-${Date.now()}-${transactionId}`;
 
     // Tạo mô tả thanh toán
@@ -255,7 +267,7 @@ export const addBillinRoom = async (req, res, next) => {
       paymentMethod: paymentMethod || "Unknown",
     });
     // Lưu hóa đơn vào cơ sở dữ liệu
-    console.log("Bill", bill)
+    console.log("Bill", bill);
     await bill.save();
 
     // Tìm tài khoản của phòng
@@ -282,9 +294,6 @@ export const addBillinRoom = async (req, res, next) => {
     next(error);
   }
 };
-
-
-
 
 export const confirmBill = async (req, res, next) => {
   try {

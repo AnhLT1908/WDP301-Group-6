@@ -55,6 +55,8 @@ const RoomDetail = () => {
     }
   };
 
+  console.log("Bill", bills)
+
   const handleInputChange = (field, value) => {
     setRoom((prev) => ({ ...prev, [field]: value }));
   };
@@ -290,7 +292,9 @@ const RoomDetail = () => {
                   <p>Total: {bill.total}</p>
                   <p>Status: {bill.status}</p>
                   <button
-                    onClick={() => navigate(`/bill/${bill._id}`)}
+                    onClick={() =>
+                      navigate(`/manager/invoice-detail/${bill._id}`)
+                    }
                     className="bg-blue-500 text-white px-4 py-2 rounded mt-2"
                   >
                     Xem chi tiết

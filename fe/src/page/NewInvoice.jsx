@@ -118,7 +118,6 @@ export default function NewInvoice() {
         console.error("Error fetching bill details:", error);
       }
     };
-
     // Only fetch if roomId exists
     if (roomId) {
       fetchBillDetails();
@@ -126,6 +125,9 @@ export default function NewInvoice() {
 
     // Add roomId as a dependency so the effect runs whenever roomId changes
   }, [roomId]);
+
+      console.log("roomPreviosMonthBill ", roomPreviosMonthBill)
+
 
   const validateForm = () => {
     const errors = {};
@@ -182,6 +184,8 @@ export default function NewInvoice() {
         {}
       );
 
+      console.log("previousMonthUsage", previousMonthUsage)
+
       // Thêm roomId và previous month's usage vào trong requestBody
       const requestBody = {
         ...invoice,
@@ -201,7 +205,7 @@ export default function NewInvoice() {
       );
 
       if (response.data.success) {
-        setQrUrl(response.data.paymentLink);
+        setQrUrl(response.data.qrUrl);
         setBillData(response.data.data);
         alert("Invoice created successfully!");
       }
