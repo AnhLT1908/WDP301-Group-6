@@ -54,6 +54,8 @@ export default function ManagerList() {
         return acc;
       }, {});
       setHouses(houseMap);
+      console.log(houses[managers._id]);
+      
       console.log("API Response:", response.data);
       if (Array.isArray(response.data.data)) {
         setManagers(response.data.data);
@@ -113,7 +115,7 @@ export default function ManagerList() {
   const handleChangeStatus = async (managerId, currentStatus) => {
     try {
       const newStatus = !currentStatus;
-      const response = await axiosInstance.put("/account/change-status", {
+      const response = await axiosInstance.patch(`/account/accounts/${managerId}/status`, {
         status: newStatus,
       });
 

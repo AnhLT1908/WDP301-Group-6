@@ -72,9 +72,7 @@ const RoomSchema = new Schema({
         required: true
     },
     status: {
-        type: String,
-        enum: ["full", "available"],
-        default: "available"
+        type: Boolean,
     },
     utilities: [{
         type: mongoose.Schema.Types.ObjectId,
