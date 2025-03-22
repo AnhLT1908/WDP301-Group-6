@@ -4,6 +4,7 @@ import Room from '../model/Room.js';
 import House from '../model/House.js';
 import getCurrentUser from '../utils/getCurrentUser.js';
 import mongoose from 'mongoose';
+import Contract from '../model/Contract.js';
 import Notification from '../model/Notification.js';
 
 export const GetAll = async (req, res) => {
@@ -64,6 +65,78 @@ export const getLodgerAccount = async (req, res) => {
       error: error.message,
     });
   }
+};
+
+export const deleteLodgerIfNotInContract = async (req, res, next) => {
+    try {
+        const { accountId } = req.params; // ID của Lodger cần xóa
+        const currentUserId = getCurrentUser(req); // Người thực hiện thao tác
+
+        // Kiểm tra accountId hợp lệ
+        if (!mongoose.Types.ObjectId.isValid(accountId)) {
+            return res.status(400).json({
+                success: false,
+                message: "accountId không hợp lệ!",
+            });
+        }
+
+        // Kiểm tra quyền của người dùng (Admin hoặc Manager)
+        const currentUser = await Account.findById(currentUserId);
+        if (!currentUser || !["Admin", "Manager"].includes(currentUser.accountType)) {
+            return res.status(403).json({
+                success: false,
+                message: "Chỉ Admin hoặc Manager mới có quyền xóa Lodger!",
+            });
+        }
+
+        // Tìm tài khoản cần xóa
+        const lodger = await Account.findById(accountId);
+        if (!lodger) {
+            return res.status(404).json({
+                success: false,
+                message: "Không tìm thấy tài khoản!",
+            });
+        }
+
+        // Kiểm tra tài khoản phải là Lodger
+        if (lodger.accountType !== "Lodger") {
+            return res.status(400).json({
+                success: false,
+                message: "Tài khoản này không phải Lodger!",
+            });
+        }
+
+        // Kiểm tra xem Lodger có trong hợp đồng nào không
+        const contractAsBenB = await Contract.findOne({ benB: accountId });
+        const contractAsRelatedParty = await Contract.findOne({ relatedParties: accountId });
+
+        if (contractAsBenB || contractAsRelatedParty) {
+            return res.status(400).json({
+                success: false,
+                message: "Không thể xóa Lodger vì tài khoản vẫn tồn tại trong hợp đồng!",
+                contract: contractAsBenB || contractAsRelatedParty,
+            });
+        }
+
+        // Xóa Lodger khỏi danh sách members trong Room (nếu có)
+        if (lodger.roomId) {
+            await Room.updateOne(
+                { _id: lodger.roomId },
+                { $pull: { "members": { accountId: lodger._id } } }
+            );
+        }
+
+        // Xóa tài khoản
+        await Account.deleteOne({ _id: accountId });
+
+        return res.status(200).json({
+            success: true,
+            message: `Lodger ${lodger.firstName} ${lodger.lastName} đã được xóa thành công!`,
+        });
+    } catch (error) {
+        console.error("Lỗi trong deleteLodgerIfNotInContract:", error);
+        next(error);
+    }
 };
 
 export const updateLodgerAccount = async (req, res) => {
