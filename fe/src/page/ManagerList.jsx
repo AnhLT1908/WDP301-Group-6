@@ -50,11 +50,10 @@ export default function ManagerList() {
       const response = await axiosInstance.get("/account/manager");
       const resHouse = await axiosInstance.get("/house");
       const houseMap = resHouse.data.houses.reduce((acc, house) => {
-        acc[house.hostID] = house.name;
+        acc[house.hostId] = house.name;
         return acc;
       }, {});
       setHouses(houseMap);
-      console.log(houses[managers._id]);
       
       console.log("API Response:", response.data);
       if (Array.isArray(response.data.data)) {
@@ -72,6 +71,7 @@ export default function ManagerList() {
       setLoading(false);
     }
   };
+  console.log(houses[managers._id]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

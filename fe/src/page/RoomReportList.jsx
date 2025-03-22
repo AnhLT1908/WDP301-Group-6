@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-export default function RoomList() {
+export default function RoomReportList() {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -69,7 +69,7 @@ export default function RoomList() {
 
   return (
     <section className="p-8 w-full">
-      <h2 className="text-yellow-500 text-2xl font-bold mb-4">Room List</h2>
+      <h2 className="text-yellow-500 text-2xl font-bold mb-4">Room Report List</h2>
       <h3 className="text-yellow-400 text-xl font-bold mb-4">List</h3>
       <div className="bg-white p-4 rounded-lg shadow">
         {loading ? (
@@ -90,11 +90,11 @@ export default function RoomList() {
             <tbody>
               {rooms.map((room, index) => (
                 <tr key={index} className="border-t">
-                  <td>{room.name}</td>
-                  <td>{room.floor}</td>
-                  <td>{room.roomType}</td>
-                  <td>{room.quantityMember}</td>
-                  <td>{room.roomPrice}</td>
+                  <td>{}</td>
+                  <td>{}</td>
+                  <td>{}</td>
+                  <td>{}</td>
+                  <td>{}</td>
                   <td className={room.status ? "text-green-500" : "text-red-500"}>
                     {room.status ? "Available" : "Full"}
                   </td>

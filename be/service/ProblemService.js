@@ -137,3 +137,25 @@ export const updateOne = async (req, res, next) => {
         next(error);
     }
 };
+
+export const getOne = async (req, res, next) => {
+    try {
+        const { problemId } = req.params;
+        const problem = await Problem.findById(problemId);
+        if (!problem) {
+            return res.status(404).json({ message: "Vấn đề không tồn tại!" });
+        }
+        return res.status(200).json({ data: problem });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getAll = async (req, res, next) => {
+    try {
+        const problems = await Problem.find();
+        return res.status(200).json({ data: problems });
+    } catch (error) {
+        next(error);
+    }
+};

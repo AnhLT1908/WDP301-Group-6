@@ -11,15 +11,24 @@ const RoomDetail = () => {
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const [bills, setBills] = useState([]);
   const [isBillPopupOpen, setIsBillPopupOpen] = useState(false);
+  const [contracts, setContracts] = useState([]);
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
+
+  // API instance với token
+  const api = axios.create({
+    baseURL: "http://localhost:5000/api/v1",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
   useEffect(() => {
     const fetchRoom = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:5000/api/v1/room/${roomId}`
-        );
+        const res = await api.get(`/room/${roomId}`);
         setRoom(res.data.data);
         setLoading(false);
       } catch (error) {
@@ -32,14 +41,7 @@ const RoomDetail = () => {
   useEffect(() => {
     const fetchLodgers = async () => {
       try {
-        const res = await axios.get(
-          "http://localhost:5000/api/v1/account/lodger-accout-list",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await api.get("/account/lodger-accout-list");
         setLodgers(res.data.data);
       } catch (error) {
         console.error("Error fetching lodger data:", error);
@@ -48,9 +50,21 @@ const RoomDetail = () => {
     fetchLodgers();
   }, []);
 
+  useEffect(() => {
+    const fetchContracts = async () => {
+      try {
+        const res = await api.get(`/contract/room/${roomId}`);
+        setContracts(res.data.data);
+      } catch (error) {
+        console.error("Error fetching contracts:", error);
+      }
+    };
+    fetchContracts();
+  }, [roomId]);
+
   const fetchBills = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/v1/bill/");
+      const res = await api.get("/bill/");
       const filteredBills = res.data.data.filter(
         (bill) => bill.roomId === roomId
       );
@@ -61,7 +75,15 @@ const RoomDetail = () => {
     }
   };
 
-  console.log("Bill", bills)
+  const updateRoomStatus = async (memberCount) => {
+    try {
+      const newStatus = memberCount < 3; // true (available) nếu < 3, false (full) nếu = 3
+      await api.put(`/room/${roomId}/status`, { status: newStatus });
+      setRoom((prev) => ({ ...prev, status: newStatus }));
+    } catch (error) {
+      console.error("Error updating room status:", error);
+    }
+  };
 
   const handleInputChange = (field, value) => {
     setRoom((prev) => ({ ...prev, [field]: value }));
@@ -74,14 +96,6 @@ const RoomDetail = () => {
     }));
   };
 
-  const handleMemberChange = (index, accountId) => {
-    setRoom((prev) => {
-      const newMembers = [...prev.members];
-      newMembers[index] = { accountId };
-      return { ...prev, members: newMembers };
-    });
-  };
-
   const handleAddMember = async () => {
     if (!newMemberEmail) return;
 
@@ -92,20 +106,46 @@ const RoomDetail = () => {
     }
 
     const accountId = member._id;
+
+    // Lấy danh sách tất cả accountId từ contracts
+    const contractMembers = contracts.flatMap((contract) => [
+      contract.benA,
+      contract.benB,
+      ...contract.relatedParties,
+    ]);
+
+    // Kiểm tra xem thành viên đã tồn tại trong hợp đồng chưa
+    if (contractMembers.includes(accountId)) {
+      alert("Thành viên này đã có trong hợp đồng của phòng!");
+      return;
+    }
+
+    // Kiểm tra số lượng thành viên hiện tại
+    const currentMemberCount = room.members.length;
+    if (currentMemberCount >= 3) {
+      alert("Phòng đã đạt tối đa 3 thành viên!");
+      return;
+    }
+
     const joinDate = new Date().toISOString();
 
     try {
-      await axios.post(`http://localhost:5000/api/v1/room/${roomId}/member`, {
+      await api.post(`/room/${roomId}/member`, {
         accountId: accountId,
         joinDate: joinDate,
       });
 
+      const updatedMembers = [...room.members, { accountId: accountId }];
       setRoom((prev) => ({
         ...prev,
-        members: [...prev.members, { accountId: accountId }],
+        members: updatedMembers,
       }));
 
+      // Cập nhật status phòng
+      await updateRoomStatus(updatedMembers.length);
+
       setNewMemberEmail("");
+      alert("Thêm thành viên thành công!");
     } catch (error) {
       console.error("Error adding member:", error);
       alert("Không thể thêm thành viên. Vui lòng thử lại.");
@@ -114,7 +154,6 @@ const RoomDetail = () => {
 
   const handleUpdateRoom = async () => {
     try {
-      // Lọc chỉ gửi các trường cần thiết và được phép cập nhật
       const updatedRoom = {
         name: room.name,
         floor: room.floor,
@@ -125,14 +164,7 @@ const RoomDetail = () => {
         members: room.members,
       };
 
-      console.log("Dữ liệu gửi đi:", updatedRoom); // Debug dữ liệu gửi đi
-
-      const response = await axios.put(
-        `http://localhost:5000/api/v1/room/${roomId}`,
-        updatedRoom
-      );
-      console.log("Phản hồi từ server:", response.data); // Debug phản hồi
-
+      const response = await api.put(`/room/${roomId}`, updatedRoom);
       setIsEditing(false);
       alert("Cập nhật phòng thành công!");
     } catch (error) {
@@ -140,9 +172,7 @@ const RoomDetail = () => {
         "Error updating room:",
         error.response ? error.response.data : error.message
       );
-      alert(
-        "Không thể cập nhật phòng. Vui lòng kiểm tra console để biết chi tiết."
-      );
+      alert("Không thể cập nhật phòng!");
     }
   };
 
@@ -194,9 +224,8 @@ const RoomDetail = () => {
           />
           <RoomInput
             label="Trạng thái"
-            value={room.status}
-            onChange={(val) => handleInputChange("status", val)}
-            editable={isEditing}
+            value={room.status ? "Available" : "Full"}
+            editable={false} // Không cho chỉnh status trực tiếp
           />
         </div>
       </div>
@@ -230,8 +259,7 @@ const RoomDetail = () => {
               key={index}
               label={`Thành viên ${index + 1}`}
               value={getLodgerName(member.accountId)}
-              onChange={(val) => handleMemberChange(index, val)}
-              editable={false} // Không cho chỉnh sửa trực tiếp tên ở đây
+              editable={false}
             />
           ))}
           {isEditing && (
