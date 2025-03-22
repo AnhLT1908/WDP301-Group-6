@@ -5,7 +5,6 @@ import Notification from "../model/Notification.js";
 import Room from "../model/Room.js";
 import getCurrentUser from "../utils/getCurrentUser.js";
 import config2 from "../utils/configPayment.js";
-import config2 from "../utils/configPayment.js";
 import DefaultPrice from "../model/DefaultPrice.js";
 import mongoose from "mongoose";
 
@@ -240,10 +239,14 @@ export const addBillinRoom = async (req, res, next) => {
     // Tính tổng tiền tiện ích
     const utilitiesTotal = priceList.reduce((sum, item) => sum + item.total, 0);
     // Tính tổng số tiền (tiền phòng + tiện ích + nợ)
-
-    console.log("Room price:", room.priic)
-    const totalAmount = room.priceList.roomPrice + utilitiesTotal + debt;
-
+    const intDebt = parseInt(debt);
+    console.log("Room price:", room.priceList.roomPrice);
+    console.log("Utlities total:", utilitiesTotal);
+    console.log("Debt", typeof intDebt);
+    console.log("========================================");
+    const totalAmount = room.priceList.roomPrice + utilitiesTotal + intDebt;
+    console.log("========================================");
+    console.log("totalAmount", totalAmount);
     // Sinh mã giao dịch và mã hóa đơn
     const transactionId = generateTransactionId();
     console.log("transactionId", transactionId);

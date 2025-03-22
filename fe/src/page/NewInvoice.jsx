@@ -18,6 +18,7 @@ export default function NewInvoice() {
   const [qrUrl, setQrUrl] = useState("");
   const [billData, setBillData] = useState(null);
   const [roomPreviosMonthBill, setRoomPreviosMonthBill] = useState("");
+  const [previosMonthBillList, setPreviosMonthBillList] = useState([]);
   const { roomId } = useParams();
   const [room, setRoom] = useState("");
   const [house, setHouse] = useState("");
@@ -109,9 +110,10 @@ export default function NewInvoice() {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        console.log("Lastest bill", response.data.data[0]);
+        console.log("Lastest bill", response.data.data);
         if (response.data.success) {
           setRoomPreviosMonthBill(response.data.data[0]);
+          setPreviosMonthBillList(response.data.data);
           console.log("Bill details fetched successfully:", response.data.data);
         }
       } catch (error) {
@@ -126,8 +128,21 @@ export default function NewInvoice() {
     // Add roomId as a dependency so the effect runs whenever roomId changes
   }, [roomId]);
 
-      console.log("roomPreviosMonthBill ", roomPreviosMonthBill)
+  console.log("roomPreviosMonthBill ", roomPreviosMonthBill);
 
+  console.log("previosMonthBillList", previosMonthBillList);
+
+  const unpaidBills = previosMonthBillList.filter(
+    (prevBill) => prevBill.isPaid === false
+  );
+
+  const totalDebtAmount = unpaidBills.reduce((sum, bill) => {
+    const billTotal = Number(bill.total) || 0;
+    return sum + billTotal;
+  }, 0);
+
+  console.log("Unpaid bill", unpaidBills);
+  console.log("Total Debt Amount:", totalDebtAmount);
 
   const validateForm = () => {
     const errors = {};
@@ -176,21 +191,21 @@ export default function NewInvoice() {
       const token = localStorage.getItem("token");
 
       // Lấy giá trị "Previous month's usage" từ roomPreviosMonthBill
-      const previousMonthUsage = roomPreviosMonthBill?.priceList?.reduce(
-        (acc, item) => {
-          acc[item.name] = item.usage || 0;
-          return acc;
-        },
-        {}
-      );
+      const previousMonthUsage = roomPreviosMonthBill?.priceList
+        ? roomPreviosMonthBill.priceList.reduce((acc, item) => {
+            acc[item.name] = item.usage || 0;
+            return acc;
+          }, {})
+        : { electricity: 0, water: 0, service: 0, internet: 0 };
 
-      console.log("previousMonthUsage", previousMonthUsage)
+      console.log("previousMonthUsage", previousMonthUsage);
 
-      // Thêm roomId và previous month's usage vào trong requestBody
+      console.log("previousMonthUsage", previousMonthUsage);
+
       const requestBody = {
         ...invoice,
-        roomId, // Thêm roomId vào body
-        previousMonthUsage, // Thêm previous month's usage vào body
+        roomId,
+        previousMonthUsage,
       };
 
       const response = await axios.post(
@@ -253,8 +268,9 @@ export default function NewInvoice() {
             <input
               type="text"
               name="debt"
-              value={invoice.debt}
+              value={totalDebtAmount > 0 ? totalDebtAmount : invoice.debt}
               onChange={handleInputChange}
+              readOnly
               className="border p-2 rounded mt-1 text-gray-700"
             />
             {formErrors.debt && (
