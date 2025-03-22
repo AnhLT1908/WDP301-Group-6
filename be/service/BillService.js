@@ -238,6 +238,8 @@ export const addBillinRoom = async (req, res, next) => {
     // Tính tổng tiền tiện ích
     const utilitiesTotal = priceList.reduce((sum, item) => sum + item.total, 0);
     // Tính tổng số tiền (tiền phòng + tiện ích + nợ)
+
+    console.log("Room price:", room.priic)
     const totalAmount = room.priceList.roomPrice + utilitiesTotal + debt;
 
     // Sinh mã giao dịch và mã hóa đơn
