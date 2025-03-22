@@ -5,6 +5,7 @@ import Notification from "../model/Notification.js";
 import Room from "../model/Room.js";
 import getCurrentUser from "../utils/getCurrentUser.js";
 import config2 from "../utils/configPayment.js";
+import config2 from "../utils/configPayment.js";
 import DefaultPrice from "../model/DefaultPrice.js";
 import mongoose from "mongoose";
 

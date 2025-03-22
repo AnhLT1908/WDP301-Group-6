@@ -13,6 +13,7 @@ const RoomDetail = () => {
   const [isBillPopupOpen, setIsBillPopupOpen] = useState(false);
   const navigate = useNavigate();
 
+  const token = localStorage.getItem("token");
   useEffect(() => {
     const fetchRoom = async () => {
       try {
@@ -32,7 +33,12 @@ const RoomDetail = () => {
     const fetchLodgers = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:5000/api/v1/account/lodger-accout-list"
+          "http://localhost:5000/api/v1/account/lodger-accout-list",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         setLodgers(res.data.data);
       } catch (error) {
