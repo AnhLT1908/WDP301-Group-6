@@ -16,7 +16,6 @@ const RoomDetail = () => {
 
   const token = localStorage.getItem("token");
 
-  // API instance với token
   const api = axios.create({
     baseURL: "http://localhost:5000/api/v1",
     headers: {
@@ -29,7 +28,14 @@ const RoomDetail = () => {
     const fetchRoom = async () => {
       try {
         const res = await api.get(`/room/${roomId}`);
-        setRoom(res.data.data);
+        const roomData = {
+          ...res.data.data,
+          priceList: {
+            roomPrice: res.data.data.priceList?.roomPrice || 0,
+            deposit: res.data.data.priceList?.deposit || 0,
+          },
+        };
+        setRoom(roomData);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching room data:", error);
@@ -77,9 +83,9 @@ const RoomDetail = () => {
 
   const updateRoomStatus = async (memberCount) => {
     try {
-      const newStatus = memberCount < 3; // true (available) nếu < 3, false (full) nếu = 3
+      const newStatus = memberCount < 3 ? "available" : "full"; // Đổi sang string theo backend
       await api.put(`/room/${roomId}/status`, { status: newStatus });
-      setRoom((prev) => ({ ...prev, status: newStatus }));
+      setRoom((prev) => ({ ...prev, status: newStatus === "available" })); // Chuyển lại boolean cho frontend
     } catch (error) {
       console.error("Error updating room status:", error);
     }
@@ -97,7 +103,10 @@ const RoomDetail = () => {
   };
 
   const handleAddMember = async () => {
-    if (!newMemberEmail) return;
+    if (!newMemberEmail) {
+      alert("Vui lòng nhập email thành viên!");
+      return;
+    }
 
     const member = lodgers.find((lodger) => lodger.email === newMemberEmail);
     if (!member) {
@@ -107,20 +116,30 @@ const RoomDetail = () => {
 
     const accountId = member._id;
 
-    // Lấy danh sách tất cả accountId từ contracts
-    const contractMembers = contracts.flatMap((contract) => [
-      contract.benA,
-      contract.benB,
-      ...contract.relatedParties,
-    ]);
+    const contractMembers = contracts
+      .filter((contract) => contract.roomId.toString() === room._id.toString())
+      .flatMap((contract) => [
+        contract.benA.toString(),
+        contract.benB.toString(),
+        ...contract.relatedParties.map((id) => id.toString()),
+      ]);
 
-    // Kiểm tra xem thành viên đã tồn tại trong hợp đồng chưa
-    if (contractMembers.includes(accountId)) {
-      alert("Thành viên này đã có trong hợp đồng của phòng!");
+    if (contractMembers.includes(accountId.toString())) {
+      alert(
+        "Thành viên này đã có trong hợp đồng của phòng (benA, benB hoặc relatedParties)!"
+      );
       return;
     }
 
-    // Kiểm tra số lượng thành viên hiện tại
+    const relatedPartiesCount = contracts
+      .filter((contract) => contract.roomId.toString() === room._id.toString())
+      .reduce((total, contract) => total + contract.relatedParties.length, 0);
+
+    if (relatedPartiesCount >= 3) {
+      alert("Số lượng bên liên quan trong hợp đồng đã đạt tối đa 3 người!");
+      return;
+    }
+
     const currentMemberCount = room.members.length;
     if (currentMemberCount >= 3) {
       alert("Phòng đã đạt tối đa 3 thành viên!");
@@ -130,41 +149,57 @@ const RoomDetail = () => {
     const joinDate = new Date().toISOString();
 
     try {
-      await api.post(`/room/${roomId}/member`, {
+      const response = await api.post(`/room/${roomId}/member`, {
         accountId: accountId,
         joinDate: joinDate,
       });
 
-      const updatedMembers = [...room.members, { accountId: accountId }];
+      const updatedMembers = [...room.members, { accountId: accountId, joinDate: joinDate }];
       setRoom((prev) => ({
         ...prev,
         members: updatedMembers,
       }));
 
-      // Cập nhật status phòng
       await updateRoomStatus(updatedMembers.length);
 
       setNewMemberEmail("");
       alert("Thêm thành viên thành công!");
     } catch (error) {
-      console.error("Error adding member:", error);
-      alert("Không thể thêm thành viên. Vui lòng thử lại.");
+      console.error("Error adding member:", error.response?.data || error.message);
+      alert("Không thể thêm thành viên! Vui lòng kiểm tra console để biết chi tiết.");
     }
   };
 
   const handleUpdateRoom = async () => {
     try {
+      if (!room.priceList?.roomPrice || Number(room.priceList.roomPrice) <= 0) {
+        alert("Giá phòng phải lớn hơn 0!");
+        return;
+      }
+
+      // Chỉ gửi các field được phép cập nhật (loại bỏ status và members)
       const updatedRoom = {
         name: room.name,
         floor: room.floor,
         area: room.area,
-        status: room.status,
-        priceList: room.priceList,
+        priceList: {
+          roomPrice: Number(room.priceList.roomPrice),
+          deposit: Number(room.priceList.deposit || 0),
+        },
         roomBill: room.roomBill,
-        members: room.members,
       };
 
+      console.log("Dữ liệu gửi đi:", updatedRoom);
+
       const response = await api.put(`/room/${roomId}`, updatedRoom);
+      setRoom((prev) => ({
+        ...prev,
+        ...response.data.room, // Cập nhật lại state với dữ liệu từ server
+        priceList: {
+          roomPrice: response.data.room.priceList.roomPrice,
+          deposit: response.data.room.priceList.deposit || 0,
+        },
+      }));
       setIsEditing(false);
       alert("Cập nhật phòng thành công!");
     } catch (error) {
@@ -172,7 +207,7 @@ const RoomDetail = () => {
         "Error updating room:",
         error.response ? error.response.data : error.message
       );
-      alert("Không thể cập nhật phòng!");
+      alert("Không thể cập nhật phòng! Vui lòng kiểm tra console để biết chi tiết.");
     }
   };
 
@@ -225,7 +260,7 @@ const RoomDetail = () => {
           <RoomInput
             label="Trạng thái"
             value={room.status ? "Available" : "Full"}
-            editable={false} // Không cho chỉnh status trực tiếp
+            editable={false}
           />
         </div>
       </div>
@@ -233,15 +268,20 @@ const RoomDetail = () => {
       <div className="bg-gray-300 rounded-lg p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4">Thông tin tài chính</h2>
         <div className="flex flex-col space-y-4">
-          {Object.keys(room.priceList).map((key) => (
-            <RoomInput
-              key={key}
-              label={key}
-              value={room.priceList[key]}
-              onChange={(val) => handlePriceChange(key, val)}
-              editable={isEditing}
-            />
-          ))}
+          <RoomInput
+            label="Giá phòng"
+            value={room.priceList?.roomPrice || ""}
+            onChange={(val) => handlePriceChange("roomPrice", val)}
+            editable={isEditing}
+            type="number"
+          />
+          <RoomInput
+            label="Tiền cọc"
+            value={room.priceList?.deposit || ""}
+            onChange={(val) => handlePriceChange("deposit", val)}
+            editable={isEditing}
+            type="number"
+          />
           <RoomInput
             label="Tiền nhà tháng"
             value={room.roomBill}
@@ -349,13 +389,13 @@ const RoomDetail = () => {
   );
 };
 
-const RoomInput = ({ label, value, onChange, editable }) => {
+const RoomInput = ({ label, value, onChange, editable, type = "text" }) => {
   return (
     <div className="flex justify-between">
       <label className="w-1/4">{label}</label>
       {editable ? (
         <input
-          type="text"
+          type={type}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className="border rounded p-2 w-3/4"
