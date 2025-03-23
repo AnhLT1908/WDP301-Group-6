@@ -28,6 +28,7 @@ import NewInvoice from "./page/NewInvoice.jsx";
 import RoomList from "./page/RoomList.jsx";
 import LodgerInvoice from "./page/LodgerInvoice.jsx";
 import UpdateLodgerAccount from "./page/UpdateLodgerAccount.jsx";
+import TransactionList from "./page/TransactionList.jsx";
 //import NotFound from "./page/NotFound.jsx";
 import Dashboard from "./page/Dashboard.jsx";
 import ManagerList from "./page/ManagerList.jsx";
@@ -191,6 +192,14 @@ function App() {
               element={
                 <ManagerLayout>
                   <RoomList />
+                </ManagerLayout>
+              }
+            />
+            <Route
+              path="manager/invoice/transaction-list"
+              element={
+                <ManagerLayout>
+                  <TransactionList />
                 </ManagerLayout>
               }
             />

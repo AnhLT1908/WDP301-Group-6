@@ -31,36 +31,36 @@ export const getTransactions = async (req, res, next) => {
   try {
     // Lấy API key từ biến môi trường hoặc config
     const apiKey = process.env.CASSO_API_KEY || config2.cassoApiKey;
-    
+
     if (!apiKey) {
       return res.status(500).json({
         success: false,
         message: "Chưa cấu hình API key cho Casso",
-        data: null
+        data: null,
       });
     }
 
     // Lấy các tham số từ query
-    const { 
-      sort = 'ASC', 
-      pageSize = 10, 
-      page = 1, 
-      fromDate, 
-      toDate 
+    const {
+      sort = "ASC",
+      pageSize = 10,
+      page = 1,
+      fromDate,
+      toDate,
     } = req.query;
 
     // Xây dựng URL với các query params
-    let url = 'https://oauth.casso.vn/v2/transactions';
+    let url = "https://oauth.casso.vn/v2/transactions";
     const params = new URLSearchParams();
-    
-    if (sort) params.append('sort', sort);
-    if (pageSize) params.append('pageSize', pageSize);
-    if (page) params.append('page', page);
-    
+
+    if (sort) params.append("sort", sort);
+    if (pageSize) params.append("pageSize", pageSize);
+    if (page) params.append("page", page);
+
     // Xử lý rõ ràng cho fromDate và toDate
-    if (fromDate) params.append('fromDate', fromDate);
-    if (toDate) params.append('toDate', toDate);
-    
+    if (fromDate) params.append("fromDate", fromDate);
+    if (toDate) params.append("toDate", toDate);
+
     // Thêm query params vào URL
     if (params.toString()) {
       url += `?${params.toString()}`;
@@ -71,19 +71,21 @@ export const getTransactions = async (req, res, next) => {
     // Gọi API Casso
     const response = await axios.get(url, {
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Apikey ${apiKey}`
-      }
+        "Content-Type": "application/json",
+        Authorization: `Apikey ${apiKey}`,
+      },
     });
 
     // Kiểm tra và xử lý phản hồi từ API
     const { data } = response;
-    
+
+    console.log("Data casso", data);
+
     if (data.error !== 0) {
       return res.status(400).json({
         success: false,
         message: data.message || "Lỗi khi lấy dữ liệu từ Casso API",
-        data: null
+        data: null,
       });
     }
 
@@ -91,36 +93,36 @@ export const getTransactions = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "Lấy danh sách giao dịch thành công",
-      data: data.data
+      data: data.data,
     });
   } catch (error) {
-    console.error('Lỗi khi lấy danh sách giao dịch:', error);
-    
+    console.error("Lỗi khi lấy danh sách giao dịch:", error);
+
     // Xử lý các loại lỗi cụ thể
     if (error.response) {
       // Lỗi từ API Casso
       const { status, data } = error.response;
-      
+
       if (status === 401) {
         return res.status(401).json({
           success: false,
-          message: 'API key không hợp lệ hoặc đã hết hạn',
-          data: null
+          message: "API key không hợp lệ hoặc đã hết hạn",
+          data: null,
         });
       }
-      
+
       return res.status(status).json({
         success: false,
-        message: data.message || 'Lỗi từ API Casso',
-        data: null
+        message: data.message || "Lỗi từ API Casso",
+        data: null,
       });
     }
-    
+
     // Lỗi kết nối hoặc lỗi khác
     return res.status(500).json({
       success: false,
-      message: 'Đã xảy ra lỗi khi kết nối đến API Casso',
-      data: null
+      message: "Đã xảy ra lỗi khi kết nối đến API Casso",
+      data: null,
     });
   }
 };
@@ -157,7 +159,10 @@ export const getBillsByRoom = async (req, res, next) => {
     const { roomId } = req.params;
     console.log("roomBills roomId", roomId);
 
-    const roomBills = await Bills.find({ roomId }).sort({ createdAt: -1 });
+    const roomBills = await Bills.find({ roomId })
+      .populate("roomId")
+      .populate("houseId")
+      .sort({ createdAt: -1 });
 
     console.log("roomBills", roomBills);
 
@@ -187,6 +192,7 @@ export const addBillinRoom = async (req, res, next) => {
 
     // Tìm phòng theo ID và populate thông tin nhà (house) liên quan
     const room = await Room.findById(roomId).populate("house");
+    console.log("Room bill ", room);
     // Kiểm tra xem phòng có tồn tại không
     if (!room) {
       return res.status(404).json({ message: "Không tìm thấy phòng." });
@@ -346,18 +352,16 @@ export const addBillinRoom = async (req, res, next) => {
     console.log("========================================");
     console.log("totalAmount", totalAmount);
     // Sinh mã giao dịch và mã hóa đơn
-    const transactionId = generateTransactionId();
 
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth() + 1;
     const formattedMonth = currentMonth.toString().padStart(2, "0");
-    console.log("transactionId", transactionId);
     console.log("date", currentMonth);
 
-    const billCode = `Bill-Month${formattedMonth}-Room${room.name}-${transactionId}`;
+    const billCode = generateTransactionId();
 
     // Tạo mô tả thanh toán
-    const paymentDescription = `Hoa don thang ${formattedMonth} - phong ${room.name}`;
+    const paymentDescription = `${room._id}.${billCode}`;
 
     // Sinh URL QR thanh toán
     const { qrUrl } = generateVietQR(totalAmount, paymentDescription);
@@ -396,7 +400,6 @@ export const addBillinRoom = async (req, res, next) => {
       success: true,
       data: bill,
       qrUrl,
-      transactionId,
       paymentDescription,
     });
   } catch (error) {
