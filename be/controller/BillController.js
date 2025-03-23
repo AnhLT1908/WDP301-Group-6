@@ -17,6 +17,9 @@ const BillController = {
   getBillsByRoom: catchAsyncErrors(async (req, res, next) => {
     await BillService.getBillsByRoom(req, res, next);
   }),
+  getTransactions: catchAsyncErrors(async (req, res, next) => {
+    await BillService.getTransactions(req, res, next);
+  }),
 };
 
 export default BillController;
