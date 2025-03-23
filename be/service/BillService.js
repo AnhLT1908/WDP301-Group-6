@@ -20,7 +20,7 @@ const generateVietQR = (amount, courseName) => {
   }-${
     config2.bankInfo.template
   }.png?amount=${amount}&addInfo=${encodeURIComponent(
-    courseName + " Ma giao dich " + transactionId
+    courseName
   )}&accountName=${encodeURIComponent(config2.bankInfo.accountName)}`;
 
   return { qrUrl, transactionId };
@@ -88,7 +88,6 @@ export const addBillinRoom = async (req, res, next) => {
 
     // Tìm phòng theo ID và populate thông tin nhà (house) liên quan
     const room = await Room.findById(roomId).populate("house");
-
     // Kiểm tra xem phòng có tồn tại không
     if (!room) {
       return res.status(404).json({ message: "Không tìm thấy phòng." });
@@ -249,11 +248,17 @@ export const addBillinRoom = async (req, res, next) => {
     console.log("totalAmount", totalAmount);
     // Sinh mã giao dịch và mã hóa đơn
     const transactionId = generateTransactionId();
+
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    const formattedMonth = currentMonth.toString().padStart(2, "0");
     console.log("transactionId", transactionId);
-    const billCode = `BILL-${roomId}-${Date.now()}-${transactionId}`;
+    console.log("date", formattedMonth);
+
+    const billCode = `Bill-Month${formattedMonth}-Room${room.name}-${transactionId}`;
 
     // Tạo mô tả thanh toán
-    const paymentDescription = `Thanh toán tiền phòng ${room.house.name} - ${room.name}`;
+    const paymentDescription = `Hoa don thang ${formattedMonth} - phong ${room.name}`;
 
     // Sinh URL QR thanh toán
     const { qrUrl } = generateVietQR(totalAmount, paymentDescription);

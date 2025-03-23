@@ -144,6 +144,15 @@ export default function NewInvoice() {
   console.log("Unpaid bill", unpaidBills);
   console.log("Total Debt Amount:", totalDebtAmount);
 
+  useEffect(() => {
+    if (totalDebtAmount > 0) {
+      setInvoice((prev) => ({
+        ...prev,
+        debt: totalDebtAmount,
+      }));
+    }
+  }, [totalDebtAmount]);
+
   const validateForm = () => {
     const errors = {};
     if (isNaN(invoice.debt) || invoice.debt === "") {
