@@ -126,9 +126,6 @@ export const deleteLodgerIfNotInContract = async (req, res, next) => {
             );
         }
 
-        // Xóa tài khoản
-        await Account.deleteOne({ _id: accountId });
-
         return res.status(200).json({
             success: true,
             message: `Lodger ${lodger.firstName} ${lodger.lastName} đã được xóa thành công!`,
