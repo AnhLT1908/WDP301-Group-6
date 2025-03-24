@@ -314,6 +314,7 @@ export default function ManagerList() {
                 <th>Email</th>
                 <th>Phone Number</th>
                 <th>House</th>
+                <th>House</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>

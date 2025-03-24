@@ -599,45 +599,24 @@ export const transferManagerToHouse = async (req, res, next) => {
 
 export const ChangeStatus = async (req, res, next) => {
     try {
-        const adminId = getCurrentUser(req); // Admin thực hiện thao tác
-        const { accountId } = req.params; // ID tài khoản cần thay đổi
+        const accountId = getCurrentUser(req);
         const { status } = req.body;
 
-        // Kiểm tra quyền Admin
-        const admin = await Account.findById(adminId);
-        if (!admin || admin.accountType !== "Admin") {
-            return res.status(403).json({
-                success: false,
-                message: "Chỉ Admin mới có quyền thay đổi trạng thái tài khoản!",
-            });
-        }
-
-        // Kiểm tra status phải là Boolean
         if (typeof status !== "boolean") {
             return res.status(400).json({
                 success: false,
-                message: "Status phải là true hoặc false!",
+                message: "Status must be either true or false",
             });
         }
 
-        // Kiểm tra tài khoản cần thay đổi
-        const targetAccount = await Account.findById(accountId);
-        if (!targetAccount) {
+        const existAccount = await Account.findById(accountId);
+        if (!existAccount) {
             return res.status(404).json({
                 success: false,
                 message: "Tài khoản không tồn tại!",
             });
         }
 
-        // Không cho phép thay đổi trạng thái của Admin khác
-        if (targetAccount.accountType === "Admin") {
-            return res.status(403).json({
-                success: false,
-                message: "Không thể thay đổi trạng thái của tài khoản Admin!",
-            });
-        }
-
-        // Cập nhật trạng thái
         const updatedAccount = await Account.findByIdAndUpdate(
             accountId,
             { status },
@@ -646,11 +625,10 @@ export const ChangeStatus = async (req, res, next) => {
 
         return res.status(200).json({
             success: true,
-            message: `Trạng thái tài khoản đã được cập nhật thành ${status ? "active" : "inactive"}`,
+            message: `Account changed to ${status}`,
             data: updatedAccount,
         });
     } catch (error) {
-        console.error("Lỗi trong updateAccountStatus:", error);
         next(error);
     }
 };
