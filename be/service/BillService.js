@@ -129,7 +129,7 @@ export const getTransactions = async (req, res, next) => {
 
 export const getAllBill = async (req, res, next) => {
   try {
-    const allBill = await Bills.find();
+    const allBill = await Bills.find().populate("roomId");
     res.status(200).json({
       success: true,
       count: allBill.length,
@@ -144,7 +144,9 @@ export const getAllBill = async (req, res, next) => {
 export const getOneBill = async (req, res, next) => {
   try {
     const { billId } = req.params;
-    const oneBill = await Bills.findById(billId);
+    const oneBill = await Bills.findById(billId)
+      .populate("roomId")
+      .populate("houseId");
     res.status(200).json({
       success: true,
       data: oneBill,
@@ -591,6 +593,54 @@ export const UpdateBillDetail = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Error in UpdateBillDetail:", error);
+    next(error);
+  }
+};
+
+export const updateBillPaymentStatus = async (req, res, next) => {
+  try {
+    const { billId } = req.params;
+    const { isPaid, note } = req.body;
+
+    // Input validation
+    if (isPaid === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Payment status is required",
+      });
+    }
+
+    // Verify bill exists before updating
+    const billExists = await Bills.findById(billId);
+    if (!billExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Bill not found",
+      });
+    }
+
+    // Perform targeted update with field validation
+    const updatedBill = await Bills.findByIdAndUpdate(
+      billId,
+      {
+        isPaid: Boolean(isPaid),
+        note: note !== undefined ? note : billExists.note,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+
+    // Return updated bill data
+    res.status(200).json({
+      success: true,
+      data: updatedBill,
+      message: "Bill payment status updated successfully",
+    });
+  } catch (error) {
+    console.error("Error updating bill payment status:", error);
     next(error);
   }
 };

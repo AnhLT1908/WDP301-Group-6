@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { QRCodeCanvas } from "qrcode.react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 export default function NewInvoice() {
   // =============== STATE DEFINITIONS ===============
@@ -17,8 +16,7 @@ export default function NewInvoice() {
       { name: "internet", price: 0, currentUsage: 0 },
     ],
   });
-  const [qrUrl, setQrUrl] = useState("");
-  const [billData, setBillData] = useState(null);
+  const navigate = useNavigate();
   const [roomPreviosMonthBill, setRoomPreviosMonthBill] = useState("");
   const [previosMonthBillList, setPreviosMonthBillList] = useState([]);
   const [currentMonthBillList, setCurrentMonthBillList] = useState([]);
@@ -38,6 +36,7 @@ export default function NewInvoice() {
     isError: false,
     message: "",
     billCode: "",
+    billId: "",
   });
 
   // =============== DATA FETCHING HOOKS ===============
@@ -261,6 +260,7 @@ export default function NewInvoice() {
       isError: false,
       message: "",
       billCode: "",
+      billId: "",
     });
 
     try {
@@ -294,13 +294,12 @@ export default function NewInvoice() {
 
       if (response.data.success) {
         // Update UI with success state
-        setQrUrl(response.data.qrUrl);
-        setBillData(response.data.data);
         setSubmissionStatus({
           isSuccess: true,
           isError: false,
           message: "Hoá đơn được tạo thành công",
           billCode: response.data.data?.billCode || "",
+          billId: response.data.data?._id || "", // Store the bill ID
         });
 
         // Update bill list to include new invoice
@@ -315,7 +314,14 @@ export default function NewInvoice() {
         isError: true,
         message: "Không thể tạo hoá đơn. Vui lòng thử lại sau.",
         billCode: "",
+        billId: "",
       });
+    }
+  };
+
+  const handleViewDetail = () => {
+    if (submissionStatus.billId) {
+      navigate(`/manager/invoice-detail/${submissionStatus.billId}`);
     }
   };
 
@@ -324,7 +330,9 @@ export default function NewInvoice() {
     <div className="min-h-screen bg-gray-100 flex flex-col py-6">
       {/* Modified header with centered layout */}
       <div className="w-full max-w-6xl mx-auto px-4">
-        <h1 className="text-2xl font-bold text-yellow-500 mb-6">New Invoice</h1>
+        <h1 className="text-2xl font-bold text-yellow-500 mb-6">
+          Tạo hóa đơn mới
+        </h1>
 
         {/* Main form container - centered and wider */}
         <div className="bg-white p-8 rounded-lg shadow-md w-full">
@@ -372,7 +380,7 @@ export default function NewInvoice() {
             {/* Basic invoice information fields */}
             <div className="flex flex-col">
               <label className="text-sm font-semibold text-gray-600">
-                Note
+                Ghi chú
               </label>
               <input
                 type="text"
@@ -383,9 +391,7 @@ export default function NewInvoice() {
               />
             </div>
             <div className="flex flex-col">
-              <label className="text-sm font-semibold text-gray-600">
-                Debt
-              </label>
+              <label className="text-sm font-semibold text-gray-600">Nợ</label>
               <input
                 type="text"
                 name="debt"
@@ -404,7 +410,7 @@ export default function NewInvoice() {
             </div>
             <div className="flex flex-col">
               <label className="text-sm font-semibold text-gray-600">
-                Room
+                Phòng
               </label>
               <input
                 type="text"
@@ -416,7 +422,7 @@ export default function NewInvoice() {
             </div>
             <div className="flex flex-col">
               <label className="text-sm font-semibold text-gray-600">
-                Month
+                Hóa đơn tháng
               </label>
               <input
                 type="text"
@@ -436,12 +442,20 @@ export default function NewInvoice() {
                 className="mb-6 pb-6 border-b border-gray-200 last:border-b-0"
               >
                 <h3 className="text-lg font-semibold capitalize mb-3">
-                  {item.name}
+                  {item.name === "electricity"
+                    ? "Tiền điện"
+                    : item.name === "water"
+                    ? "Tiền nước"
+                    : item.name === "service"
+                    ? "Tiền dịch vụ"
+                    : item.name === "internet"
+                    ? "Tiền mạng"
+                    : item.name}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="flex flex-col">
                     <label className="text-sm font-semibold text-gray-600">
-                      Price
+                      Giá tiền
                     </label>
                     <input
                       type="text" // Changed from number to text for formatted display
@@ -452,7 +466,7 @@ export default function NewInvoice() {
                   </div>
                   <div className="flex flex-col">
                     <label className="text-sm font-semibold text-gray-600">
-                      Previous month's usage
+                      Số sử dụng tháng trước
                     </label>
                     <input
                       type="text"
@@ -467,7 +481,7 @@ export default function NewInvoice() {
                   </div>
                   <div className="flex flex-col">
                     <label className="text-sm font-semibold text-gray-600">
-                      Current month's usage
+                      Số sử dụng tháng hiện tại
                     </label>
                     <input
                       type="text"
@@ -522,19 +536,29 @@ export default function NewInvoice() {
           {/* Action buttons section */}
           <div className="flex justify-between mt-8">
             <button className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-md w-[200px] transition duration-200">
-              Back
+              Quay trở lại
             </button>
-            <button
-              onClick={handleSubmit}
-              disabled={isCreateButtonDisabled()}
-              className={`${
-                isCreateButtonDisabled()
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-green-600 hover:bg-green-700"
-              } text-white px-6 py-3 rounded-md w-[200px] transition duration-200`}
-            >
-              Create
-            </button>
+
+            {submissionStatus.isSuccess ? (
+              <button
+                onClick={handleViewDetail}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md w-[200px] transition duration-200"
+              >
+                Xem chi tiết
+              </button>
+            ) : (
+              <button
+                onClick={handleSubmit}
+                disabled={isCreateButtonDisabled()}
+                className={`${
+                  isCreateButtonDisabled()
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-green-600 hover:bg-green-700"
+                } text-white px-6 py-3 rounded-md w-[200px] transition duration-200`}
+              >
+                Tạo hóa đơn
+              </button>
+            )}
           </div>
         </div>
       </div>

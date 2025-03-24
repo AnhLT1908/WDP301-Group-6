@@ -20,6 +20,9 @@ const BillController = {
   getTransactions: catchAsyncErrors(async (req, res, next) => {
     await BillService.getTransactions(req, res, next);
   }),
+  updateBillPaymentStatus: catchAsyncErrors(async (req, res, next) => {
+    await BillService.updateBillPaymentStatus(req, res, next);
+  })
 };
 
 export default BillController;

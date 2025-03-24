@@ -73,7 +73,6 @@ const TransactionList = () => {
       const relatedBill = transactionRoomId
         ? roomIdToBillMap.get(transactionRoomId.toLowerCase())
         : null;
-
       // Xác định ID phòng thực tế từ giao dịch hoặc hóa đơn liên quan
       let actualRoomId = null;
       if (relatedBill) {
@@ -107,7 +106,7 @@ const TransactionList = () => {
         ...transaction,
         transactionDate,
         relatedBill,
-        roomId: actualRoomId,
+        billId: relatedBill?._id,
         // Tên phòng: lấy từ đối tượng roomId nếu có hoặc rút gọn từ ID phòng
         roomName: relatedBill
           ? typeof relatedBill.roomId === "object" &&
@@ -458,7 +457,7 @@ const TransactionList = () => {
                     </td>
                     <td className={cellClass}>
                       <a
-                        href={`/manager/invoice-detail/${record.roomId}`}
+                        href={`/manager/invoice-detail/${record.billId}`}
                         className="text-xs font-semibold text-blue-600 underline hover:underline"
                       >
                         Cập nhật hoá đơn
