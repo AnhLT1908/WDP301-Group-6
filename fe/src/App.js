@@ -32,7 +32,6 @@ import UpdateLodgerAccount from "./page/UpdateLodgerAccount.jsx";
 import Dashboard from "./page/Dashboard.jsx";
 import ManagerList from "./page/ManagerList.jsx";
 import ReportList from "./page/RoomReportList.jsx";
-import ManagerViewReport from "./page/ManagerViewReport.jsx";
 
 function App() {
   const [accountType, setAccountType] = useState(
@@ -217,14 +216,6 @@ function App() {
               element={
                 <ManagerLayout>
                   <ReportList />
-                </ManagerLayout>
-              }
-            />
-            <Route
-              path="manager/report/report-detail/:problemId"
-              element={
-                <ManagerLayout>
-                  <ManagerViewReport />
                 </ManagerLayout>
               }
             />
