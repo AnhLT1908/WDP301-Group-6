@@ -6,107 +6,233 @@ export default function InvoiceList() {
   const [bills, setBills] = useState([]);
   const [houses, setHouses] = useState({});
   const [rooms, setRooms] = useState({});
-  const navigate = useNavigate(); // Hook để điều hướng
+  const navigate = useNavigate();
+
+  const hostId = JSON.parse(localStorage.getItem("user"))._id;
+  console.log("Host id", hostId);
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchHouseData = async () => {
       try {
-        const [billRes, houseRes, roomRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/v1/bill/"),
-          axios.get("http://localhost:5000/api/v1/house/"),
-          axios.get("http://localhost:5000/api/v1/room/"),
-        ]);
-
-        console.log(roomRes.data.data);
-        const houseMap = houseRes.data.houses.reduce((acc, house) => {
-          acc[house._id] = house.name;
-          return acc;
-        }, {});
-
-        const roomMap = roomRes.data.data.reduce((acc, room) => {
-          acc[room._id] = room.name;
-          return acc;
-        }, {});
-
-        setBills(billRes.data.data || []);
-        setHouses(houseMap);
-        console.log(houses);
-        setRooms(roomMap);
+        const response = await axios.get(
+          "http://localhost:5000/api/v1/house/houseByHost",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "host-Id": hostId,
+            },
+          }
+        );
+        console.log("Response", response.data);
+        console.log("Response data detail", response.data.data[0]);
+        if (response.data.data && response.data.data.length > 0) {
+          setHouses(response.data.data[0]);
+        }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetchHouseData: ", error);
+      }
+    };
+    fetchHouseData();
+  }, [hostId, token]);
+
+  console.log("House by host id: ", houses);
+
+  useEffect(() => {
+    const fetchAllBill = async () => {
+      try {
+        if (houses && houses._id) {
+          const response = await axios.get(
+            `http://localhost:5000/api/v1/bill/`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          const billByHouse = response.data.data.filter(
+            (billHouseId) => billHouseId?.houseId === houses._id
+          );
+
+          if (billByHouse && billByHouse.length > 0) {
+            setBills(billByHouse);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching bills: ", error);
       }
     };
 
-    fetchData();
-  }, []);
+    fetchAllBill();
+  }, [houses, token]);
+
+  console.log("Bill by house", bills);
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return (
+      `${date.getHours().toString().padStart(2, "0")}:` +
+      `${date.getMinutes().toString().padStart(2, "0")}:` +
+      `${date.getSeconds().toString().padStart(2, "0")} ` +
+      `${date.getDate().toString().padStart(2, "0")}/` +
+      `${(date.getMonth() + 1).toString().padStart(2, "0")}/` +
+      `${date.getFullYear()}`
+    );
+  };
 
   const handleViewDetail = (billId) => {
     navigate(`/manager/invoice-detail/${billId}`);
   };
 
   const handleCreateInvoice = () => {
-    navigate("/manager/invoice/new-invoice")
-  }
+    navigate("/manager/invoice/new-invoice");
+  };
 
   return (
-    <section className="p-8 w-full">
-      <h2 className="text-yellow-500 text-2xl font-bold">Invoice List</h2>
-
-      <div className="flex justify-between my-4">
-        <h3 className="text-yellow-400 text-xl font-bold mb-4">List</h3>
-        <button className="bg-green-500 text-white w-[50%] px-4 py-2 rounded">
-          Create new invoice
+    <div className="mb-8 flex flex-col">
+      {/* Card Container */}
+      {/* <div className="m-6">
+        <button className="flex justify-center items-center rounded-md font-medium text-white bg-green-600 p-6 w-[100px] h-[50px]">
+          Back
         </button>
-      </div>
-      <div className="bg-white p-4 rounded-lg shadow">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b bg-gray-200">
-              <th className="p-2">House Name</th>
-              <th className="p-2">Room Number</th>
-              <th className="p-2">Note</th>
-              <th className="p-2">Total Price</th>
-              <th className="p-2">Payment Method</th>
-              <th className="p-2">Status</th>
-              <th className="p-2">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {bills.length > 0 ? (
-              bills.map((bill, index) => (
-                <tr key={index} className="border-t">
-                  <td className="p-2">{houses[bill.houseId] || "Unknown"}</td>
-                  <td className="p-2">{rooms[bill.roomId] || "Unknown"}</td>
-                  <td className="p-2">{bill.note}</td>
-                  <td className="p-2">{bill.total}</td>
-                  <td className="p-2">{bill.paymentMethod}</td>
-                  <td
-                    className={`p-2 ${
-                      bill.isPaid ? "text-green-500" : "text-red-500"
-                    }`}
-                  >
-                    {bill.isPaid ? "Paid" : "Unpaid"}
-                  </td>
-                  <td className="p-2">
-                    <button
-                      onClick={() => handleViewDetail(bill._id)}
-                      className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition"
-                    >
-                      View Detail
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
+      </div> */}
+      <div className="shadow overflow-hidden m-6">
+        {/* Card Header */}
+        <div className="flex justify-between items-center rounded-lg bg-gradient-to-r from-green-700 to-green-500 p-6 mx-6">
+          <h6 className="text-white text-lg font-medium">Invoice List</h6>
+          {/* <button
+            onClick={handleCreateAccount}
+            className="bg-white text-green-500 hover:bg-green-900  transition duration-300 font-bold px-6 py-2 rounded-xl shadow-md"
+          >
+            Create new account
+          </button> */}
+        </div>
+        {/* Card Body */}
+        <div className="overflow-x-auto px-0 pt-0 pb-2">
+          <table className="w-full min-w-[640px] table-auto">
+            <thead>
               <tr>
-                <td colSpan="7" className="text-center p-4 text-gray-500">
-                  No invoices available.
-                </td>
+                {[
+                  "Phòng",
+                  "Mã hóa đơn",
+                  "Tổng hóa đơn",
+                  "Ngày tạo",
+                  "Trạng thái",
+                  "Actions",
+                ].map((el) => (
+                  <th
+                    key={el}
+                    className="border-b border-blue-gray-50 py-3 px-6 text-left"
+                  >
+                    <span className="text-[11px] font-bold uppercase text-blue-gray-400">
+                      {el}
+                    </span>
+                  </th>
+                ))}
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {bills.map((bill, index) => {
+                const cellClass = `py-3 px-6 ${
+                  index === bill.length - 1
+                    ? ""
+                    : "border-b border-blue-gray-50"
+                }`;
+                return (
+                  <tr
+                    key={bill._id}
+                    className="hover:bg-gray-300 transition duration-100"
+                  >
+                    <td className={cellClass}>
+                      <div className="flex items-center gap-4">
+                        <div>
+                          <p className="text-sm font-semibold text-blue-gray-700">
+                            {bill.roomId.name}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className={cellClass}>
+                      <p className="text-xs font-semibold text-blue-gray-600">
+                        {bill.billCode}
+                      </p>
+                    </td>
+
+                    <td className={cellClass}>
+                      <p className="text-xs font-semibold text-blue-gray-600">
+                        {bill.total?.toLocaleString("vi-VN") || "0"} VND
+                      </p>
+                    </td>
+
+                    <td className={cellClass}>
+                      <p className="text-xs font-semibold text-blue-gray-600">
+                        {formatDate(bill.createdAt)}
+                      </p>
+                    </td>
+
+                    <td className={cellClass}>
+                      <span
+                        className={`py-0.5 px-2 text-[11px] font-medium inline-block rounded ${
+                          bill.isPaid === true
+                            ? "bg-green-600 text-white"
+                            : "bg-yellow-600 text-white"
+                        }`}
+                      >
+                        {bill.isPaid ? "Đã thanh toán" : "Chưa thanh toán"}
+                      </span>
+                    </td>
+
+                    <td className={cellClass}>
+                      <a
+                        href={`/manager/invoice-detail/${bill._id}`}
+                        className="text-xs font-semibold text-blue-gray-600 hover:underline"
+                      >
+                        Edit
+                      </a>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </section>
+      {/* <div className="flex justify-center items-center mt-6">
+        <button
+          onClick={() => handleChangePages(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="flex items-center justify-center mr-2 w-[80px] bg-green-500 hover:bg-green-700 p-2 rounded-lg text-base font-semibold text-white"
+        >
+          Previous
+        </button>
+        <div className="flex items-center space-x-2">
+          {[...Array(totalPages)].map((_, index) => {
+            const pageNum = index + 1;
+            return (
+              <button
+                key={pageNum}
+                onClick={() => handleChangePages(pageNum)}
+                className={`flex items-center justify-center px-3 py-1 text-lg font-semibold rounded-md ${
+                  pageNum === currentPage
+                    ? "bg-green-600 text-white"
+                    : "bg-gray-200 text-green-500 hover:bg-gray-300"
+                }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          onClick={() => handleChangePages(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="flex justify-center items-center ml-2 w-[80px] bg-green-500 hover:bg-green-700 p-2 rounded-lg text-base font-semibold text-white"
+        >
+          Next
+        </button>
+      </div> */}
+    </div>
   );
 }
