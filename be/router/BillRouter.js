@@ -11,5 +11,9 @@ BillRouter.get("/", BillController.getAllBill);
 BillRouter.get("/roomBill/:roomId", BillController.getBillsByRoom);
 BillRouter.get("/bill-detail/:billId", BillController.getOneBill);
 BillRouter.get("/transactions", BillController.getTransactions);
+BillRouter.patch(
+  "/bill-update/:billId",
+  BillController.updateBillPaymentStatus
+);
 
 export default BillRouter;
