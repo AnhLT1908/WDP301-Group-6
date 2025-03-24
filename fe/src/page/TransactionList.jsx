@@ -2,45 +2,40 @@ import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 
 const TransactionList = () => {
+  // Lưu trữ các giao dịch được tải từ API
   const [transactions, setTransactions] = useState([]);
+  // Quản lý phân trang
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  // Lưu trữ danh sách hóa đơn phòng
   const [roomBillList, setRoomBillList] = useState([]);
+  // Lưu trữ các giao dịch có chứa mã phòng khớp với danh sách hóa đơn
   const [matchingTransactions, setMatchingTransactions] = useState([]);
-
+  // Đếm ngược để tải lại trang
+  const [countdown, setCountdown] = useState(60);
+  // Theo dõi các ID phòng đang được tải để tránh gọi trùng lặp
   const fetchingRoomIds = useRef(new Set());
+  // Theo dõi các ID hóa đơn đã tồn tại để tránh thêm trùng lặp
   const existingBillIds = useRef(new Set());
 
-  /**
-   * Extracts a room ID from a transaction description
-   * Looks for a 24-character hexadecimal string (MongoDB ObjectId format)
-   * Returns the ID in lowercase for consistent comparison
-   * @param {string} description - The description text to parse
-   * @returns {string|null} - The extracted room ID (lowercase) or null if not found
-   */
+  // Trích xuất mã ID phòng từ mô tả giao dịch
+  // Format ID: chuỗi 24 ký tự alphanumeric (thường là ObjectId của MongoDB)
   const extractRoomId = (description) => {
     if (!description) {
       return null;
     }
 
-    // Find all 24-character hexadecimal strings in the description (case insensitive)
     const matches = [...description.matchAll(/(\w{24})/gi)];
 
     if (matches.length === 0) {
       return null;
     }
 
-    // Return the last match (which is typically the room ID in your data structure)
-    // Convert to lowercase for case-insensitive comparison
     return matches[matches.length - 1][0].toLowerCase();
   };
 
-  /**
-   * Helper function to extract roomId from a bill object
-   * Handles different representations of roomId
-   * @param {Object} bill - The bill object
-   * @returns {string|null} - The extracted room ID or null if not found
-   */
+  // Trích xuất mã ID phòng từ đối tượng hóa đơn
+  // Xử lý cả các trường hợp: originalRoomId, roomId là object, roomId là string
   const extractBillRoomId = (bill) => {
     if (bill.originalRoomId) {
       return bill.originalRoomId;
@@ -57,19 +52,14 @@ const TransactionList = () => {
     return null;
   };
 
-  /**
-   * Integrates information from roomBillList with matchingTransactions
-   * Creates combined records for unified display
-   * Ensures roomId is properly extracted for invoice detail links
-   * @returns {Array} Array of integrated records with bill and transaction data
-   */
+  // Tích hợp thông tin giao dịch với thông tin hóa đơn phòng
+  // Kết quả: danh sách giao dịch đã được bổ sung thêm thông tin từ hóa đơn liên quan
   const getIntegratedRecords = () => {
     if (!matchingTransactions.length) return [];
 
-    // Map to store relationships between room IDs and bills
+    // Tạo map giữa ID phòng và hóa đơn để tìm kiếm nhanh
     const roomIdToBillMap = new Map();
 
-    // Index bills by roomId (normalized to lowercase for case insensitive matching)
     roomBillList.forEach((bill) => {
       const billRoomId = extractBillRoomId(bill);
       if (billRoomId) {
@@ -77,16 +67,14 @@ const TransactionList = () => {
       }
     });
 
-    // Create integrated records by combining transaction data with related bill data
+    // Ánh xạ từng giao dịch sang bản ghi tích hợp có đầy đủ thông tin
     return matchingTransactions.map((transaction) => {
-      // Extract roomId from transaction description
       const transactionRoomId = extractRoomId(transaction.description);
-      // Look up corresponding bill
       const relatedBill = transactionRoomId
         ? roomIdToBillMap.get(transactionRoomId.toLowerCase())
         : null;
 
-      // Extract the actual roomId (not normalized) for the detail link
+      // Xác định ID phòng thực tế từ giao dịch hoặc hóa đơn liên quan
       let actualRoomId = null;
       if (relatedBill) {
         if (relatedBill.originalRoomId) {
@@ -100,27 +88,27 @@ const TransactionList = () => {
           actualRoomId = relatedBill.roomId;
         }
       } else if (transactionRoomId) {
-        // If we have a roomId from transaction but no matching bill,
-        // use the extracted roomId from the transaction description
         const originalCaseRoomId =
           transaction.description.match(/(\w{24})/i)?.[1];
         actualRoomId = originalCaseRoomId || transactionRoomId;
       }
 
-      // Format transaction date
-      const transactionDate = transaction.tid
+      // Chuyển đổi timestamp thành định dạng ngày giờ Việt Nam
+      const transactionDate = transaction.when
+        ? new Date(transaction.when).toLocaleString("vi-VN")
+        : transaction.tid
         ? new Date(
             parseInt(transaction.tid.split("-")[0]) * 1000
           ).toLocaleString("vi-VN")
         : "N/A";
 
-      // Create integrated record with combined data
+      // Trả về đối tượng giao dịch đã tích hợp thêm thông tin hóa đơn
       return {
         ...transaction,
         transactionDate,
         relatedBill,
-        // Store the actual roomId for the invoice detail link
         roomId: actualRoomId,
+        // Tên phòng: lấy từ đối tượng roomId nếu có hoặc rút gọn từ ID phòng
         roomName: relatedBill
           ? typeof relatedBill.roomId === "object" &&
             relatedBill.roomId !== null
@@ -133,12 +121,14 @@ const TransactionList = () => {
               ).substring(0, 6)
           : "Not Found",
         billCode: relatedBill?.billCode || "N/A",
+        // Trạng thái hóa đơn: đã cập nhật / cần cập nhật
         billStatus:
           relatedBill?.isPaid === true
             ? "Đã cập nhật"
             : relatedBill?.isPaid === false
             ? "Cần cập nhật"
             : "N/A",
+        // Class màu sắc cho trạng thái hóa đơn
         billStatusClass:
           relatedBill?.isPaid === true
             ? "bg-green-100 text-green-800"
@@ -149,33 +139,25 @@ const TransactionList = () => {
     });
   };
 
-  /**
-   * Extracts and stores records that contain roomIds matching those in roomBillList
-   * Uses case-insensitive comparison for more reliable matching
-   * @returns {Array} Array of transaction records with matching roomIds
-   */
+  // Lọc các giao dịch có chứa ID phòng trùng khớp với ID trong danh sách hóa đơn
   const extractTransactionsWithMatchingRoomIds = () => {
-    // Early exit if no transactions or roomBills
     if (!transactions.length || !roomBillList.length) {
       console.log("No transactions or room bills available for matching");
       return [];
     }
 
-    // Create a Set of all roomIds in roomBillList (normalized to lowercase)
+    // Tạo set chứa tất cả ID phòng từ danh sách hóa đơn
     const roomIdSet = new Set();
 
     roomBillList.forEach((bill) => {
-      // Handle populated roomId objects
       if (typeof bill.roomId === "object" && bill.roomId !== null) {
         roomIdSet.add(bill.roomId._id.toLowerCase());
       }
 
-      // Handle string roomIds
       if (typeof bill.roomId === "string") {
         roomIdSet.add(bill.roomId.toLowerCase());
       }
 
-      // Handle the originalRoomId property if it exists
       if (bill.originalRoomId) {
         roomIdSet.add(bill.originalRoomId.toLowerCase());
       }
@@ -183,7 +165,7 @@ const TransactionList = () => {
 
     console.log(`Found ${roomIdSet.size} unique room IDs in roomBillList`);
 
-    // Filter transactions that contain matching roomIds in their description
+    // Lọc giao dịch có chứa ID phòng thuộc roomIdSet
     const matchingTransactions = transactions.filter((transaction) => {
       if (!transaction.description) return false;
 
@@ -198,34 +180,26 @@ const TransactionList = () => {
     return matchingTransactions;
   };
 
-  /**
-   * Update matching transactions when either transactions or roomBillList changes
-   */
+  // Cập nhật matchingTransactions khi transactions hoặc roomBillList thay đổi
   useEffect(() => {
     const matches = extractTransactionsWithMatchingRoomIds();
     setMatchingTransactions(matches);
   }, [transactions, roomBillList]);
 
-  console.log("matchingTransactions", matchingTransactions);
-
-  /**
-   * Fetches bill data for a specific room ID
-   * Preserves the populated roomId object while also storing the original roomId string
-   * Uses a tracking mechanism to prevent duplicate fetches and track processed bills
-   * @param {string} roomId - The ID of the room to fetch bills for
-   */
+  // Lấy thông tin hóa đơn cho một phòng cụ thể từ API
   const fetchRoomBill = async (roomId) => {
     try {
-      // Prevent duplicate fetches for the same room
+      // Kiểm tra nếu đang trong quá trình fetch dữ liệu phòng này thì bỏ qua
       if (fetchingRoomIds.current.has(roomId)) {
         console.log(`Fetch for room ${roomId} already in progress, skipping`);
         return;
       }
 
-      // Mark this room as being fetched
+      // Đánh dấu đang fetch dữ liệu cho phòng này
       fetchingRoomIds.current.add(roomId);
       console.log(`Starting fetch for room ${roomId}`);
 
+      // Gọi API lấy thông tin hóa đơn cho phòng
       const response = await axios.get(
         `http://localhost:5000/api/v1/bill/roomBill/${roomId}`,
         {
@@ -238,27 +212,26 @@ const TransactionList = () => {
       console.log(`Room bill response for ${roomId}:`, response.data);
       const data = response.data;
 
-      // Log raw data to verify population worked correctly on the backend
       if (data && data.data.length > 0) {
         console.log("Sample populated bill:", data.data[0]);
         console.log("Room data in populated bill:", data.data[0].roomId);
 
-        // Filter out bills we've already processed
+        // Lọc các hóa đơn chưa tồn tại trong state
         const newBills = data.data.filter(
           (bill) => !existingBillIds.current.has(bill._id)
         );
 
         if (newBills.length > 0) {
-          // Store the original roomId string separately without overwriting the populated object
+          // Thêm originalRoomId để tham chiếu ngược về phòng
           const billsWithOriginalRoomId = newBills.map((bill) => ({
             ...bill,
-            originalRoomId: roomId, // Store the string ID under a different property
+            originalRoomId: roomId,
           }));
 
-          // Mark these bills as processed
+          // Cập nhật existingBillIds để tránh trùng lặp
           newBills.forEach((bill) => existingBillIds.current.add(bill._id));
 
-          // Update the bill list with the new bills
+          // Cập nhật state với các hóa đơn mới
           setRoomBillList((prevBills) => [
             ...prevBills,
             ...billsWithOriginalRoomId,
@@ -271,15 +244,13 @@ const TransactionList = () => {
     } catch (error) {
       console.error(`Error fetching room bill for ${roomId}:`, error);
     } finally {
-      // Clean up the tracking set regardless of success/failure
+      // Loại bỏ đánh dấu đang fetch cho phòng này
       fetchingRoomIds.current.delete(roomId);
       console.log(`Completed fetch for room ${roomId}`);
     }
   };
 
-  /**
-   * Monitor updates to the roomBillList for debugging purposes
-   */
+  // Ghi log khi roomBillList thay đổi
   useEffect(() => {
     console.log("roomBillList updated:", roomBillList);
     const uniqueBillIds = new Set(roomBillList.map((bill) => bill._id));
@@ -288,12 +259,18 @@ const TransactionList = () => {
     );
   }, [roomBillList]);
 
-  /**
-   * Fetches transaction data for a specific page
-   * Extracts room IDs from transaction descriptions and triggers room bill fetches
-   * Modified to handle case-insensitive room ID extraction
-   * @param {number} page - The page number to fetch
-   */
+  // Thiết lập đếm ngược tự động reload
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (countdown > 0) {
+        setCountdown((prev) => prev - 1);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [countdown]);
+
+  // Lấy danh sách giao dịch từ API
   const fetchTransactions = async (page) => {
     try {
       console.log(`Fetching transactions for page ${page}`);
@@ -317,16 +294,15 @@ const TransactionList = () => {
       console.log("Transaction data received:", data);
 
       if (data && data.data.records) {
+        // Cập nhật state với các giao dịch nhận được
         setTransactions(data.data.records);
         setTotalPages(data.data.totalPages);
 
-        // Extract unique room IDs from transaction descriptions (normalized to lowercase)
+        // Tìm các ID phòng duy nhất từ mô tả giao dịch
         const uniqueRoomIds = new Set();
         data.data.records.forEach((transaction) => {
           const roomId = extractRoomId(transaction?.description);
           if (roomId) {
-            // Store the original case in the uniqueRoomIds Set for API calls
-            // The original ID is needed for the API, even though we normalize for comparison
             const originalCaseId =
               transaction.description.match(/(\w{24})/i)?.[1];
             if (originalCaseId) {
@@ -339,7 +315,7 @@ const TransactionList = () => {
           `Found ${uniqueRoomIds.size} unique room IDs on page ${page}`
         );
 
-        // Fetch bills for each unique room ID
+        // Gọi API lấy thông tin hóa đơn cho từng phòng
         uniqueRoomIds.forEach((roomId) => {
           fetchRoomBill(roomId);
         });
@@ -353,51 +329,18 @@ const TransactionList = () => {
     }
   };
 
-  /**
-   * Gets all bills associated with a specific room ID
-   * Uses case-insensitive comparison for more reliable matching
-   * @param {string} roomId - The room ID to filter by
-   * @returns {Array} - Array of bills for the specified room
-   */
-  const getBillsForRoom = (roomId) => {
-    // Convert input roomId to lowercase for case-insensitive comparison
-    const normalizedRoomId = roomId.toLowerCase();
-
-    return roomBillList.filter((bill) => {
-      // Check against the original string ID we stored
-      if (bill.originalRoomId) {
-        return bill.originalRoomId.toLowerCase() === normalizedRoomId;
-      }
-
-      // Check against the populated roomId object if available
-      if (typeof bill.roomId === "object" && bill.roomId !== null) {
-        return bill.roomId._id.toLowerCase() === normalizedRoomId;
-      }
-
-      // Check against string roomId if that's what we have
-      if (typeof bill.roomId === "string") {
-        return bill.roomId.toLowerCase() === normalizedRoomId;
-      }
-
-      return false;
-    });
-  };
-
-  /**
-   * Reset bill data and fetch transactions when page changes
-   */
+  // Khởi tạo và tải lại dữ liệu khi trang thay đổi
   useEffect(() => {
+    // Reset dữ liệu khi chuyển trang
     setRoomBillList([]);
     existingBillIds.current.clear();
     fetchingRoomIds.current.clear();
 
+    // Tải dữ liệu giao dịch mới
     fetchTransactions(currentPage);
   }, [currentPage]);
 
-  /**
-   * Handles pagination navigation
-   * @param {number} page - The page number to navigate to
-   */
+  // Xử lý sự kiện chuyển trang
   const handleChangePages = (page) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
@@ -406,16 +349,16 @@ const TransactionList = () => {
 
   return (
     <div className="mb-8 flex flex-col">
-      {/* Integrated Transaction and Bill Display */}
+      {/* Card chứa bảng danh sách giao dịch */}
       <div className="shadow overflow-hidden m-6">
-        {/* Card Header */}
-        <div className="flex justify-between items-center rounded-lg bg-gradient-to-r from-blue-700 to-blue-500 p-6 mx-6">
+        {/* Header của card */}
+        <div className="flex justify-between items-center rounded-lg bg-gradient-to-r from-green-700 to-green-500 p-6 mx-6">
           <h6 className="text-white text-lg font-medium">
             Transaction and Bill Information
           </h6>
         </div>
 
-        {/* Card Body */}
+        {/* Bảng danh sách giao dịch */}
         <div className="overflow-x-auto px-0 pt-0 pb-2">
           <table className="w-full min-w-[640px] table-auto">
             <thead>
@@ -443,8 +386,8 @@ const TransactionList = () => {
               </tr>
             </thead>
             <tbody>
+              {/* Render dữ liệu tích hợp giữa giao dịch và hóa đơn */}
               {getIntegratedRecords().map((record, index) => {
-                // Define the cell class for styling
                 const cellClass = `py-3 px-6 ${
                   index === getIntegratedRecords().length - 1
                     ? ""
@@ -456,28 +399,24 @@ const TransactionList = () => {
                     key={record.id}
                     className="hover:bg-gray-300 transition duration-100"
                   >
-                    {/* ID */}
                     <td className={cellClass}>
                       <p className="text-xs font-semibold text-blue-gray-600">
                         {record.id}
                       </p>
                     </td>
 
-                    {/* Transaction ID */}
                     <td className={cellClass}>
                       <p className="text-xs font-semibold text-blue-gray-600">
                         {record.tid || "N/A"}
                       </p>
                     </td>
 
-                    {/* Description */}
                     <td className={cellClass}>
                       <p className="text-xs font-semibold text-blue-gray-600 max-w-md truncate">
                         {record.description || "N/A"}
                       </p>
                     </td>
 
-                    {/* Amount */}
                     <td className={cellClass}>
                       <p
                         className={`text-xs font-semibold ${
@@ -488,14 +427,12 @@ const TransactionList = () => {
                       </p>
                     </td>
 
-                    {/* Transaction Date */}
                     <td className={cellClass}>
                       <p className="text-xs font-semibold text-blue-gray-600">
                         {record.transactionDate}
                       </p>
                     </td>
 
-                    {/* Room Name */}
                     <td className={cellClass}>
                       <div className="flex items-center gap-4">
                         <div>
@@ -506,14 +443,12 @@ const TransactionList = () => {
                       </div>
                     </td>
 
-                    {/* Bill Code */}
                     <td className={cellClass}>
                       <p className="text-xs font-semibold text-blue-gray-600">
                         {record.billCode}
                       </p>
                     </td>
 
-                    {/* Status */}
                     <td className={cellClass}>
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${record.billStatusClass}`}
@@ -532,21 +467,19 @@ const TransactionList = () => {
                   </tr>
                 );
               })}
-              {getIntegratedRecords().length === 0 && (
-                <tr>
-                  <td colSpan="8" className="py-4 px-6 text-center">
-                    <p className="text-sm text-gray-500">
-                      No matching transactions found
-                    </p>
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
+          {/* Hiển thị thông báo đếm ngược khi không có dữ liệu */}
+          {getIntegratedRecords().length === 0 && (
+            <div className="text-center mt-4">
+              <p className="text-lg font-semibold text-gray-500">
+                Vui lòng tải lại trang sau {countdown} giây để lấy dữ liệu
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Pagination */}
       <div className="flex justify-center items-center mt-6">
         <button
           onClick={() => handleChangePages(currentPage - 1)}
