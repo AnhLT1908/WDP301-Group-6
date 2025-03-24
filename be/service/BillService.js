@@ -7,6 +7,7 @@ import getCurrentUser from "../utils/getCurrentUser.js";
 import config2 from "../utils/configPayment.js";
 import DefaultPrice from "../model/DefaultPrice.js";
 import mongoose from "mongoose";
+import axios from "axios";
 
 const generateTransactionId = () => {
   return crypto.randomBytes(4).toString("hex").substring(0, 7);
@@ -20,10 +21,110 @@ const generateVietQR = (amount, courseName) => {
   }-${
     config2.bankInfo.template
   }.png?amount=${amount}&addInfo=${encodeURIComponent(
-    courseName + " Ma giao dich " + transactionId
+    courseName
   )}&accountName=${encodeURIComponent(config2.bankInfo.accountName)}`;
 
   return { qrUrl, transactionId };
+};
+
+export const getTransactions = async (req, res, next) => {
+  try {
+    // Lấy API key từ biến môi trường hoặc config
+    const apiKey = process.env.CASSO_API_KEY || config2.cassoApiKey;
+
+    if (!apiKey) {
+      return res.status(500).json({
+        success: false,
+        message: "Chưa cấu hình API key cho Casso",
+        data: null,
+      });
+    }
+
+    // Lấy các tham số từ query
+    const {
+      sort = "ASC",
+      pageSize = 10,
+      page = 1,
+      fromDate,
+      toDate,
+    } = req.query;
+
+    // Xây dựng URL với các query params
+    let url = "https://oauth.casso.vn/v2/transactions";
+    const params = new URLSearchParams();
+
+    if (sort) params.append("sort", sort);
+    if (pageSize) params.append("pageSize", pageSize);
+    if (page) params.append("page", page);
+
+    // Xử lý rõ ràng cho fromDate và toDate
+    if (fromDate) params.append("fromDate", fromDate);
+    if (toDate) params.append("toDate", toDate);
+
+    // Thêm query params vào URL
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
+
+    console.log(`Calling Casso API with URL: ${url}`); // Debug log
+
+    // Gọi API Casso
+    const response = await axios.get(url, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Apikey ${apiKey}`,
+      },
+    });
+
+    // Kiểm tra và xử lý phản hồi từ API
+    const { data } = response;
+
+    console.log("Data casso", data);
+
+    if (data.error !== 0) {
+      return res.status(400).json({
+        success: false,
+        message: data.message || "Lỗi khi lấy dữ liệu từ Casso API",
+        data: null,
+      });
+    }
+
+    // Thành công, trả về dữ liệu cho client
+    return res.status(200).json({
+      success: true,
+      message: "Lấy danh sách giao dịch thành công",
+      data: data.data,
+    });
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách giao dịch:", error);
+
+    // Xử lý các loại lỗi cụ thể
+    if (error.response) {
+      // Lỗi từ API Casso
+      const { status, data } = error.response;
+
+      if (status === 401) {
+        return res.status(401).json({
+          success: false,
+          message: "API key không hợp lệ hoặc đã hết hạn",
+          data: null,
+        });
+      }
+
+      return res.status(status).json({
+        success: false,
+        message: data.message || "Lỗi từ API Casso",
+        data: null,
+      });
+    }
+
+    // Lỗi kết nối hoặc lỗi khác
+    return res.status(500).json({
+      success: false,
+      message: "Đã xảy ra lỗi khi kết nối đến API Casso",
+      data: null,
+    });
+  }
 };
 
 export const getAllBill = async (req, res, next) => {
@@ -58,7 +159,10 @@ export const getBillsByRoom = async (req, res, next) => {
     const { roomId } = req.params;
     console.log("roomBills roomId", roomId);
 
-    const roomBills = await Bills.find({ roomId }).sort({ createdAt: -1 });
+    const roomBills = await Bills.find({ roomId })
+      .populate("roomId")
+      .populate("houseId")
+      .sort({ createdAt: -1 });
 
     console.log("roomBills", roomBills);
 
@@ -88,7 +192,7 @@ export const addBillinRoom = async (req, res, next) => {
 
     // Tìm phòng theo ID và populate thông tin nhà (house) liên quan
     const room = await Room.findById(roomId).populate("house");
-
+    console.log("Room bill ", room);
     // Kiểm tra xem phòng có tồn tại không
     if (!room) {
       return res.status(404).json({ message: "Không tìm thấy phòng." });
@@ -175,6 +279,7 @@ export const addBillinRoom = async (req, res, next) => {
             break;
           }
         }
+
         console.log("Total", total);
         return { name: item.name, price, usage, total };
       });
@@ -238,15 +343,25 @@ export const addBillinRoom = async (req, res, next) => {
     // Tính tổng tiền tiện ích
     const utilitiesTotal = priceList.reduce((sum, item) => sum + item.total, 0);
     // Tính tổng số tiền (tiền phòng + tiện ích + nợ)
-    const totalAmount = room.priceList.roomPrice + utilitiesTotal + debt;
-
+    const intDebt = parseInt(debt);
+    console.log("Room price:", room.priceList.roomPrice);
+    console.log("Utlities total:", utilitiesTotal);
+    console.log("Debt", typeof intDebt);
+    console.log("========================================");
+    const totalAmount = room.priceList.roomPrice + utilitiesTotal + intDebt;
+    console.log("========================================");
+    console.log("totalAmount", totalAmount);
     // Sinh mã giao dịch và mã hóa đơn
-    const transactionId = generateTransactionId();
-    console.log("transactionId", transactionId);
-    const billCode = `BILL-${roomId}-${Date.now()}-${transactionId}`;
+
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    const formattedMonth = currentMonth.toString().padStart(2, "0");
+    console.log("date", currentMonth);
+
+    const billCode = generateTransactionId();
 
     // Tạo mô tả thanh toán
-    const paymentDescription = `Thanh toán tiền phòng ${room.house.name} - ${room.name}`;
+    const paymentDescription = `${room._id}.${billCode}`;
 
     // Sinh URL QR thanh toán
     const { qrUrl } = generateVietQR(totalAmount, paymentDescription);
@@ -285,7 +400,6 @@ export const addBillinRoom = async (req, res, next) => {
       success: true,
       data: bill,
       qrUrl,
-      transactionId,
       paymentDescription,
     });
   } catch (error) {
