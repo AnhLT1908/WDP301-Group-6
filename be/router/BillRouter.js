@@ -10,5 +10,6 @@ BillRouter.put("/confirm/:billId", BillController.confimBill);
 BillRouter.get("/", BillController.getAllBill);
 BillRouter.get("/roomBill/:roomId", BillController.getBillsByRoom);
 BillRouter.get("/bill-detail/:billId", BillController.getOneBill);
+BillRouter.get("/transactions", BillController.getTransactions);
 
 export default BillRouter;

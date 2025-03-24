@@ -54,9 +54,6 @@ export default function InvoiceList() {
 
       <div className="flex justify-between my-4">
         <h3 className="text-yellow-400 text-xl font-bold mb-4">List</h3>
-        <button className="bg-green-500 text-white w-[50%] px-4 py-2 rounded">
-          Create new invoice
-        </button>
       </div>
       <div className="bg-white p-4 rounded-lg shadow">
         <table className="w-full text-left border-collapse">

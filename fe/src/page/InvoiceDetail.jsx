@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 
 export default function InvoiceDetail() {
-  const { billId } = useParams(); 
+  const { roomId } = useParams(); 
   const [bill, setBill] = useState(null);
   const [house, setHouse] = useState([]);
   const [room, setRoom] = useState([]);
@@ -12,14 +12,14 @@ export default function InvoiceDetail() {
   useEffect(() => {
     const fetchBill = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/v1/bill/bill-detail/${billId}`);
+        const res = await axios.get(`http://localhost:5000/api/v1/bill/roomBill/${roomId}`);
         setBill(res.data.data);
       } catch (error) {
         console.error("Error fetching house data:", error);
       }
     };
     fetchBill();
-  }, [billId]);
+  }, [roomId]);
 
     useEffect(() => {
         const fetchData = async () => {
