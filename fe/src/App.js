@@ -32,6 +32,7 @@ import TransactionList from "./page/TransactionList.jsx";
 //import NotFound from "./page/NotFound.jsx";
 import Dashboard from "./page/Dashboard.jsx";
 import ManagerList from "./page/ManagerList.jsx";
+import ReportList from "./page/RoomReportList.jsx";
 
 function App() {
   const [accountType, setAccountType] = useState(
@@ -208,6 +209,22 @@ function App() {
               element={
                 <ManagerLayout>
                   <RoomDetail />
+                </ManagerLayout>
+              }
+            />
+            <Route
+              path="manager/room/rooms-list"
+              element={
+                <DashboardLayout>
+                  <RoomList />
+                </DashboardLayout>
+              }
+            />
+            <Route
+              path = "manager/report/report-list"
+              element={
+                <ManagerLayout>
+                  <ReportList />
                 </ManagerLayout>
               }
             />

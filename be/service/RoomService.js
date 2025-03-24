@@ -4,7 +4,10 @@ import Room from "../model/Room.js";
 import Bill from "../model/Bills.js";
 import House from "../model/House.js";
 import mongoose from 'mongoose';
-
+import Account from "../model/Account.js";
+import Contract from "../model/Contract.js";
+import getCurrentUser from "../utils/getCurrentUser.js";
+import { generateTransactionId, generateVietQR} from "../service/BillService.js" 
 
 export const getAllRoom = async(req, res, next)=>{
   try {
@@ -46,8 +49,6 @@ export const ViewListUtilities = async (req, res) => {
     });
   }
 };
-
-console.log(ViewListUtilities);
 
 
 export const AddNewUtilities = async (req, res) => {
@@ -205,6 +206,172 @@ export const DeleteUtilities = async (req, res) => {
       message: "Error delete utilities",
       error: error.message,
     });
+  }
+};
+
+
+export const changeRoom = async (req, res, next) => {
+  try {
+      const { accountId } = req.params;
+      let { newRoomId } = req.body;
+
+      if (!mongoose.Types.ObjectId.isValid(accountId)) {
+          return res.status(400).json({ success: false, message: "accountId không hợp lệ!" });
+      }
+
+      const account = await Account.findById(accountId);
+      if (!account || account.accountType !== "Lodger") {
+          return res.status(403).json({ success: false, message: "Chỉ Lodger mới có thể chuyển phòng!" });
+      }
+
+      const oldRoomId = account.roomId;
+      if (!oldRoomId) {
+          return res.status(400).json({ success: false, message: "Tài khoản không thuộc phòng nào!" });
+      }
+
+      const oldRoom = await Room.findById(oldRoomId).populate("house");
+      if (!oldRoom || !oldRoom.members.some(member => member.accountId.toString() === accountId)) {
+          return res.status(404).json({ success: false, message: "Bạn không thuộc phòng cũ!" });
+      }
+
+      // Kiểm tra nợ hóa đơn
+      const unpaidBills = await Bill.find({ roomId: oldRoomId, isPaid: false });
+      if (unpaidBills.length > 0) {
+          return res.status(400).json({
+              success: false,
+              message: "Phòng cũ còn nợ hóa đơn chưa thanh toán!",
+              unpaidBills,
+          });
+      }
+
+      // Tìm phòng trống nếu không cung cấp newRoomId
+      if (!newRoomId) {
+          const availableRoom = await Room.findOne({
+              house: oldRoom.house,
+              status: "available",
+              deleted: false,
+          });
+          if (!availableRoom) {
+              return res.status(404).json({ success: false, message: "Không tìm thấy phòng trống trong nhà này!" });
+          }
+          newRoomId = availableRoom._id;
+      }
+
+      const newRoom = await Room.findById(newRoomId).populate("house");
+      if (!newRoom) {
+          return res.status(404).json({ success: false, message: "Không tìm thấy phòng mới!" });
+      }
+      if (newRoom.status === "full") {
+          return res.status(400).json({ success: false, message: "Phòng mới đã đầy!" });
+      }
+
+      // 1. Cập nhật roomId trong tài khoản
+      account.roomId = newRoomId;
+      account.rentalDate = new Date();
+      await account.save();
+
+      // 2. Xử lý phòng cũ
+      oldRoom.members = oldRoom.members.filter(member => member.accountId.toString() !== accountId);
+      if (oldRoom.members.length === 0) {
+          oldRoom.status = "available";
+      }
+      await oldRoom.save();
+
+      if (account.isContact) {
+          account.isContact = false;
+          await account.save();
+          if (oldRoom.members.length > 0) {
+              const newContact = await Account.findOne({ roomId: oldRoomId, _id: { $ne: accountId } });
+              if (newContact) {
+                  newContact.isContact = true;
+                  await newContact.save();
+              }
+          }
+      }
+
+      // 3. Thêm vào phòng mới
+      newRoom.members.push({ accountId, joinDate: new Date() });
+      if (newRoom.members.length >= 3) {
+          newRoom.status = "full";
+      }
+      await newRoom.save();
+
+      // 4. Tạo hóa đơn mới
+      const transactionId = generateTransactionId();
+      const billCode = `BILL-${newRoomId}-${Date.now()}-${transactionId}`;
+      const totalAmount = newRoom.priceList.roomPrice;
+      const { qrUrl } = generateVietQR(totalAmount, `Thanh toán tiền phòng ${newRoom.house.name} - ${newRoom.name}`);
+
+      const bill = new Bill({
+          roomId: newRoomId,
+          houseId: newRoom.house._id,
+          billCode,
+          roomPrice: newRoom.priceList.roomPrice,
+          priceList: [],
+          debt: 0,
+          total: totalAmount,
+          note: "Hóa đơn khởi tạo khi chuyển phòng",
+          paymentLink: qrUrl,
+          transactionId,
+          isPaid: false,
+          paymentMethod: "Unknown",
+      });
+      await bill.save();
+
+      // 5. Tạo hợp đồng mới
+      const manager = await Account.findOne({ accountType: "Manager" });
+      const contactAccount = await Account.findOne({ roomId: newRoomId, isContact: true }) || 
+                            await Account.findOneAndUpdate(
+                                { roomId: newRoomId, accountType: "Lodger" },
+                                { isContact: true },
+                                { new: true }
+                            ); // Nếu chưa có người đại diện, chọn một Lodger bất kỳ
+      const otherMembers = newRoom.members
+          .filter(member => member.accountId.toString() !== contactAccount._id.toString())
+          .map(member => member.accountId);
+
+      const contract = new Contract({
+          roomId: newRoomId,
+          benA: manager._id,
+          benB: contactAccount._id, // Người đại diện
+          relatedParties: otherMembers, // Các thành viên còn lại
+          description: "Hợp đồng mới sau khi chuyển phòng",
+          startDate: Date.now(),
+          endDate: oneYearFromNow(),
+      });
+      await contract.save();
+
+      // 6. Gửi thông báo
+      await Notification.create([
+          {
+              sender: accountId,
+              recipients: [{ user: manager._id, isRead: false }],
+              message: `${account.firstName} ${account.lastName} đã chuyển từ phòng ${oldRoom.name} sang phòng ${newRoom.name}.`,
+              type: "room_change",
+          },
+          {
+              sender: manager._id,
+              recipients: [{ user: contactAccount._id, isRead: false }],
+              message: `Phòng ${newRoom.name} có hóa đơn mới: ${billCode} và hợp đồng mới: ${contract._id}.`,
+              type: "bill",
+              link: `/bills/${bill._id}`,
+          },
+      ]);
+
+      return res.status(200).json({
+          success: true,
+          message: "Chuyển phòng thành công!",
+          data: {
+              account,
+              oldRoom: oldRoom.name,
+              newRoom: newRoom.name,
+              bill,
+              contract,
+          },
+      });
+  } catch (error) {
+      console.error("Lỗi trong changeRoom:", error);
+      next(error);
   }
 };
 

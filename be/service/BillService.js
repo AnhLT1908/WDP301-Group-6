@@ -9,12 +9,12 @@ import DefaultPrice from "../model/DefaultPrice.js";
 import mongoose from "mongoose";
 import axios from "axios";
 
-const generateTransactionId = () => {
-  return crypto.randomBytes(4).toString("hex").substring(0, 7);
+export const generateTransactionId = () => {
+    return crypto.randomBytes(4).toString('hex').substring(0, 7);
 };
 
 // Hàm tạo URL QR code
-const generateVietQR = (amount, courseName) => {
+export const generateVietQR = (amount, courseName) => {
   const transactionId = generateTransactionId();
   const qrUrl = `https://img.vietqr.io/image/${config2.bankInfo.bankId}-${
     config2.bankInfo.bankAccount
@@ -152,9 +152,9 @@ export const getOneBill = async (req, res, next) => {
       data: oneBill,
     });
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
+}
 
 export const getBillsByRoom = async (req, res, next) => {
   try {
@@ -174,11 +174,10 @@ export const getBillsByRoom = async (req, res, next) => {
       data: roomBills,
     });
   } catch (error) {
-    next(error);
+      console.error("Lỗi trong autoCheckBillsAndContracts:", error);
   }
 };
 
-// Hàm xử lý tạo hóa đơn cho một phòng (async function cho phép sử dụng await)
 export const addBillinRoom = async (req, res, next) => {
   try {
     // Destructuring các thông tin từ request body
@@ -200,52 +199,45 @@ export const addBillinRoom = async (req, res, next) => {
       return res.status(404).json({ message: "Không tìm thấy phòng." });
     }
 
-    // Kiểm tra tính hợp lệ của house ID
-    if (!room.house || !mongoose.Types.ObjectId.isValid(room.house)) {
-      return res
-        .status(400)
-        .json({ message: `Phòng ${room.name} không có houseId!` });
-    }
+      if (!room.house || !mongoose.Types.ObjectId.isValid(room.house)) {
+          return res.status(400).json({ message: `Phòng ${room.name} không có houseId!` });
+      }
 
-    // Lấy danh sách giá mặc định từ cơ sở dữ liệu
-    const defaultPrices = await DefaultPrice.find();
+      const existingBill = await Bills.findOne({ roomId, isPaid: false });
+      if (existingBill) {
+          return res.status(400).json({
+              success: false,
+              message: "Phòng này đã có hóa đơn chưa thanh toán. Vui lòng thanh toán trước khi tạo hóa đơn mới!",
+              existingBill,
+          });
+      }
 
-    console.log("defaultPrices", defaultPrices);
+      const { note, debt = 0, paymentMethod, customPriceList } = req.body;
 
-    // Chuyển đổi danh sách giá mặc định thành một map để tra cứu nhanh
-    const defaultPriceMap = defaultPrices.reduce((map, price) => {
-      map[price.name] = { price: price.price, unit: price.unit };
-      return map;
-    }, {});
-    console.log("defaultPriceMap", defaultPriceMap);
+      // Kiểm tra hóa đơn cũ quá 30 ngày để cộng debt
+      const now = new Date();
+      const oldBills = await Bills.find({ roomId, isPaid: false });
+      let accumulatedDebt = debt;
+      for (const oldBill of oldBills) {
+          const daysSinceCreation = Math.floor((now - new Date(oldBill.createdAt)) / (1000 * 60 * 60 * 24));
+          if (daysSinceCreation >= 30) {
+              accumulatedDebt += oldBill.total;
+          }
+      }
 
-    // Khởi tạo mảng danh sách giá
-    let priceList = [];
+      const defaultPrices = await DefaultPrice.find();
+      const defaultPriceMap = defaultPrices.reduce((map, price) => {
+          map[price.name] = { price: price.price, unit: price.unit };
+          return map;
+      }, {});
+      let priceList = [];
 
-    // Xử lý danh sách giá tùy chỉnh nếu được cung cấp
-    if (customPriceList && Array.isArray(customPriceList)) {
-      // Ánh xạ danh sách giá tùy chỉnh
-      priceList = customPriceList.map((item) => {
-        // Lấy giá mặc định hoặc sử dụng giá được cung cấp
-        const defaultPrice = defaultPriceMap[item.name] || {
-          price: item.price || 0,
-          unit: "",
-        };
-
-        // Tính usage = previousMonthUsage[name] - currentUsage
-        const previousUsage = previousMonthUsage[item.name] || 0;
-        console.log("previousUsage", previousMonthUsage[item.name]);
-        const strUsage = item.currentUsage || "0"; // usage is now a string (strUsage)
-
-        const usage = parseInt(strUsage); // Create a separate variable for usage
-        const differentUsage = usage - previousUsage; // Calculate the difference in usage
-        console.log("previousUsage", previousUsage);
-        console.log("usage", usage); // log usage for debugging
-        console.log("differentUsage", differentUsage); // log differentUsage for debugging
-
-        const price =
-          item.price !== undefined ? item.price : defaultPrice.price;
-        let total;
+      if (customPriceList && Array.isArray(customPriceList)) {
+          priceList = customPriceList.map(item => {
+              const defaultPrice = defaultPriceMap[item.name] || { price: item.price || 0, unit: "" };
+              const usage = item.usage || 0;
+              const price = item.price !== undefined ? item.price : defaultPrice.price;
+              let total;
 
         // Log thông tin để debug
         console.log(`Processing ${item.name}:`, {
@@ -368,34 +360,37 @@ export const addBillinRoom = async (req, res, next) => {
     // Sinh URL QR thanh toán
     const { qrUrl } = generateVietQR(totalAmount, paymentDescription);
 
-    // Tạo mới hóa đơn
-    const bill = new Bills({
-      roomId,
-      houseId: room.house._id,
-      billCode,
-      roomPrice: room.priceList.roomPrice,
-      priceList,
-      debt,
-      total: totalAmount,
-      note,
-      paymentLink: qrUrl,
-      isPaid: false,
-      paymentMethod: paymentMethod || "Unknown",
-    });
-    // Lưu hóa đơn vào cơ sở dữ liệu
-    console.log("Bill", bill);
-    await bill.save();
+      const bill = new Bills({
+          roomId,
+          houseId: room.house._id,
+          billCode,
+          roomPrice: room.priceList.roomPrice,
+          priceList,
+          debt: accumulatedDebt,
+          total: totalAmount,
+          note: accumulatedDebt > debt ? `${note || ""} | Có nợ từ hóa đơn cũ: ${accumulatedDebt - debt}` : note,
+          paymentLink: qrUrl,
+          transactionId: transactionId,
+          isPaid: false,
+          paymentMethod: paymentMethod || "Unknown",
+      });
+      await bill.save();
 
-    // Tìm tài khoản của phòng
-    const roomAccount = await Account.findOne({ roomId: roomId });
+      // Tìm tài khoản người đại diện hoặc tất cả Lodger trong phòng
+      const contactAccount = await Account.findOne({ roomId: roomId, isContact: true }) || await Account.findOne({ roomId: roomId });
+      if (!contactAccount) {
+          return res.status(404).json({
+              message: "Không tìm thấy người đại diện cho phòng này!",
+          });
+      }
 
-    // Tạo thông báo cho tài khoản phòng
-    await Notification.create({
-      sender: getCurrentUser(req),
-      recipients: [{ user: roomAccount?._id, isRead: false }],
-      message: `Một hoá đơn phòng ${room.name} đã được tạo (Tổng: ${totalAmount})`,
-      type: "bill",
-    });
+      // Gửi thông báo trong hệ thống
+      await Notification.create({
+          sender: getCurrentUser(req),
+          recipients: [{ user: contactAccount._id, isRead: false }],
+          message: `Một hóa đơn phòng ${room.name} đã được tạo (Tổng: ${totalAmount} VND)`,
+          type: "bill",
+      });
 
     // Trả về phản hồi thành công với thông tin hóa đơn
     res.status(201).json({
@@ -405,53 +400,134 @@ export const addBillinRoom = async (req, res, next) => {
       paymentDescription,
     });
   } catch (error) {
-    // Chuyển lỗi sang middleware xử lý lỗi
-    next(error);
+      next(error);
   }
 };
 
-export const confirmBill = async (req, res, next) => {
+export const confirmBill = async(req, res, next) =>{
   try {
-    const { billId } = req.params;
-    const { paymentMethod } = req.body;
-    const bill = await Bills.findById(billId);
-    if (!bill) {
-      return res.status(404).json({ message: "Không tìm thấy hóa đơn!" });
+      const { billId } = req.params;
+      const { paymentMethod } = req.body;
+      const bill = await Bills.findById(billId);
+      if (!bill) {
+          return res.status(404).json({ message: "Không tìm thấy hóa đơn!" });
+      }
+      if (bill.isPaid) {
+        return { message: "Bill đã thanh toán rồi !!" };
+      }
+
+      bill.isPaid = true;
+      bill.paymentMethod = paymentMethod;
+
+      await bill.save();
+
+      const roomAccount = await Account.findOne({ roomId: bill.roomId });
+      
+      if (!roomAccount) {
+          throw new Error("Không tìm thấy tài khoản phòng!");
+      }
+
+      const room = await Room.findById(bill.roomId);
+      if (!room) {
+          throw new Error("Không tìm thấy thông tin phòng!");
+      }
+
+      await Notification.create({
+              sender: getCurrentUser(req),
+              recipients: [{ user: roomAccount.id, isRead: false }],
+              message: `Hóa đơn của phòng ${room.name} đã được thanh toán bằng ${paymentMethod === "Cash" ? "Tiền mặt" : "Chuyển khoản"}.`,
+              type: "bill",
+          });
+
+          res.json(bill);
+    } catch (error) {
+      next(error)
     }
-    if (bill.isPaid) {
-      return { message: "Bill đã thanh toán rồi !!" };
+}
+
+export const autoConfirmBill = async(billId, paymentMethod = "Banking") =>{
+    try {
+        const bill = await Bills.findById(billId);
+        if (!bill) {
+            return res.status(404).json({ message: "Không tìm thấy hóa đơn!" });
+        }
+        if (bill.isPaid) {
+          return { message: "Bill đã thanh toán rồi !!" };
+        }
+  
+        bill.isPaid = true;
+        bill.paymentMethod = paymentMethod;
+  
+        await bill.save();
+  
+        const roomAccount = await Account.findOne({ roomId: bill.roomId });
+        
+        if (!roomAccount) {
+            throw new Error("Không tìm thấy tài khoản phòng!");
+        }
+
+    const roomBills = await Bills.find({ roomId }).sort({ createdAt: -1 });
+
+        await Notification.create({
+                sender: null,
+                recipients: [{ user: roomAccount.id, isRead: false }],
+                message: `Hóa đơn của phòng ${room.name} đã được thanh toán bằng ${paymentMethod === "Cash" ? "Tiền mặt" : "Chuyển khoản"}.`,
+                type: "bill",
+            });
+  
+            res.json(bill);
+      } catch (error) {
+        next(error)
+      }
+}
+
+//Webhook EndPoint
+export const handleWebHook = async(req, res, next) =>{
+  try {
+    const {data} = req.body;
+    console.log("Webhook từ Casso:", data);
+    //Kiểm tra tính hợp lệ của ApiKey và Webhook
+    const apiKey = process.env.CASSO_API_KEY;
+    const signature = req.header["x-api-key"]
+    if(signature !== apiKey){
+      return res.status(401).json({ message: "Xác thực webhook thất bại!" });
+    }
+    const {description, amount} = data;
+    const transactionMatch = description.match(/Mã giao dịch (\w+)/);
+    if(!transactionMatch){
+      return res.status(400).json({
+        message: "Không tìm thấy transactionId trong mô tả"
+      })
     }
 
-    bill.isPaid = true;
-    bill.paymentMethod = paymentMethod;
+    const transactionId = transactionMatch[1];
+    const bill = await Bills.findOne({transactionId});
 
-    await bill.save();
-
-    const roomAccount = await Account.findOne({ roomId: bill.roomId });
-
-    if (!roomAccount) {
-      throw new Error("Không tìm thấy tài khoản phòng!");
+    if(!bill){
+      res.status(404).json({
+        message: "Không tìm thấy hóa đơn khớp với transactionId"
+      })
     }
 
-    const room = await Room.findById(bill.roomId);
-    if (!room) {
-      throw new Error("Không tìm thấy thông tin phòng!");
+    if(bill.total !== amount){
+      res.status(404).json({
+        message: "Số tiền chuyển khoản không khớp với hóa đơn"
+      })
     }
 
-    await Notification.create({
-      sender: getCurrentUser(req),
-      recipients: [{ user: roomAccount.id, isRead: false }],
-      message: `Hóa đơn của phòng ${room.name} đã được thanh toán bằng ${
-        paymentMethod === "Cash" ? "Tiền mặt" : "Chuyển khoản"
-      }.`,
-      type: "bill",
-    });
+    const updateBill = await autoConfirmBill(bill._id, "Banking");
 
-    res.json(bill);
+    return res.status(200).json({
+      success: true,
+      message:"Hóa đơn đã gửi thành công",
+      data: updateBill
+    })
   } catch (error) {
-    next(error);
+    console.error("Lỗi trong webhook:", error);
+    return res.status(500).json({ message: "Lỗi xử lý webhook!" });
   }
-};
+}
+
 
 export const UpdateBillDetail = async (req, res, next) => {
   try {

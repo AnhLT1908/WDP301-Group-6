@@ -7,8 +7,7 @@ const HouseSchema = new mongoose.Schema(
       required: true,
     },
     status: {
-      type: String,
-      enum: ["available", "full"],
+      type: Boolean,
       required: true,
     },
     location: {

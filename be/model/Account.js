@@ -75,6 +75,12 @@ const AccountSchema = new mongoose.Schema(
             default: null,
             ref: "PasswordResetCode",
         },
+        isContact: {
+            type: Boolean,
+            default: false, // Mặc định không phải người đại diện
+            //Trường Boolean mới, mặc định là false. Khi được đặt là true, 
+            // người này sẽ là người đại diện cho phòng để nhận thông báo và chịu trách nhiệm thanh toán hóa đơn.
+        },
     },
     {
         timestamps: true,
