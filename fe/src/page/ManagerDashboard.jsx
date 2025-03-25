@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Bar, Pie, Line } from "react-chartjs-2";
+import { Bar, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -9,8 +9,6 @@ import {
   CategoryScale,
   LinearScale,
   BarElement,
-  LineElement,
-  PointElement,
   Title,
 } from "chart.js";
 
@@ -21,40 +19,26 @@ ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
-  LineElement,
-  PointElement,
   Title
 );
 
-const Dashboard = () => {
+const ManagerDashboard = () => {
   const currentDate = new Date("2025-03-25");
 
   const [stats, setStats] = useState({
-    general: {
-      houseNumber: 0,
-      roomNumber: 0,
-      roomNumberNotEmpty: 0,
-      roomNumberEmpty: 0,
-    },
     revenue: {
       year: currentDate.getFullYear(),
       revenueByMonth: Array(12).fill(0),
       billCountByMonth: Array(12).fill(0),
+      houseRevenueByMonth: Array(12).fill([]),
       totalAnnualRevenue: 0,
       averageMonthlyRevenue: 0,
       highestRevenueMonth: 0,
       lowestRevenueMonth: 0,
     },
-    bills: {
-      billIsPaid: 0,
-      totalBillIsPaid: 0,
-      billIsNotPaid: 0,
-      totalBillIsNotPaid: 0,
-      totalBills: 0,
-      grandTotal: 0,
-      paidPercentage: 0,
-    },
+    bills: [],
     problems: {
+      problemByHouse: [],
       totalProblems: 0,
       resolvedProblems: 0,
       unresolvedProblems: 0,
@@ -62,7 +46,7 @@ const Dashboard = () => {
   });
 
   const [filters, setFilters] = useState({
-    year: currentDate.getFullYear().toString(),
+    revenueYear: currentDate.getFullYear().toString(),
     billMonth: "",
     billIsPaid: "",
     problemStartDate: "",
@@ -76,10 +60,10 @@ const Dashboard = () => {
     const errors = {};
 
     switch (name) {
-      case "year": {
+      case "revenueYear": {
         const year = parseInt(value, 10);
         if (year > currentDate.getFullYear()) {
-          errors.year = "Year cannot exceed current year (2025)";
+          errors.revenueYear = "Year cannot exceed current year (2025)";
         }
         break;
       }
@@ -126,23 +110,22 @@ const Dashboard = () => {
   const fetchStatistics = async () => {
     try {
       const endpoints = [
-        { url: "/api/v1/static/general", statKey: "general", params: {} },
         { 
-          url: "/api/v1/static/revenue", 
-          statKey: "revenue", 
-          params: { year: filters.year } 
+          url: "/api/v1/static/house/revenues", 
+          statKey: "revenue",
+          params: { year: filters.revenueYear }
         },
         { 
-          url: "/api/v1/static/bills", 
-          statKey: "bills", 
+          url: "/api/v1/static/house/bills", 
+          statKey: "bills",
           params: {
             month: filters.billMonth || null,
             isPaid: filters.billIsPaid === "" ? null : filters.billIsPaid === "true",
           }
         },
         { 
-          url: "/api/v1/static/problems", 
-          statKey: "problems", 
+          url: "/api/v1/static/house/problems", 
+          statKey: "problems",
           params: {
             startDate: filters.problemStartDate || null,
             endDate: filters.problemEndDate || null,
@@ -159,32 +142,35 @@ const Dashboard = () => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-          params: endpoint.params,
+          params: endpoint.params
         })
       );
 
       const responses = await Promise.all(requests);
       const updatedStats = {};
       endpoints.forEach((endpoint, index) => {
-        console.log(`Response from ${endpoint.url}:`, responses[index].data);
+        console.log(`Raw response from ${endpoint.url}:`, responses[index].data);
         updatedStats[endpoint.statKey] = responses[index].data;
       });
 
-      setStats((prevStats) => ({
-        ...prevStats,
-        ...updatedStats,
-      }));
+      setStats((prevStats) => {
+        const newStats = { ...prevStats, ...updatedStats };
+        console.log("New stats after update:", newStats);
+        return newStats;
+      });
     } catch (error) {
       console.error("Fetch error:", error.response?.data || error.message);
     }
   };
 
+  // Fetch dữ liệu ban đầu khi mount
   useEffect(() => {
     fetchStatistics();
   }, []);
 
+  // Fetch lại khi filters thay đổi
   useEffect(() => {
-    const criticalErrors = ["year", "billMonth", "problemStartDate", "problemEndDate"];
+    const criticalErrors = ["revenueYear", "billMonth", "problemStartDate", "problemEndDate"];
     const hasCriticalError = criticalErrors.some(key => errors[key]);
     if (!hasCriticalError) {
       fetchStatistics();
@@ -204,86 +190,52 @@ const Dashboard = () => {
   };
 
   const chartConfigurations = {
-    roomStatusPie: {
-      labels: ["Occupied Rooms", "Empty Rooms"],
-      datasets: [
-        {
-          data: [stats.general.roomNumberNotEmpty, stats.general.roomNumberEmpty],
-          backgroundColor: ["#36A2EB", "#FF6384"],
-        },
-      ],
-    },
-    monthlyRevenueLine: {
+    monthlyRevenueBar: {
       labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-      datasets: [
-        {
-          label: `Monthly Revenue (${filters.year})`,
-          data: stats.revenue.revenueByMonth,
-          borderColor: "#42A5F5",
-          backgroundColor: "rgba(66, 165, 245, 0.2)",
-        },
-      ],
+      datasets: [{
+        label: `Monthly Revenue (${stats.revenue.year})`,
+        data: stats.revenue.revenueByMonth,
+        backgroundColor: "#42A5F5",
+      }],
     },
     billStatusPie: {
       labels: ["Paid Bills", "Unpaid Bills"],
-      datasets: [
-        {
-          data: [
-            filters.billIsPaid === "true" ? stats.bills.billIsPaid : 
-            filters.billIsPaid === "false" ? 0 : stats.bills.billIsPaid,
-            filters.billIsPaid === "true" ? 0 : 
-            filters.billIsPaid === "false" ? stats.bills.billIsNotPaid : stats.bills.billIsNotPaid
-          ],
-          backgroundColor: ["#4CAF50", "#F44336"],
-        },
-      ],
+      datasets: [{
+        data: [
+          stats.bills.reduce((sum, house) => sum + (house.billIsPaid || 0), 0),
+          stats.bills.reduce((sum, house) => sum + (house.billIsNotPaid || 0), 0)
+        ],
+        backgroundColor: ["#4CAF50", "#F44336"],
+      }],
     },
     problemStatusPie: {
       labels: ["Resolved", "Unresolved"],
-      datasets: [
-        {
-          data: [
-            filters.problemStatus === "true" ? stats.problems.resolvedProblems : 
-            filters.problemStatus === "false" ? 0 : stats.problems.resolvedProblems,
-            filters.problemStatus === "true" ? 0 : 
-            filters.problemStatus === "false" ? stats.problems.unresolvedProblems : stats.problems.unresolvedProblems
-          ],
-          backgroundColor: ["#FF6384", "#FFCE56"],
-        },
-      ],
+      datasets: [{
+        data: [
+          stats.problems.resolvedProblems || 0,
+          stats.problems.unresolvedProblems || 0
+        ],
+        backgroundColor: ["#4CAF50", "#FF6384"],
+      }],
     },
-    billCountByMonthBar: {
+    billCountBar: {
       labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-      datasets: [
-        {
-          label: `Bill Count (${filters.year})`,
-          data: stats.revenue.billCountByMonth,
-          backgroundColor: "#FFC107",
-        },
-      ],
+      datasets: [{
+        label: `Bill Count (${stats.revenue.year})`,
+        data: stats.revenue.billCountByMonth,
+        backgroundColor: "#FFC107",
+      }],
     },
   };
 
   return (
     <div className="p-5 max-w-6xl mx-auto">
       <h1 className="text-center text-3xl font-bold text-gray-800 mb-8">
-        Admin Dashboard - Hostel Statistics
+        Manager Dashboard - House Statistics
       </h1>
 
       {/* Key Performance Indicators */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
-        <div className="bg-gray-100 p-5 rounded-lg text-center shadow-md">
-          <h3 className="text-lg font-medium text-gray-600">Total Hostels</h3>
-          <p className="text-2xl font-bold text-gray-800 mt-2">
-            {stats.general.houseNumber}
-          </p>
-        </div>
-        <div className="bg-gray-100 p-5 rounded-lg text-center shadow-md">
-          <h3 className="text-lg font-medium text-gray-600">Total Rooms</h3>
-          <p className="text-2xl font-bold text-gray-800 mt-2">
-            {stats.general.roomNumber}
-          </p>
-        </div>
         <div className="bg-gray-100 p-5 rounded-lg text-center shadow-md">
           <h3 className="text-lg font-medium text-gray-600">Total Revenue</h3>
           <p className="text-2xl font-bold text-gray-800 mt-2">
@@ -291,9 +243,23 @@ const Dashboard = () => {
           </p>
         </div>
         <div className="bg-gray-100 p-5 rounded-lg text-center shadow-md">
+          <h3 className="text-lg font-medium text-gray-600">Total Bills</h3>
+          <p className="text-2xl font-bold text-gray-800 mt-2">
+            {stats.bills.reduce((sum, house) => sum + (house.totalBills || 0), 0)}
+          </p>
+        </div>
+        <div className="bg-gray-100 p-5 rounded-lg text-center shadow-md">
           <h3 className="text-lg font-medium text-gray-600">Total Problems</h3>
           <p className="text-2xl font-bold text-gray-800 mt-2">
-            {stats.problems.totalProblems}
+            {stats.problems.totalProblems || 0}
+          </p>
+        </div>
+        <div className="bg-gray-100 p-5 rounded-lg text-center shadow-md">
+          <h3 className="text-lg font-medium text-gray-600">Paid Percentage</h3>
+          <p className="text-2xl font-bold text-gray-800 mt-2">
+            {stats.bills.length > 0 
+              ? (stats.bills.reduce((sum, house) => sum + (house.paidPercentage || 0), 0) / stats.bills.length).toFixed(2)
+              : 0}%
           </p>
         </div>
       </div>
@@ -308,42 +274,28 @@ const Dashboard = () => {
             <label className="block text-gray-700 mb-2">Year</label>
             <input
               type="number"
-              name="year"
-              value={filters.year}
+              name="revenueYear"
+              value={filters.revenueYear}
               onChange={handleFilterChange}
               className="p-2 rounded border"
             />
-            {errors.year && <p className="text-red-500 text-sm mt-1">{errors.year}</p>}
+            {errors.revenueYear && (
+              <p className="text-red-500 text-sm mt-1">{errors.revenueYear}</p>
+            )}
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
             <h4 className="text-center text-lg font-semibold text-gray-700 mb-5">
-              Monthly Revenue ({filters.year})
+              Monthly Revenue ({stats.revenue.year})
             </h4>
-            <Bar
-              data={chartConfigurations.monthlyRevenueLine}
-              options={{
-                scales: {
-                  y: { beginAtZero: true, title: { display: true, text: "Revenue (VND)" } },
-                  x: { title: { display: true, text: "Month" } },
-                },
-              }}
-            />
+            <Bar data={chartConfigurations.monthlyRevenueBar} />
           </div>
           <div>
             <h4 className="text-center text-lg font-semibold text-gray-700 mb-5">
-              Monthly Bill Count ({filters.year})
+              Monthly Bill Count ({stats.revenue.year})
             </h4>
-            <Bar
-              data={chartConfigurations.billCountByMonthBar}
-              options={{
-                scales: {
-                  y: { beginAtZero: true, title: { display: true, text: "Number of Bills" } },
-                  x: { title: { display: true, text: "Month" } },
-                },
-              }}
-            />
+            <Bar data={chartConfigurations.billCountBar} />
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-5">
@@ -384,7 +336,9 @@ const Dashboard = () => {
               placeholder="e.g., 03-2025"
               className="p-2 rounded border"
             />
-            {errors.billMonth && <p className="text-red-500 text-sm mt-1">{errors.billMonth}</p>}
+            {errors.billMonth && (
+              <p className="text-red-500 text-sm mt-1">{errors.billMonth}</p>
+            )}
           </div>
           <div>
             <label className="block text-gray-700 mb-2">Status</label>
@@ -410,17 +364,15 @@ const Dashboard = () => {
           <div className="mt-5">
             <div className="grid grid-cols-2 gap-3">
               <div className="text-center">
-                <h4 className="text-md font-medium text-gray-600">Total Bills</h4>
-                <p className="text-lg font-bold">{stats.bills.totalBills}</p>
-              </div>
-              <div className="text-center">
-                <h4 className="text-md font-medium text-gray-600">Payment Percentage</h4>
-                <p className="text-lg font-bold">{stats.bills.paidPercentage.toFixed(2)}%</p>
-              </div>
-              <div className="text-center">
-                <h4 className="text-md font-medium text-gray-600">Grand Total</h4>
+                <h4 className="text-md font-medium text-gray-600">Total Paid Amount</h4>
                 <p className="text-lg font-bold">
-                  {stats.bills.grandTotal.toLocaleString()} VND
+                  {stats.bills.reduce((sum, house) => sum + (house.totalBillIsPaid || 0), 0).toLocaleString()} VND
+                </p>
+              </div>
+              <div className="text-center">
+                <h4 className="text-md font-medium text-gray-600">Total Unpaid Amount</h4>
+                <p className="text-lg font-bold">
+                  {stats.bills.reduce((sum, house) => sum + (house.totalBillIsNotPaid || 0), 0).toLocaleString()} VND
                 </p>
               </div>
             </div>
@@ -483,20 +435,8 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
-
-      {/* Room Status Section */}
-      <div className="bg-white p-5 rounded-lg shadow-md mb-10">
-        <h3 className="text-center text-xl font-semibold text-gray-700 mb-5">
-          Room Status Distribution
-        </h3>
-        <div className="flex justify-center">
-          <div className="w-full max-w-md">
-            <Pie data={chartConfigurations.roomStatusPie} />
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
 
-export default Dashboard;
+export default ManagerDashboard;
