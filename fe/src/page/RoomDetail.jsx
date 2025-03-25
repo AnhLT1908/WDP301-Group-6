@@ -537,7 +537,6 @@ const RoomDetail = () => {
         alert("Tiền cọc phải là số không âm!");
         return;
       }
-  
       // Chuẩn bị dữ liệu cập nhật - Chỉ gửi những trường được phép thay đổi
       // Các trường floor và area hiện đã được đặt là read-only trong UI
       const updatedRoom = {
@@ -546,18 +545,15 @@ const RoomDetail = () => {
           roomPrice: roomPrice,
           deposit: deposit,
         },
-      };
   
       console.log("Sending room update:", updatedRoom);
   
       // Gửi request cập nhật đến API
       const response = await api.put(`/room/${roomId}`, updatedRoom);
-  
       // Validate kết quả trả về từ API
       if (!response.data || !response.data.room) {
         throw new Error("Invalid response from server");
       }
-  
       // Cập nhật state local từ dữ liệu server trả về
       setRoom((prev) => ({
         ...prev,
@@ -568,27 +564,23 @@ const RoomDetail = () => {
         },
         // Giữ lại các trường khác không được cập nhật
       }));
-  
       // Thoát khỏi chế độ chỉnh sửa và hiển thị thông báo thành công
       setIsEditing(false);
       alert("Cập nhật phòng thành công!");
     } catch (error) {
       // Xử lý lỗi nâng cao với logging chi tiết
       console.error("Room update failed:", error);
-  
       // Trích xuất thông điệp lỗi từ response API hoặc message lỗi
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
         "Unknown error occurred";
-  
       // Log thông tin chi tiết về lỗi để debug
       console.error("Error details:", {
         status: error.response?.status,
         message: errorMessage,
         data: error.response?.data,
       });
-  
       // Hiển thị thông báo lỗi cho người dùng
       alert(`Không thể cập nhật phòng: ${errorMessage}`);
     }
