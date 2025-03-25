@@ -74,6 +74,7 @@ const HomePage = () => {
     {
       title: "Tin tức",
       icon: <ReceiptText size={70} className="relative text-white" />,
+      action: () => handleBillNavigate(roomId),
     },
     {
       title: "Báo cáo",
@@ -112,6 +113,7 @@ const HomePage = () => {
                     <Button
                       showIcon={true}
                       className="px-4 py-2 bg-green-500 text-white rounded"
+                      onClick={card.action}
                     >
                       View More
                     </Button>
