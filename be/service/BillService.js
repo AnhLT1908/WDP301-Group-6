@@ -73,7 +73,7 @@ export const autoCheckBillsAndContracts = async () => {
           const daysSinceCreation = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
 
           // 1. Sau 30 ngày: Cộng vào debt cho hóa đơn tiếp theo
-          if (daysSinceCreation >= 30) {
+          if (daysSinceCreation >= 2) {
               const nextBill = await Bills.findOne({
                   roomId,
                   createdAt: { $gt: bill.createdAt },
@@ -81,17 +81,21 @@ export const autoCheckBillsAndContracts = async () => {
               });
 
               if (nextBill) {
+                  if (!nextBill.transactionId) {
+                      nextBill.transactionId = `AUTO-${Date.now()}`;
+                  }
                   nextBill.debt = (nextBill.debt || 0) + bill.total;
                   nextBill.note = `${nextBill.note || ""} | Nợ từ hóa đơn ${bill.billCode}: ${bill.total}`;
                   await nextBill.save();
-              } else {
-                  // Nếu chưa có hóa đơn tiếp theo, ghi log hoặc xử lý sau
+              } else if (!bill.logged) {  // Đảm bảo chỉ log một lần
                   console.log(`Hóa đơn ${bill.billCode} quá hạn 30 ngày nhưng chưa có hóa đơn mới để cộng nợ.`);
+                  bill.logged = true;   
+                  await bill.save();   
               }
           }
 
           // 2. Sau 60 ngày và > 2 hóa đơn chưa thanh toán: Vô hiệu hóa tài khoản
-          if (daysSinceCreation >= 60) {
+          if (daysSinceCreation >= 3) {
               const unpaidCount = await Bills.countDocuments({ roomId, isPaid: false });
               if (unpaidCount > 2) {
                   const contactAccount = await Account.findOne({ roomId, isContact: true });
@@ -120,7 +124,7 @@ export const autoCheckBillsAndContracts = async () => {
               const lastUpdate = new Date(account.updatedAt);
               const daysSinceDisabled = Math.floor((now - lastUpdate) / (1000 * 60 * 60 * 24));
 
-              if (daysSinceDisabled >= 15) {
+              if (daysSinceDisabled >= 2) {
                   const contract = await Contract.findOne({ roomId, status: "valid" });
                   if (contract) {
                       contract.status = "expired";
@@ -264,14 +268,13 @@ export const addBillinRoom = async (req, res, next) => {
           message: `Một hóa đơn phòng ${room.name} đã được tạo (Tổng: ${totalAmount} VND)`,
           type: "bill",
       });
+      // ${priceList.map(item => `- ${item.name}: ${item.total} VND (${item.usage} ${defaultPriceMap[item.name]?.unit || ''})`).join('\n')}
 
       // Chuẩn bị nội dung email
       const billDetails = `
           Hóa đơn phòng: ${room.name}
           Mã hóa đơn: ${billCode}
           Tiền phòng: ${room.priceList.roomPrice} VND
-          Chi tiết dịch vụ:
-          ${priceList.map(item => `- ${item.name}: ${item.total} VND (${item.usage} ${defaultPriceMap[item.name]?.unit || ''})`).join('\n')}
           Nợ cũ: ${accumulatedDebt} VND
           Tổng tiền: ${totalAmount} VND
           Link thanh toán: ${qrUrl}

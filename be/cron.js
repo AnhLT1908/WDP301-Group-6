@@ -6,4 +6,4 @@ cron.schedule('* * * * *', () => {
     autoCheckBillsAndContracts();
 },{
     timezone: "Asia/Ho_Chi_Minh"
-});
+}); 
