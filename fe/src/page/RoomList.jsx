@@ -53,9 +53,13 @@ export default function RoomList() {
           return;
         }
 
+        console.log("House", houseResponse)
+
         const managerHouse = houseResponse.data.houses.find(
           (house) => house.hostId === managerId
         );
+
+        console.log("managerHouse", managerHouse)
         if (!managerHouse) {
           console.error("No house found for manager");
           setLoading(false);
@@ -66,10 +70,13 @@ export default function RoomList() {
         setNewRoomData((prev) => ({ ...prev, houseId: managerHouse._id }));
 
         const response = await api.get("/room/");
+        console.log("roomList", response)
+
         if (Array.isArray(response.data.data)) {
           const filteredRooms = response.data.data.filter(
-            (room) => room.houseId === managerHouse._id
+            (room) => room.house === managerHouse._id
           );
+          console.log("filteredRooms", filteredRooms)
           setRooms(filteredRooms);
         } else {
           setRooms([]);
@@ -84,6 +91,8 @@ export default function RoomList() {
 
     fetchRooms();
   }, []);
+
+  console.log("rooms list", rooms)
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
