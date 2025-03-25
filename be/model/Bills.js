@@ -64,7 +64,7 @@ const BillSchema = new mongoose.Schema({
     },
     transactionId: {
         type: String,
-        required: true,
+        // required: true,
         unique: true,
     },
 },  
