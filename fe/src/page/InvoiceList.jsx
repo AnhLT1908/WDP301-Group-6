@@ -148,7 +148,7 @@ export default function InvoiceList() {
                       <div className="flex items-center gap-4">
                         <div>
                           <p className="text-sm font-semibold text-blue-gray-700">
-                            {bill.roomId.name}
+                            {bill.roomId?.name}
                           </p>
                         </div>
                       </div>

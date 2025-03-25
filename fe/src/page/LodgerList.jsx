@@ -9,7 +9,7 @@ export default function LodgerList() {
     try{
       const fetchAccounts = async () => {
 
-        const resAccount = await axios.get("http://localhost:5000/api/v1/account/lodger-accout-list");
+        const resAccount = await axios.get("http://localhost:5000/api/v1/account/lodger-account-list");
 
         const resRoom = await axios.get("http://localhost:5000/api/v1/room/");
 
