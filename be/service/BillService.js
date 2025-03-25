@@ -199,45 +199,52 @@ export const addBillinRoom = async (req, res, next) => {
       return res.status(404).json({ message: "Không tìm thấy phòng." });
     }
 
-      if (!room.house || !mongoose.Types.ObjectId.isValid(room.house)) {
-          return res.status(400).json({ message: `Phòng ${room.name} không có houseId!` });
-      }
+    // Kiểm tra tính hợp lệ của house ID
+    if (!room.house || !mongoose.Types.ObjectId.isValid(room.house)) {
+      return res
+        .status(400)
+        .json({ message: `Phòng ${room.name} không có houseId!` });
+    }
 
-      const existingBill = await Bills.findOne({ roomId, isPaid: false });
-      if (existingBill) {
-          return res.status(400).json({
-              success: false,
-              message: "Phòng này đã có hóa đơn chưa thanh toán. Vui lòng thanh toán trước khi tạo hóa đơn mới!",
-              existingBill,
-          });
-      }
+    // Lấy danh sách giá mặc định từ cơ sở dữ liệu
+    const defaultPrices = await DefaultPrice.find();
 
-      const { note, debt = 0, paymentMethod, customPriceList } = req.body;
+    console.log("defaultPrices", defaultPrices);
 
-      // Kiểm tra hóa đơn cũ quá 30 ngày để cộng debt
-      const now = new Date();
-      const oldBills = await Bills.find({ roomId, isPaid: false });
-      let accumulatedDebt = debt;
-      for (const oldBill of oldBills) {
-          const daysSinceCreation = Math.floor((now - new Date(oldBill.createdAt)) / (1000 * 60 * 60 * 24));
-          if (daysSinceCreation >= 30) {
-              accumulatedDebt += oldBill.total;
-          }
-      }
+    // Chuyển đổi danh sách giá mặc định thành một map để tra cứu nhanh
+    const defaultPriceMap = defaultPrices.reduce((map, price) => {
+      map[price.name] = { price: price.price, unit: price.unit };
+      return map;
+    }, {});
+    console.log("defaultPriceMap", defaultPriceMap);
 
-      const defaultPrices = await DefaultPrice.find();
-      const defaultPriceMap = defaultPrices.reduce((map, price) => {
-          map[price.name] = { price: price.price, unit: price.unit };
-          return map;
-      }, {});
-      let priceList = [];
+    // Khởi tạo mảng danh sách giá
+    let priceList = [];
 
-      if (customPriceList && Array.isArray(customPriceList)) {
-          priceList = customPriceList.map(item => {
-              const defaultPrice = defaultPriceMap[item.name] || { price: item.price || 0, unit: "" };
-              const usage = item.usage || 0;
-              const price = item.price !== undefined ? item.price : defaultPrice.price;
-              let total;
+    // Xử lý danh sách giá tùy chỉnh nếu được cung cấp
+    if (customPriceList && Array.isArray(customPriceList)) {
+      // Ánh xạ danh sách giá tùy chỉnh
+      priceList = customPriceList.map((item) => {
+        // Lấy giá mặc định hoặc sử dụng giá được cung cấp
+        const defaultPrice = defaultPriceMap[item.name] || {
+          price: item.price || 0,
+          unit: "",
+        };
+
+        // Tính usage = previousMonthUsage[name] - currentUsage
+        const previousUsage = previousMonthUsage[item.name] || 0;
+        console.log("previousUsage", previousMonthUsage[item.name]);
+        const strUsage = item.currentUsage || "0"; // usage is now a string (strUsage)
+
+        const usage = parseInt(strUsage); // Create a separate variable for usage
+        const differentUsage = usage - previousUsage; // Calculate the difference in usage
+        console.log("previousUsage", previousUsage);
+        console.log("usage", usage); // log usage for debugging
+        console.log("differentUsage", differentUsage); // log differentUsage for debugging
+
+        const price =
+          item.price !== undefined ? item.price : defaultPrice.price;
+        let total;
 
         // Log thông tin để debug
         console.log(`Processing ${item.name}:`, {
@@ -360,37 +367,34 @@ export const addBillinRoom = async (req, res, next) => {
     // Sinh URL QR thanh toán
     const { qrUrl } = generateVietQR(totalAmount, paymentDescription);
 
-      const bill = new Bills({
-          roomId,
-          houseId: room.house._id,
-          billCode,
-          roomPrice: room.priceList.roomPrice,
-          priceList,
-          debt: accumulatedDebt,
-          total: totalAmount,
-          note: accumulatedDebt > debt ? `${note || ""} | Có nợ từ hóa đơn cũ: ${accumulatedDebt - debt}` : note,
-          paymentLink: qrUrl,
-          transactionId: transactionId,
-          isPaid: false,
-          paymentMethod: paymentMethod || "Unknown",
-      });
-      await bill.save();
+    // Tạo mới hóa đơn
+    const bill = new Bills({
+      roomId,
+      houseId: room.house._id,
+      billCode,
+      roomPrice: room.priceList.roomPrice,
+      priceList,
+      debt,
+      total: totalAmount,
+      note,
+      paymentLink: qrUrl,
+      isPaid: false,
+      paymentMethod: paymentMethod || "Unknown",
+    });
+    // Lưu hóa đơn vào cơ sở dữ liệu
+    console.log("Bill", bill);
+    await bill.save();
 
-      // Tìm tài khoản người đại diện hoặc tất cả Lodger trong phòng
-      const contactAccount = await Account.findOne({ roomId: roomId, isContact: true }) || await Account.findOne({ roomId: roomId });
-      if (!contactAccount) {
-          return res.status(404).json({
-              message: "Không tìm thấy người đại diện cho phòng này!",
-          });
-      }
+    // Tìm tài khoản của phòng
+    const roomAccount = await Account.findOne({ roomId: roomId });
 
-      // Gửi thông báo trong hệ thống
-      await Notification.create({
-          sender: getCurrentUser(req),
-          recipients: [{ user: contactAccount._id, isRead: false }],
-          message: `Một hóa đơn phòng ${room.name} đã được tạo (Tổng: ${totalAmount} VND)`,
-          type: "bill",
-      });
+    // Tạo thông báo cho tài khoản phòng
+    await Notification.create({
+      sender: getCurrentUser(req),
+      recipients: [{ user: roomAccount?._id, isRead: false }],
+      message: `Một hoá đơn phòng ${room.name} đã được tạo (Tổng: ${totalAmount})`,
+      type: "bill",
+    });
 
     // Trả về phản hồi thành công với thông tin hóa đơn
     res.status(201).json({
@@ -400,7 +404,8 @@ export const addBillinRoom = async (req, res, next) => {
       paymentDescription,
     });
   } catch (error) {
-      next(error);
+    // Chuyển lỗi sang middleware xử lý lỗi
+    next(error);
   }
 };
 
@@ -718,90 +723,5 @@ export const updateBillPaymentStatus = async (req, res, next) => {
   } catch (error) {
     console.error("Error updating bill payment status:", error);
     next(error);
-  }
-};
-
-
-export const autoCheckBillsAndContracts = async () => {
-  try {
-
-    console.log("Bắt đầu kiểm tra hóa đơn và hợp đồng...");
-      const now = new Date();
-      
-      // Lấy tất cả hóa đơn chưa thanh toán
-      const unpaidBills = await Bills.find({ isPaid: false }).populate("roomId");
-
-      for (const bill of unpaidBills) {
-          const roomId = bill.roomId._id;
-          const createdAt = new Date(bill.createdAt);
-          const daysSinceCreation = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
-
-          // 1. Sau 30 ngày: Cộng vào debt cho hóa đơn tiếp theo
-          if (daysSinceCreation >= 30) {
-              const nextBill = await Bills.findOne({
-                  roomId,
-                  createdAt: { $gt: bill.createdAt },
-                  isPaid: false,
-              });
-
-              if (nextBill) {
-                  nextBill.debt = (nextBill.debt || 0) + bill.total;
-                  nextBill.note = `${nextBill.note || ""} | Nợ từ hóa đơn ${bill.billCode}: ${bill.total}`;
-                  await nextBill.save();
-              } else {
-                  // Nếu chưa có hóa đơn tiếp theo, ghi log hoặc xử lý sau
-                  console.log(`Hóa đơn ${bill.billCode} quá hạn 30 ngày nhưng chưa có hóa đơn mới để cộng nợ.`);
-              }
-          }
-
-          // 2. Sau 60 ngày và > 2 hóa đơn chưa thanh toán: Vô hiệu hóa tài khoản
-          if (daysSinceCreation >= 60) {
-              const unpaidCount = await Bills.countDocuments({ roomId, isPaid: false });
-              if (unpaidCount > 2) {
-                  const contactAccount = await Account.findOne({ roomId, isContact: true });
-                  if (contactAccount && contactAccount.status !== false) {
-                      contactAccount.status = false;
-                      await contactAccount.save({ validateBeforeSave: false });
-                      await Notification.create({
-                          sender: null,
-                          recipients: [{ user: contactAccount._id, isRead: false }],
-                          message: `Tài khoản của bạn đã bị vô hiệu hóa do có hơn 2 hóa đơn chưa thanh toán quá 60 ngày!`,
-                          type: "account_status",
-                      });
-                  }
-              }
-          }
-      }
-
-      // 3. Kiểm tra tài khoản bị vô hiệu hóa quá 15 ngày: Hủy hợp đồng
-      const disabledAccounts = await Account.find({ status: false, isContact: true }).populate("roomId");
-      for (const account of disabledAccounts) {
-          const roomId = account.roomId?._id;
-          if (!roomId) continue;
-
-          const unpaidCount = await Bills.countDocuments({ roomId, isPaid: false });
-          if (unpaidCount > 2) {
-              const lastUpdate = new Date(account.updatedAt);
-              const daysSinceDisabled = Math.floor((now - lastUpdate) / (1000 * 60 * 60 * 24));
-
-              if (daysSinceDisabled >= 15) {
-                  const contract = await Contract.findOne({ roomId, status: "valid" });
-                  if (contract) {
-                      contract.status = "expired";
-                      await contract.save();
-                      await Notification.create({
-                          sender: null,
-                          recipients: [{ user: account._id, isRead: false }],
-                          message: `Hợp đồng của phòng ${account.roomId.name} đã bị hủy do không thanh toán hóa đơn sau 15 ngày bị vô hiệu hóa!`,
-                          type: "contract",
-                      });
-                  }
-              }
-          }
-      }
-
-      console.log("Đã kiểm tra và xử lý hóa đơn/hợp đồng tự động.");
-  } catch (error) {
-      console.error("Lỗi trong autoCheckBillsAndContracts:", error);
   }
 };

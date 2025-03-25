@@ -30,7 +30,7 @@ export const createTransferRequest = async (req, res, next) => {
             content: content || "Tôi muốn chuyển sang phòng khác.",
             roomId,
             creatorId,
-            houseId: room.house,
+            houseId: room.houseId,
           });
         await problem.save();
 
