@@ -7,6 +7,7 @@ import NewRouter from './NewRoute.js';
 import ProblemRouter from './ProblemRouter.js';
 import BillRouter from './BillRouter.js';
 import StatisticRouter from './StatisticsRoute.js';
+import ContractRouter from './ContractRoute.js';
 const indexRouter = express.Router();
 
 indexRouter.use("/account", AccountRouter);
@@ -17,5 +18,7 @@ indexRouter.use("/new", NewRouter);
 indexRouter.use("/problem", ProblemRouter);
 indexRouter.use("/bill", BillRouter);
 indexRouter.use("/static", StatisticRouter);
+indexRouter.use("/contract", ContractRouter);
+
 
 export default indexRouter;

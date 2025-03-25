@@ -41,7 +41,7 @@ const RoomSchema = new Schema({
         type: String,
         required: true
     },
-    house: {
+    houseId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "House"
     },
@@ -53,7 +53,14 @@ const RoomSchema = new Schema({
         accountId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Account",
-            required: true
+            required: true,
+            validate: {
+                validator: function (v) {
+                    return v.length <= 3; // Tối đa 4 người
+                },
+                message: 'Số lượng bên liên quan không được vượt quá 3 người'
+            },
+            default: []
         },
         joinDate: {
             type: Date,
@@ -65,9 +72,7 @@ const RoomSchema = new Schema({
         required: true
     },
     status: {
-        type: String,
-        enum: ["full", "available"],
-        default: "available"
+        type: Boolean,
     },
     utilities: [{
         type: mongoose.Schema.Types.ObjectId,

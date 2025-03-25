@@ -1,5 +1,5 @@
-import * as BillService from "../service/BillService.js";
-import catchAsyncErrors from "../middleware/asyncErrorCatch.js";
+import * as BillService from '../service/BillService.js'
+import catchAsyncErrors from '../middleware/asyncErrorCatch.js'
 
 const BillController = {
   addBillinRoom: catchAsyncErrors(async (req, res, next) => {
