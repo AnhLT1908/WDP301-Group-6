@@ -4,17 +4,19 @@ import Footer from "../components/layout/Footer";
 import Card from "../components/ui/Card";
 import Carousel from "../components/ui/Carousel";
 import Button from "../components/form/Button";
-import { House, DoorOpen, AlignJustify, FileWarning } from "lucide-react";
+import { House, DoorOpen, ReceiptText, FileWarning } from "lucide-react";
 import carousel_img_1 from "../../src/assets/images/carousel_images/carousel_img_1.jpg";
 import carousel_img_2 from "../../src/assets/images/carousel_images/carousel_img_2.jpg";
 import carousel_img_3 from "../../src/assets/images/carousel_images/carousel_img_3.jpg";
 import news1 from "../../src/assets/images/news1.jpg";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const HomePage = () => {
   const carouselImages = [carousel_img_1, carousel_img_2, carousel_img_3];
   const roomId = JSON.parse(localStorage.getItem("user")).roomId;
   const [room, setRoom] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchRoomData = async() => {
@@ -50,18 +52,28 @@ const HomePage = () => {
     },
   ];
 
+  const handleBillNavigate = (roomId) => {
+    navigate(`/lodger-invoice-list/${roomId}`);
+  };
+
+  const handleRoomNavigate = (roomId) => {
+    navigate(`/room/${roomId}`);
+  };
+
   const featureCards = [
     {
       title: "Khu nhà trọ",
       icon: <House size={70} className="relative text-white" />,
+      action: null,
     },
     {
       title: "Phòng trọ",
       icon: <DoorOpen size={70} className="relative text-white" />,
+      action: () => handleRoomNavigate(roomId),
     },
     {
       title: "Tin tức",
-      icon: <AlignJustify size={70} className="relative text-white" />,
+      icon: <ReceiptText size={70} className="relative text-white" />,
     },
     {
       title: "Báo cáo",
