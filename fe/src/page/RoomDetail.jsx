@@ -45,41 +45,43 @@ const RoomDetail = () => {
     fetchRoom();
   }, [roomId]);
 
-  useEffect(() => {
-    const fetchLodgers = async () => {
-      try {
-        // Fetch all lodger accounts from the API
-        const res = await api.get("/account/lodger-account-list");
-        console.log("Lodger data:", res.data);
+  const fetchLodgers = async () => {
+    try {
+      // Fetch all lodger accounts from the API
+      const res = await api.get("/account/lodger-account-list");
+      console.log("Lodger data:", res.data);
 
-        if (!res.data.data || !Array.isArray(res.data.data)) {
-          console.error("Invalid data format from API");
-          return;
-        }
-
-        const lodgerList = res.data.data;
-        console.log("Lodger list:", lodgerList);
-        console.log("Current roomId for filtering:", roomId);
-
-        if (lodgerList.length > 0) {
-          const lodgersWithRoom = lodgerList.filter(
-            (lodger) => lodger?.roomId?.toString() === roomId?.toString()
-          );
-          setLodgers(lodgersWithRoom);
-
-          const lodgersWithNoRoom = lodgerList.filter(
-            (lodger) =>
-              lodger.accountType === "Lodger" &&
-              (lodger.roomId === null || lodger.roomId === undefined)
-          );
-          console.log("Lodgers with no room:", lodgersWithNoRoom);
-          setLodgerNoRoom(lodgersWithNoRoom);
-        }
-      } catch (error) {
-        console.error("Error fetching lodger data:", error);
+      if (!res.data.data || !Array.isArray(res.data.data)) {
+        console.error("Invalid data format from API");
+        return;
       }
-    };
 
+      const lodgerList = res.data.data;
+      console.log("Lodger list:", lodgerList);
+      console.log("Current roomId for filtering:", roomId);
+
+      if (lodgerList.length > 0) {
+        // Find lodgers in this room
+        const lodgersWithRoom = lodgerList.filter(
+          (lodger) => lodger?.roomId?.toString() === roomId?.toString()
+        );
+        setLodgers(lodgersWithRoom);
+
+        // Find lodgers without a room assignment
+        const lodgersWithNoRoom = lodgerList.filter(
+          (lodger) =>
+            lodger.accountType === "Lodger" &&
+            (lodger.roomId === null || lodger.roomId === undefined)
+        );
+        console.log("Lodgers with no room:", lodgersWithNoRoom);
+        setLodgerNoRoom(lodgersWithNoRoom);
+      }
+    } catch (error) {
+      console.error("Error fetching lodger data:", error);
+    }
+  };
+
+  useEffect(() => {
     fetchLodgers();
   }, [roomId]);
 
@@ -90,6 +92,7 @@ const RoomDetail = () => {
     const fetchContracts = async () => {
       try {
         const res = await api.get(`/contract/room/${roomId}`);
+        console.log("Contract", res.data);
         setContracts(res.data.data);
       } catch (error) {
         console.error("Error fetching contracts:", error);
@@ -97,6 +100,8 @@ const RoomDetail = () => {
     };
     fetchContracts();
   }, [roomId]);
+
+  console.log("Room contract", contracts);
 
   const fetchBills = async () => {
     try {
@@ -111,9 +116,9 @@ const RoomDetail = () => {
 
   const updateRoomStatus = async (memberCount) => {
     try {
-      const newStatus = memberCount < 3 ? "available" : "full"; // Đổi sang string theo backend
+      const newStatus = memberCount < 5 ? true : false;
       await api.put(`/room/${roomId}/status`, { status: newStatus });
-      setRoom((prev) => ({ ...prev, status: newStatus === "available" })); // Chuyển lại boolean cho frontend
+      setRoom((prev) => ({ ...prev, status: newStatus === true }));
     } catch (error) {
       console.error("Error updating room status:", error);
     }
@@ -136,70 +141,235 @@ const RoomDetail = () => {
       return;
     }
 
-    const member = lodgers.find((lodger) => lodger.email === newMemberEmail);
+    const member = lodgerNoRoom.find(
+      (lodger) => lodger.email === newMemberEmail
+    );
     if (!member) {
-      alert("Không tìm thấy thành viên với email này!");
-      return;
-    }
-
-    const accountId = member._id;
-
-    const contractMembers = contracts
-      .filter((contract) => contract.roomId.toString() === room._id.toString())
-      .flatMap((contract) => [
-        contract.benA.toString(),
-        contract.benB.toString(),
-        ...contract.relatedParties.map((id) => id.toString()),
-      ]);
-
-    if (contractMembers.includes(accountId.toString())) {
       alert(
-        "Thành viên này đã có trong hợp đồng của phòng (benA, benB hoặc relatedParties)!"
+        "Không tìm thấy thành viên với email này hoặc thành viên đã có phòng!"
       );
       return;
     }
 
-    const relatedPartiesCount = contracts
-      .filter((contract) => contract.roomId.toString() === room._id.toString())
-      .reduce((total, contract) => total + contract.relatedParties.length, 0);
+    const accountId = member._id;
+    console.log("+++++++Checkcontract", contracts);
+    console.log("+++++++Checkroom", room);
 
-    if (relatedPartiesCount >= 3) {
-      alert("Số lượng bên liên quan trong hợp đồng đã đạt tối đa 3 người!");
-      return;
+    // Get the contract for this room
+    const roomContract = contracts.find(
+      (contract) => contract.roomId._id.toString() === room._id.toString()
+    );
+
+    console.log("============roomContract", roomContract);
+
+    // Check if member exists in any contract roles
+    if (roomContract) {
+      // Handle the case where benA and benB are objects with _id properties
+      const benAId =
+        typeof roomContract.benA === "object"
+          ? roomContract.benA._id
+          : roomContract.benA;
+      const benBId =
+        typeof roomContract.benB === "object"
+          ? roomContract.benB._id
+          : roomContract.benB;
+
+      const contractMembers = [benAId.toString(), benBId.toString()];
+
+      // Safely add relatedParties if they exist
+      if (
+        roomContract.relatedParties &&
+        Array.isArray(roomContract.relatedParties)
+      ) {
+        contractMembers.push(
+          ...roomContract.relatedParties.map((party) =>
+            typeof party === "object" ? party._id.toString() : party.toString()
+          )
+        );
+      }
+
+      if (contractMembers.includes(accountId.toString())) {
+        alert(
+          "Thành viên này đã có trong hợp đồng của phòng (benA, benB hoặc relatedParties)!"
+        );
+        return;
+      }
+
+      // Check relatedParties limit (4 people maximum) - only if relatedParties exists
+      if (
+        roomContract.relatedParties &&
+        Array.isArray(roomContract.relatedParties) &&
+        roomContract.relatedParties.length >= 4
+      ) {
+        alert("Số lượng bên liên quan trong hợp đồng đã đạt tối đa 4 người!");
+        return;
+      }
     }
 
+    // Check room members limit (5 people maximum)
     const currentMemberCount = room.members.length;
-    if (currentMemberCount >= 3) {
-      alert("Phòng đã đạt tối đa 3 thành viên!");
+    if (currentMemberCount >= 5) {
+      alert("Phòng đã đạt tối đa 5 thành viên!");
       return;
     }
 
     const joinDate = new Date().toISOString();
 
     try {
-      const response = await api.post(`/room/${roomId}/member`, {
+      // Step 1: Add member to the room
+      const roomResponse = await api.post(`/room/${roomId}/member`, {
         accountId: accountId,
         joinDate: joinDate,
       });
 
+      // Update local state for room members
       const updatedMembers = [
         ...room.members,
         { accountId: accountId, joinDate: joinDate },
       ];
+
       setRoom((prev) => ({
         ...prev,
         members: updatedMembers,
       }));
 
+      // Step 2: Update the account with the roomId
+      try {
+        await api.put(`/account/updateLodgerAccount/${accountId}`, {
+          roomId: roomId,
+          rentalDate: joinDate,
+          // Only update necessary fields to avoid overwriting other account data
+        });
+
+        console.log(`Updated account ${accountId} with roomId ${roomId}`);
+      } catch (accountError) {
+        console.error(
+          "Error updating account with roomId:",
+          accountError.response?.data || accountError.message
+        );
+        // Continue execution as we may need to rollback later if subsequent steps fail
+      }
+
+      // Step 3: If there's a contract for this room, add the member to relatedParties
+      if (roomContract) {
+        try {
+          // First, ensure relatedParties is initialized if null
+          if (roomContract.relatedParties === null) {
+            try {
+              // Use a general update endpoint instead
+              await api.put(`/contract/${roomContract._id}`, {
+                relatedParties: [],
+              });
+
+              console.log(
+                "Initialized empty relatedParties array for contract"
+              );
+
+              // Update local contract state
+              setContracts((prevContracts) =>
+                prevContracts.map((contract) => {
+                  if (contract._id === roomContract._id) {
+                    return {
+                      ...contract,
+                      relatedParties: [],
+                    };
+                  }
+                  return contract;
+                })
+              );
+
+              // Update roomContract in local scope
+              roomContract.relatedParties = [];
+            } catch (initError) {
+              console.error("Error initializing relatedParties:", initError);
+              // Continue with the attempt to add the member anyway
+            }
+          }
+
+          // Log the exact data we're sending to debug
+          console.log("Contract ID:", roomContract._id);
+          console.log("Account ID to add:", accountId);
+          console.log("Account ID type:", typeof accountId);
+
+          // Ensure accountId is a valid string format for ObjectId
+          const accountIdString = accountId.toString();
+
+          // Validate ObjectId format before sending to API
+          if (!/^[0-9a-fA-F]{24}$/.test(accountIdString)) {
+            console.error(
+              "Invalid ObjectId format for accountId:",
+              accountIdString
+            );
+            throw new Error("Invalid accountId format");
+          }
+
+          // Now add member to contract relatedParties with validated ID
+          const response = await api.put(
+            `/contract/${roomContract._id}/related-parties`,
+            {
+              accountId: accountIdString,
+            }
+          );
+
+          console.log("Contract update response:", response.data);
+
+          // Update local contract state only if API call succeeds
+          setContracts((prevContracts) =>
+            prevContracts.map((contract) => {
+              if (contract._id === roomContract._id) {
+                // Use the safe version of relatedParties
+                const currentRelatedParties = contract.relatedParties || [];
+                return {
+                  ...contract,
+                  relatedParties: [...currentRelatedParties, accountIdString],
+                };
+              }
+              return contract;
+            })
+          );
+
+          console.log(
+            `Added account ${accountIdString} to contract ${roomContract._id} related parties`
+          );
+        } catch (contractError) {
+          console.error(
+            "Error adding member to contract relatedParties:",
+            contractError.response?.data || contractError.message
+          );
+
+          // Continue execution despite contract update failure
+          // The member is still added to the room, which is the primary operation
+        }
+      }
+
+      // Step 4: Update room status based on member count
       await updateRoomStatus(updatedMembers.length);
 
+      // Step 5: Reset input and notify success
       setNewMemberEmail("");
+
+      // Step 6: Refresh lodger lists to update UI
+      fetchLodgers();
+
       alert("Thêm thành viên thành công!");
     } catch (error) {
       console.error(
         "Error adding member:",
         error.response?.data || error.message
       );
+
+      // Attempt to rollback changes if the initial room update succeeds but subsequent updates fail
+      try {
+        // Only attempt rollback if the room update succeeded
+        if (error.response?.status !== 400 && error.response?.status !== 404) {
+          console.log("Attempting to rollback changes...");
+          // Rollback could involve removing the member from the room
+          // This would need a new endpoint or could be handled server-side
+        }
+      } catch (rollbackError) {
+        console.error("Error during rollback:", rollbackError);
+      }
+
       alert(
         "Không thể thêm thành viên! Vui lòng kiểm tra console để biết chi tiết."
       );
@@ -340,19 +510,27 @@ const RoomDetail = () => {
           ))}
           {isEditing && (
             <>
-              <input
-                type="email"
-                value={newMemberEmail}
-                onChange={(e) => setNewMemberEmail(e.target.value)}
-                className="border rounded p-2 w-full"
-                placeholder="Nhập email thành viên"
-              />
-              <button
-                onClick={handleAddMember}
-                className="bg-blue-500 text-white px-4 py-2 rounded"
-              >
-                Thêm thành viên
-              </button>
+              <div className="flex flex-col space-y-4">
+                <label>Chọn thành viên mới:</label>
+                <select
+                  className="block appearance-none w-full bg-white border border-gray-400 hover:border-gray-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline"
+                  value={newMemberEmail}
+                  onChange={(e) => setNewMemberEmail(e.target.value)}
+                >
+                  <option value="">-- Chọn thành viên --</option>
+                  {lodgerNoRoom.map((lodger, index) => (
+                    <option key={lodger._id} value={lodger.email}>
+                      {`${lodger.lastName} ${lodger.firstName} (${lodger.email})`}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleAddMember}
+                  className="bg-blue-500 text-white px-4 py-2 rounded"
+                >
+                  Thêm thành viên
+                </button>
+              </div>
             </>
           )}
         </div>

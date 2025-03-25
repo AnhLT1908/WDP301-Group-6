@@ -556,11 +556,6 @@ export const addMember = async(req, res, next) =>{
         throw new Error("Không tìm thấy phòng.");
     }
 
-    const existingMember = room.members.some(member => member.accountId.toString() === accountId);
-    if (existingMember) {
-      return res.status(400).json({ message: "Thành viên đã tồn tại trong phòng." });
-    }
-
     //  Bỏ qua xử lý hình ảnh
     room.members.push({ accountId, joinDate: new Date(joinDate) });
     await room.save();
@@ -578,7 +573,6 @@ export const addMember = async(req, res, next) =>{
 
 
 export const ChangeRoomStatus = async (req, res) => {
-  const validStatuses = ["full", "available"];
   const { newStatus } = req.body;
 
   if (!validStatuses.includes(newStatus)) {

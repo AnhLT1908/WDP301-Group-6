@@ -410,3 +410,51 @@ export const updateContractLodgerSide = async (req, res, next) => {
     next(error);
   }
  };
+
+ export const addRelatedParty = async (req, res) => {
+  try {
+    const { contractId } = req.params;
+    const { accountId } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(contractId)) {
+      return res.status(400).json({ message: "Invalid contractId" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(accountId)) {
+      return res.status(400).json({ message: "Invalid accountId" });
+    }
+
+    const contract = await Contract.findById(contractId);
+    if (!contract) {
+      return res.status(404).json({ message: "Contract not found" });
+    }
+
+    // Initialize relatedParties if null
+    if (contract.relatedParties === null) {
+      contract.relatedParties = [];
+    }
+
+    // Check if account already exists in relatedParties
+    if (contract.relatedParties.includes(accountId)) {
+      return res.status(400).json({ message: "Account already exists in relatedParties" });
+    }
+
+    // Validate maximum limit for relatedParties (4 people)
+    if (contract.relatedParties.length >= 4) {
+      return res.status(400).json({ message: "Maximum number of relatedParties reached (4)" });
+    }
+
+    // Add account to relatedParties
+    contract.relatedParties.push(accountId);
+    await contract.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Added account to contract relatedParties",
+      contract
+    });
+  } catch (error) {
+    console.error("Error adding related party:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

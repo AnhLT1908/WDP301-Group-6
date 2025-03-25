@@ -18,5 +18,9 @@ ContractRouter.patch(
   protect,
   ContractController.updateContractLodgerSide
 );
+ContractRouter.put(
+  "/:contractId/related-parties",
+  ContractController.addRelatedParty
+);
 
 export default ContractRouter;
