@@ -74,7 +74,7 @@ export default function RoomReportList() {
           setReports([]);
         }
 
-        const creatorResponse = await axiosInstance.get(`/account/lodger-accout-list`);
+        const creatorResponse = await axiosInstance.get(`/account/lodger-account-list`);
         const creatorReportMap = creatorResponse.data.data.reduce((acc, creator) => {
           acc[creator._id] = creator.firstName + " " + creator.lastName;
           return acc;

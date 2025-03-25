@@ -34,7 +34,6 @@ const CreateLodgerAccount = () => {
     console.log("Get token: ", token);
   }, []);
 
-
   // Function to fetch rooms from API
   const fetchRooms = async () => {
     try {
@@ -105,14 +104,20 @@ const CreateLodgerAccount = () => {
 
       console.log("Sending data:", requestData);
 
-      await axios.post(
-        "http://localhost:5000/api/v1/account/create-lodger",
-        requestData
+      const response = await axios.post(
+        "http://localhost:5000/api/v1/account/create",
+        requestData, // Move requestData here as the second argument
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       setSuccess("Account created successfully!");
       setTimeout(() => setSuccess(null), 3000);
       handleDiscard();
+      setLoading(false);
     } catch (err) {
       console.error("Error creating account:", err);
       setError(
@@ -123,7 +128,6 @@ const CreateLodgerAccount = () => {
       setLoading(false);
     }
   };
-
   const handleDiscard = () => {
     setFormData({ ...initialFormData });
     setAvatar(null);
@@ -280,7 +284,6 @@ const CreateLodgerAccount = () => {
                     className="w-full border border-gray-300 p-2 rounded-md appearance-none pr-8"
                     value={formData.room}
                     onChange={handleInputChange}
-                    required
                   >
                     <option value="">Lựa chọn phòng</option>
                     {Array.isArray(rooms) ? (
