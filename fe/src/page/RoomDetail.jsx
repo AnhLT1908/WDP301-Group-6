@@ -8,12 +8,12 @@ const RoomDetail = () => {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [lodgers, setLodgers] = useState([]);
+  const [lodgerNoRoom, setLodgerNoRoom] = useState([]);
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const [bills, setBills] = useState([]);
   const [isBillPopupOpen, setIsBillPopupOpen] = useState(false);
   const [contracts, setContracts] = useState([]);
   const navigate = useNavigate();
-
   const token = localStorage.getItem("token");
 
   const api = axios.create({
@@ -35,6 +35,7 @@ const RoomDetail = () => {
             deposit: res.data.data.priceList?.deposit || 0,
           },
         };
+        console.log("Room data", roomData);
         setRoom(roomData);
         setLoading(false);
       } catch (error) {
@@ -47,14 +48,43 @@ const RoomDetail = () => {
   useEffect(() => {
     const fetchLodgers = async () => {
       try {
-        const res = await api.get("/account/lodger-accout-list");
-        setLodgers(res.data.data);
+        // Fetch all lodger accounts from the API
+        const res = await api.get("/account/lodger-account-list");
+        console.log("Lodger data:", res.data);
+
+        if (!res.data.data || !Array.isArray(res.data.data)) {
+          console.error("Invalid data format from API");
+          return;
+        }
+
+        const lodgerList = res.data.data;
+        console.log("Lodger list:", lodgerList);
+        console.log("Current roomId for filtering:", roomId);
+
+        if (lodgerList.length > 0) {
+          const lodgersWithRoom = lodgerList.filter(
+            (lodger) => lodger?.roomId?.toString() === roomId?.toString()
+          );
+          setLodgers(lodgersWithRoom);
+
+          const lodgersWithNoRoom = lodgerList.filter(
+            (lodger) =>
+              lodger.accountType === "Lodger" &&
+              (lodger.roomId === null || lodger.roomId === undefined)
+          );
+          console.log("Lodgers with no room:", lodgersWithNoRoom);
+          setLodgerNoRoom(lodgersWithNoRoom);
+        }
       } catch (error) {
         console.error("Error fetching lodger data:", error);
       }
     };
+
     fetchLodgers();
-  }, []);
+  }, [roomId]);
+
+  console.log("lodgersFilter", lodgers);
+  console.log("lodgersNoRoomFilter", lodgerNoRoom);
 
   useEffect(() => {
     const fetchContracts = async () => {
@@ -70,11 +100,9 @@ const RoomDetail = () => {
 
   const fetchBills = async () => {
     try {
-      const res = await api.get("/bill/");
-      const filteredBills = res.data.data.filter(
-        (bill) => bill.roomId === roomId
-      );
-      setBills(filteredBills);
+      const res = await api.get(`bill/roomBill/${roomId}`);
+      console.log("Bill room", res.data.data);
+      setBills(res.data.data);
       setIsBillPopupOpen(true);
     } catch (error) {
       console.error("Error fetching bills:", error);
@@ -154,7 +182,10 @@ const RoomDetail = () => {
         joinDate: joinDate,
       });
 
-      const updatedMembers = [...room.members, { accountId: accountId, joinDate: joinDate }];
+      const updatedMembers = [
+        ...room.members,
+        { accountId: accountId, joinDate: joinDate },
+      ];
       setRoom((prev) => ({
         ...prev,
         members: updatedMembers,
@@ -165,8 +196,13 @@ const RoomDetail = () => {
       setNewMemberEmail("");
       alert("Thêm thành viên thành công!");
     } catch (error) {
-      console.error("Error adding member:", error.response?.data || error.message);
-      alert("Không thể thêm thành viên! Vui lòng kiểm tra console để biết chi tiết.");
+      console.error(
+        "Error adding member:",
+        error.response?.data || error.message
+      );
+      alert(
+        "Không thể thêm thành viên! Vui lòng kiểm tra console để biết chi tiết."
+      );
     }
   };
 
@@ -207,7 +243,9 @@ const RoomDetail = () => {
         "Error updating room:",
         error.response ? error.response.data : error.message
       );
-      alert("Không thể cập nhật phòng! Vui lòng kiểm tra console để biết chi tiết.");
+      alert(
+        "Không thể cập nhật phòng! Vui lòng kiểm tra console để biết chi tiết."
+      );
     }
   };
 
@@ -253,13 +291,13 @@ const RoomDetail = () => {
           />
           <RoomInput
             label="Diện tích"
-            value={room.area}
+            value={room.area + "m2"}
             onChange={(val) => handleInputChange("area", val)}
             editable={isEditing}
           />
           <RoomInput
             label="Trạng thái"
-            value={room.status ? "Available" : "Full"}
+            value={room.status ? "Còn trống" : "Đã đầy"}
             editable={false}
           />
         </div>
@@ -270,23 +308,21 @@ const RoomDetail = () => {
         <div className="flex flex-col space-y-4">
           <RoomInput
             label="Giá phòng"
-            value={room.priceList?.roomPrice || ""}
+            value={
+              room.priceList?.roomPrice?.toLocaleString("vn-VN") + " VND" || ""
+            }
             onChange={(val) => handlePriceChange("roomPrice", val)}
             editable={isEditing}
             type="number"
           />
           <RoomInput
             label="Tiền cọc"
-            value={room.priceList?.deposit || ""}
+            value={
+              room.priceList?.deposit?.toLocaleString("vn-VN") + " VND" || ""
+            }
             onChange={(val) => handlePriceChange("deposit", val)}
             editable={isEditing}
             type="number"
-          />
-          <RoomInput
-            label="Tiền nhà tháng"
-            value={room.roomBill}
-            onChange={(val) => handleInputChange("roomBill", val)}
-            editable={isEditing}
           />
         </div>
       </div>
@@ -294,11 +330,11 @@ const RoomDetail = () => {
       <div className="bg-gray-300 rounded-lg p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4">Thông tin thành viên</h2>
         <div className="flex flex-col space-y-4">
-          {room.members.map((member, index) => (
+          {lodgers.map((member, index) => (
             <RoomInput
               key={index}
               label={`Thành viên ${index + 1}`}
-              value={getLodgerName(member.accountId)}
+              value={`${member.lastName} ${member.firstName}`}
               editable={false}
             />
           ))}

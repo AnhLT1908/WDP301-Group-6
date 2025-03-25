@@ -25,7 +25,7 @@ const ContractSchema = new mongoose.Schema(
             validate: {
                 validator: async function (value) {
                     const account = await mongoose.model('Account').findById(value);
-                    return account && account.accountType === 'Lodger' && account.isContact === true;
+                    return account && account.accountType === 'Lodger' && account.isContact === false;
                 },
                 message: 'Bên B phải là Lodger và là người đại diện (isContact: true)!'
             }

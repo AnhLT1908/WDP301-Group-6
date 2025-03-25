@@ -64,7 +64,6 @@ const RoomSchema = new Schema({
         },
         joinDate: {
             type: Date,
-            required: true
         }
     }],
     area: {

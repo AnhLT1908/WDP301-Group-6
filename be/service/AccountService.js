@@ -194,74 +194,135 @@ export const getProfile = async (req, res) => {
     }
 };
 
+// export const CreateLodgerAccount = async (req, res) => {
+//     const { firstName, lastName, email, password, dateOfBirth, identityCard, phone, room, rentalDate, leaseTerminationDate, status, accountType } = req.body;
+//     try {
+//         const checkEmailExists = await Account.findOne({ email: email });
+//         if (checkEmailExists !== null)
+//             return res.status(400).json({ message: "Email đã tồn tại" });
+
+//         const salt = await bcrypt.genSalt(10);
+//         const hashedPassword = await bcrypt.hash(password, salt);
+
+//         const roomData = await Room.findById(room);
+//         if (!roomData) {
+//             return res.status(404).json({ message: "Phòng không tồn tại" });
+//         }
+
+//         if (roomData.members?.length >= roomData.quantityMember) {
+//             return res.status(400).json({ message: "Phòng đã đầy" });
+//         }
+
+//         const accountData = await Account.create({
+//             firstName,
+//             lastName,
+//             email,
+//             password: hashedPassword,
+//             dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+//             identityCard,
+//             phone,
+//             roomId: roomData._id,
+//             rentalDate: rentalDate ? new Date(rentalDate) : null,
+//             leaseTerminationDate: leaseTerminationDate ? new Date(leaseTerminationDate) : null,
+//             status: status,
+//             accountType: accountType || "Lodger",
+//         });
+
+//         await Room.findByIdAndUpdate(
+//             roomData._id,
+//             { 
+//                 $push: { 
+//                     members: {
+//                         accountId: accountData._id,
+//                         joinDate: rentalDate ? new Date(rentalDate) : new Date()
+//                     }
+//                 },
+//                 $set: { 
+//                     status: roomData.members.length + 1 >= roomData.quantityMember ? "full" : "available"
+//                 }
+//             },
+//             { new: true, runValidators: true }
+//         );
+
+//         return res.status(201).json({
+//             message: "Tạo tài khoản thành công",
+//             data: {
+//                 firstName: accountData.firstName,
+//                 lastName: accountData.lastName,
+//                 email: accountData.email,
+//                 accountType: accountData.accountType,
+//                 room: roomData.name,
+//                 gender: accountData.gender
+//             },
+//         });
+//     } catch (error) {
+//         console.error(error);
+//         return res.status(500).json({
+//             message: "Lỗi Server Error",
+//             error: error.message
+//         });
+//     }
+// };
+
 export const CreateLodgerAccount = async (req, res) => {
-    const { firstName, lastName, email, password, dateOfBirth, identityCard, phone, room, rentalDate, leaseTerminationDate, status, accountType } = req.body;
-    try {
-        const checkEmailExists = await Account.findOne({ email: email });
-        if (checkEmailExists !== null)
-            return res.status(400).json({ message: "Email đã tồn tại" });
+  const { 
+      firstName, 
+      lastName, 
+      email, 
+      password, 
+      dateOfBirth, 
+      identityCard, 
+      phone, 
+      rentalDate, 
+      leaseTerminationDate, 
+      status, 
+      accountType 
+  } = req.body;
 
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+  try {
+      // Email existence check
+      const checkEmailExists = await Account.findOne({ email: email });
+      if (checkEmailExists) {
+          return res.status(400).json({ message: "Email đã tồn tại" });
+      }
 
-        const roomData = await Room.findById(room);
-        if (!roomData) {
-            return res.status(404).json({ message: "Phòng không tồn tại" });
-        }
+      // Password hashing
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
 
-        if (roomData.members?.length >= roomData.quantityMember) {
-            return res.status(400).json({ message: "Phòng đã đầy" });
-        }
+      // Account creation without roomId
+      const accountData = await Account.create({
+          firstName,
+          lastName,
+          email,
+          password: hashedPassword,
+          dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+          identityCard,
+          phone,
+          // Explicitly set roomId to null (though it's already the default)
+          roomId: null,
+          rentalDate: rentalDate ? new Date(rentalDate) : null,
+          leaseTerminationDate: leaseTerminationDate ? new Date(leaseTerminationDate) : null,
+          status: status || false,
+          accountType: accountType || "Lodger",
+      });
 
-        const accountData = await Account.create({
-            firstName,
-            lastName,
-            email,
-            password: hashedPassword,
-            dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-            identityCard,
-            phone,
-            roomId: roomData._id,
-            rentalDate: rentalDate ? new Date(rentalDate) : null,
-            leaseTerminationDate: leaseTerminationDate ? new Date(leaseTerminationDate) : null,
-            status: status,
-            accountType: accountType || "Lodger",
-        });
-
-        await Room.findByIdAndUpdate(
-            roomData._id,
-            { 
-                $push: { 
-                    members: {
-                        accountId: accountData._id,
-                        joinDate: rentalDate ? new Date(rentalDate) : new Date()
-                    }
-                },
-                $set: { 
-                    status: roomData.members.length + 1 >= roomData.quantityMember ? "full" : "available"
-                }
-            },
-            { new: true, runValidators: true }
-        );
-
-        return res.status(201).json({
-            message: "Tạo tài khoản thành công",
-            data: {
-                firstName: accountData.firstName,
-                lastName: accountData.lastName,
-                email: accountData.email,
-                accountType: accountData.accountType,
-                room: roomData.name,
-                gender: accountData.gender
-            },
-        });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            message: "Lỗi Server Error",
-            error: error.message
-        });
-    }
+      return res.status(201).json({
+          message: "Tạo tài khoản thành công",
+          data: {
+              firstName: accountData.firstName,
+              lastName: accountData.lastName,
+              email: accountData.email,
+              accountType: accountData.accountType,
+          },
+      });
+  } catch (error) {
+      console.error(error);
+      return res.status(500).json({
+          message: "Lỗi Server Error",
+          error: error.message
+      });
+  }
 };
 
 export const CreateManagerAccount = async (req, res) => {
