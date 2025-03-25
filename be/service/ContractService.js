@@ -458,3 +458,52 @@ export const updateContractLodgerSide = async (req, res, next) => {
     return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+export const removeRelatedParty = async (req, res) => {
+  try {
+    const { contractId, accountId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(contractId)) {
+      return res.status(400).json({ message: "Invalid contractId" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(accountId)) {
+      return res.status(400).json({ message: "Invalid accountId" });
+    }
+
+    const contract = await Contract.findById(contractId);
+    if (!contract) {
+      return res.status(404).json({ message: "Contract not found" });
+    }
+
+    // Ensure relatedParties is an array
+    if (!contract.relatedParties || !Array.isArray(contract.relatedParties)) {
+      return res.status(400).json({ message: "relatedParties is not properly initialized" });
+    }
+
+    // Check if account exists in relatedParties
+    const partyIndex = contract.relatedParties.findIndex(
+      party => party.toString() === accountId
+    );
+    
+    if (partyIndex === -1) {
+      return res.status(404).json({ message: "Account not found in relatedParties" });
+    }
+
+    // Remove account from relatedParties
+    contract.relatedParties.splice(partyIndex, 1);
+    await contract.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Account removed from contract relatedParties",
+      contract
+    });
+  } catch (error) {
+    console.error("Error removing related party:", error);
+    return res.status(500).json({ 
+      message: "Server error", 
+      error: error.message 
+    });
+  }
+};

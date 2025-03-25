@@ -26,6 +26,9 @@ const ContractController = {
   addRelatedParty: catchAsyncErrors(async (req, res, next) => {
     await ContractService.addRelatedParty(req, res, next);
   }),
+  removeRelatedParty: catchAsyncErrors(async (req, res, next) => {
+    await ContractService.removeRelatedParty(req, res, next);
+  }),
 };
 
 export default ContractController;

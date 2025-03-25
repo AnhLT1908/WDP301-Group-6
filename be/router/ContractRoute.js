@@ -22,5 +22,9 @@ ContractRouter.put(
   "/:contractId/related-parties",
   ContractController.addRelatedParty
 );
+ContractRouter.delete(
+  "/:contractId/related-parties/:accountId",
+  ContractController.removeRelatedParty
+);
 
 export default ContractRouter;

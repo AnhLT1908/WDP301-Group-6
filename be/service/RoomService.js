@@ -759,3 +759,47 @@ export const GetMemberManagerOfHouse = async(req, res) =>{
     return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 }
+
+export const removeMember = async(req, res) => {
+  try {
+    const { roomId, accountId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(roomId)) {
+      return res.status(400).json({ message: "Invalid roomId" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(accountId)) {
+      return res.status(400).json({ message: "Invalid accountId" });
+    }
+
+    const room = await Room.findById(roomId);
+    if (!room) {
+      return res.status(404).json({ message: "Không tìm thấy phòng." });
+    }
+
+    // Check if member exists in room
+    const memberIndex = room.members.findIndex(member => 
+      member.accountId.toString() === accountId
+    );
+    
+    if (memberIndex === -1) {
+      return res.status(404).json({ message: "Thành viên không tồn tại trong phòng." });
+    }
+
+    // Remove member from room
+    room.members.splice(memberIndex, 1);
+    await room.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Xóa thành viên thành công",
+      room
+    });
+  } catch (error) {
+    console.error("Error removing member:", error);
+    return res.status(500).json({ 
+      message: "Server error", 
+      error: error.message 
+    });
+  }
+};

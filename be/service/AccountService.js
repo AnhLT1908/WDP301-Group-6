@@ -80,7 +80,7 @@ export const updateLodgerAccount = async (req, res) => {
     dateOfBirth,
     identityCard,
     phone,
-    roomId, // Changed from 'room' to match frontend parameter name
+    roomId,
     rentalDate,
     leaseTerminationDate,
     gender,
@@ -90,11 +90,13 @@ export const updateLodgerAccount = async (req, res) => {
   console.log("Received update data: ", req.body);
 
   try {
+    // Find the account using a direct MongoDB operation for more control
     const accountData = await Account.findById(accountId);
     if (!accountData) {
       return res.status(404).json({ message: "Tài khoản không tồn tại" });
     }
 
+    // Email validation check
     if (email && email !== accountData.email) {
       const checkEmailExists = await Account.findOne({ email: email });
       if (checkEmailExists !== null) {
@@ -102,56 +104,60 @@ export const updateLodgerAccount = async (req, res) => {
       }
     }
 
+    // Password handling
     if (password) {
       const salt = await bcrypt.genSalt(10);
       accountData.password = await bcrypt.hash(password, salt);
     }
 
-    // Update room data if roomId has changed
-    if (roomId) {
-      const roomData = await Room.findById(roomId);
-      if (!roomData) {
-        return res.status(404).json({ message: "Phòng không tồn tại" });
-      }
-
-      // Only check room capacity if we're not already in this room
-      if (!accountData.roomId || accountData.roomId.toString() !== roomId) {
-        // Use members length directly instead of quantityMember (which doesn't exist in your schema)
-        if (roomData.members?.length >= 5) {
-          return res.status(400).json({ message: "Phòng đã đầy" });
+    // Room assignment handling - explicit check for null to handle removal
+    if (roomId !== undefined) {
+      if (roomId === null) {
+        // Explicitly set and mark as modified for null values
+        accountData.roomId = null;
+        accountData.markModified('roomId');
+      } else {
+        // Normal room assignment flow
+        const roomData = await Room.findById(roomId);
+        if (!roomData) {
+          return res.status(404).json({ message: "Phòng không tồn tại" });
         }
-      }
 
-      accountData.roomId = roomId;
+        // Only check room capacity if we're not already in this room
+        if (!accountData.roomId || accountData.roomId.toString() !== roomId) {
+          if (roomData.members?.length >= 5) {
+            return res.status(400).json({ message: "Phòng đã đầy" });
+          }
+        }
+
+        accountData.roomId = roomId;
+      }
     }
 
-    // Update account data
-    accountData.firstName = firstName || accountData.firstName;
-    accountData.lastName = lastName || accountData.lastName;
-    accountData.email = email || accountData.email;
-    accountData.dateOfBirth = dateOfBirth
-      ? new Date(dateOfBirth)
-      : accountData.dateOfBirth;
-    accountData.identityCard = identityCard || accountData.identityCard;
-    accountData.phone = phone || accountData.phone;
-    accountData.rentalDate = rentalDate
-      ? new Date(rentalDate)
-      : accountData.rentalDate;
-    accountData.leaseTerminationDate = leaseTerminationDate
-      ? new Date(leaseTerminationDate)
-      : accountData.leaseTerminationDate;
-    accountData.gender = gender || accountData.gender;
-    accountData.status = status !== undefined ? status : accountData.status;
+    // Update other account data fields
+    if (firstName !== undefined) accountData.firstName = firstName;
+    if (lastName !== undefined) accountData.lastName = lastName;
+    if (email !== undefined) accountData.email = email;
+    if (dateOfBirth !== undefined) accountData.dateOfBirth = new Date(dateOfBirth);
+    if (identityCard !== undefined) accountData.identityCard = identityCard;
+    if (phone !== undefined) accountData.phone = phone;
+    if (rentalDate !== undefined) accountData.rentalDate = new Date(rentalDate);
+    if (leaseTerminationDate !== undefined) accountData.leaseTerminationDate = new Date(leaseTerminationDate);
+    if (gender !== undefined) accountData.gender = gender;
+    if (status !== undefined) accountData.status = status;
 
-    // Save updated account
+    // Save the updated account
     await accountData.save();
+
+    // Fetch the latest data to ensure response reflects actual DB state
+    const updatedAccount = await Account.findById(accountId);
 
     return res.status(200).json({
       message: "Cập nhật tài khoản thành công",
-      data: accountData,
+      data: updatedAccount.toObject(), // Convert to plain object for consistent serialization
     });
   } catch (error) {
-    console.error(error);
+    console.error("Account update error:", error);
     return res.status(500).json({
       message: "Lỗi Server Error",
       error: error.message,

@@ -56,7 +56,10 @@ const RoomController = {
   }),
   ChangeRoom: catchAsyncErrors(async(req, res, next) =>{
     await RoomService.changeRoom(req, res, next)
-  })
+  }),
+  removeMember: catchAsyncErrors(async(req, res, next) =>{
+    await RoomService.removeMember(req, res, next)
+  }),
 };
 
 

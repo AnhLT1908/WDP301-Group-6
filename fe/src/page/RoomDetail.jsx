@@ -3,19 +3,27 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const RoomDetail = () => {
+  // ===== STATE DECLARATIONS =====
   const { roomId } = useParams();
-  const [room, setRoom] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
-  const [lodgers, setLodgers] = useState([]);
-  const [lodgerNoRoom, setLodgerNoRoom] = useState([]);
-  const [newMemberEmail, setNewMemberEmail] = useState("");
-  const [bills, setBills] = useState([]);
-  const [isBillPopupOpen, setIsBillPopupOpen] = useState(false);
-  const [contracts, setContracts] = useState([]);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
+  // Các state quản lý dữ liệu phòng và UI
+  const [room, setRoom] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Các state quản lý người thuê và thành viên
+  const [lodgers, setLodgers] = useState([]); // Danh sách người thuê trong phòng hiện tại
+  const [lodgerNoRoom, setLodgerNoRoom] = useState([]); // Danh sách người thuê chưa có phòng
+  const [newMemberEmail, setNewMemberEmail] = useState(""); // Email thành viên mới được chọn
+
+  // Các state quản lý hóa đơn và hợp đồng
+  const [bills, setBills] = useState([]);
+  const [isBillPopupOpen, setIsBillPopupOpen] = useState(false);
+  const [contracts, setContracts] = useState([]);
+
+  // ===== API SETUP =====
   const api = axios.create({
     baseURL: "http://localhost:5000/api/v1",
     headers: {
@@ -24,6 +32,9 @@ const RoomDetail = () => {
     },
   });
 
+  // ===== FETCH DATA FUNCTIONS =====
+
+  // Hàm lấy thông tin phòng
   useEffect(() => {
     const fetchRoom = async () => {
       try {
@@ -45,9 +56,10 @@ const RoomDetail = () => {
     fetchRoom();
   }, [roomId]);
 
+  // Hàm lấy danh sách người thuê
   const fetchLodgers = async () => {
     try {
-      // Fetch all lodger accounts from the API
+      // Lấy tất cả tài khoản người thuê từ API
       const res = await api.get("/account/lodger-account-list");
       console.log("Lodger data:", res.data);
 
@@ -61,13 +73,13 @@ const RoomDetail = () => {
       console.log("Current roomId for filtering:", roomId);
 
       if (lodgerList.length > 0) {
-        // Find lodgers in this room
+        // Lọc ra người thuê có trong phòng hiện tại
         const lodgersWithRoom = lodgerList.filter(
           (lodger) => lodger?.roomId?.toString() === roomId?.toString()
         );
         setLodgers(lodgersWithRoom);
 
-        // Find lodgers without a room assignment
+        // Lọc ra người thuê chưa có phòng nào
         const lodgersWithNoRoom = lodgerList.filter(
           (lodger) =>
             lodger.accountType === "Lodger" &&
@@ -81,13 +93,16 @@ const RoomDetail = () => {
     }
   };
 
+  // Gọi hàm fetchLodgers khi roomId thay đổi
   useEffect(() => {
     fetchLodgers();
   }, [roomId]);
 
+  // Logging để debug
   console.log("lodgersFilter", lodgers);
   console.log("lodgersNoRoomFilter", lodgerNoRoom);
 
+  // Hàm lấy danh sách hợp đồng
   useEffect(() => {
     const fetchContracts = async () => {
       try {
@@ -103,6 +118,7 @@ const RoomDetail = () => {
 
   console.log("Room contract", contracts);
 
+  // Hàm lấy danh sách hóa đơn và hiển thị popup
   const fetchBills = async () => {
     try {
       const res = await api.get(`bill/roomBill/${roomId}`);
@@ -114,8 +130,12 @@ const RoomDetail = () => {
     }
   };
 
+  // ===== EVENT HANDLERS =====
+
+  // Cập nhật trạng thái phòng dựa trên số lượng thành viên
   const updateRoomStatus = async (memberCount) => {
     try {
+      // Phòng còn trống nếu số lượng thành viên < 5, ngược lại là đầy
       const newStatus = memberCount < 5 ? true : false;
       await api.put(`/room/${roomId}/status`, { status: newStatus });
       setRoom((prev) => ({ ...prev, status: newStatus === true }));
@@ -124,10 +144,12 @@ const RoomDetail = () => {
     }
   };
 
+  // Xử lý thay đổi input thông tin phòng
   const handleInputChange = (field, value) => {
     setRoom((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Xử lý thay đổi giá phòng và tiền cọc
   const handlePriceChange = (field, value) => {
     setRoom((prev) => ({
       ...prev,
@@ -135,12 +157,25 @@ const RoomDetail = () => {
     }));
   };
 
+  // ===== MEMBER MANAGEMENT =====
+
+  /**
+   * Xử lý thêm thành viên vào phòng
+   * Quy trình:
+   * 1. Kiểm tra tính hợp lệ của dữ liệu đầu vào
+   * 2. Thêm thành viên vào phòng
+   * 3. Cập nhật roomId trong thông tin tài khoản thành viên
+   * 4. Thêm thành viên vào relatedParties của hợp đồng (nếu có)
+   * 5. Cập nhật trạng thái phòng và làm mới UI
+   */
   const handleAddMember = async () => {
+    // Kiểm tra email thành viên đã được chọn chưa
     if (!newMemberEmail) {
       alert("Vui lòng nhập email thành viên!");
       return;
     }
 
+    // Tìm kiếm thành viên trong danh sách người thuê chưa có phòng
     const member = lodgerNoRoom.find(
       (lodger) => lodger.email === newMemberEmail
     );
@@ -152,19 +187,15 @@ const RoomDetail = () => {
     }
 
     const accountId = member._id;
-    console.log("+++++++Checkcontract", contracts);
-    console.log("+++++++Checkroom", room);
 
-    // Get the contract for this room
+    // Tìm hợp đồng liên quan đến phòng này
     const roomContract = contracts.find(
       (contract) => contract.roomId._id.toString() === room._id.toString()
     );
 
-    console.log("============roomContract", roomContract);
-
-    // Check if member exists in any contract roles
+    // Nếu có hợp đồng, kiểm tra các điều kiện ràng buộc
     if (roomContract) {
-      // Handle the case where benA and benB are objects with _id properties
+      // Xử lý trường hợp benA và benB là đối tượng chứa thuộc tính _id
       const benAId =
         typeof roomContract.benA === "object"
           ? roomContract.benA._id
@@ -174,9 +205,10 @@ const RoomDetail = () => {
           ? roomContract.benB._id
           : roomContract.benB;
 
+      // Tạo danh sách các thành viên đã có trong hợp đồng
       const contractMembers = [benAId.toString(), benBId.toString()];
 
-      // Safely add relatedParties if they exist
+      // An toàn thêm các bên liên quan nếu tồn tại
       if (
         roomContract.relatedParties &&
         Array.isArray(roomContract.relatedParties)
@@ -188,14 +220,13 @@ const RoomDetail = () => {
         );
       }
 
+      // Kiểm tra thành viên đã có trong hợp đồng chưa
       if (contractMembers.includes(accountId.toString())) {
-        alert(
-          "Thành viên này đã có trong hợp đồng của phòng (benA, benB hoặc relatedParties)!"
-        );
+        alert("Thành viên này đã có trong hợp đồng của phòng!");
         return;
       }
 
-      // Check relatedParties limit (4 people maximum) - only if relatedParties exists
+      // Kiểm tra giới hạn relatedParties (tối đa 4 người)
       if (
         roomContract.relatedParties &&
         Array.isArray(roomContract.relatedParties) &&
@@ -206,7 +237,7 @@ const RoomDetail = () => {
       }
     }
 
-    // Check room members limit (5 people maximum)
+    // Kiểm tra giới hạn thành viên phòng (tối đa 5 người)
     const currentMemberCount = room.members.length;
     if (currentMemberCount >= 5) {
       alert("Phòng đã đạt tối đa 5 thành viên!");
@@ -216,13 +247,13 @@ const RoomDetail = () => {
     const joinDate = new Date().toISOString();
 
     try {
-      // Step 1: Add member to the room
+      // Bước 1: Thêm thành viên vào phòng
       const roomResponse = await api.post(`/room/${roomId}/member`, {
         accountId: accountId,
         joinDate: joinDate,
       });
 
-      // Update local state for room members
+      // Cập nhật state local cho thành viên phòng
       const updatedMembers = [
         ...room.members,
         { accountId: accountId, joinDate: joinDate },
@@ -233,12 +264,11 @@ const RoomDetail = () => {
         members: updatedMembers,
       }));
 
-      // Step 2: Update the account with the roomId
+      // Bước 2: Cập nhật roomId trong thông tin tài khoản người thuê
       try {
         await api.put(`/account/updateLodgerAccount/${accountId}`, {
           roomId: roomId,
           rentalDate: joinDate,
-          // Only update necessary fields to avoid overwriting other account data
         });
 
         console.log(`Updated account ${accountId} with roomId ${roomId}`);
@@ -247,16 +277,16 @@ const RoomDetail = () => {
           "Error updating account with roomId:",
           accountError.response?.data || accountError.message
         );
-        // Continue execution as we may need to rollback later if subsequent steps fail
+        // Tiếp tục thực hiện mặc dù có lỗi, sẽ xử lý rollback nếu cần
       }
 
-      // Step 3: If there's a contract for this room, add the member to relatedParties
+      // Bước 3: Nếu có hợp đồng cho phòng này, thêm thành viên vào relatedParties
       if (roomContract) {
         try {
-          // First, ensure relatedParties is initialized if null
+          // Đầu tiên, khởi tạo relatedParties nếu là null
           if (roomContract.relatedParties === null) {
             try {
-              // Use a general update endpoint instead
+              // Sử dụng endpoint cập nhật chung
               await api.put(`/contract/${roomContract._id}`, {
                 relatedParties: [],
               });
@@ -265,7 +295,7 @@ const RoomDetail = () => {
                 "Initialized empty relatedParties array for contract"
               );
 
-              // Update local contract state
+              // Cập nhật state contract local
               setContracts((prevContracts) =>
                 prevContracts.map((contract) => {
                   if (contract._id === roomContract._id) {
@@ -278,23 +308,23 @@ const RoomDetail = () => {
                 })
               );
 
-              // Update roomContract in local scope
+              // Cập nhật roomContract trong scope hiện tại
               roomContract.relatedParties = [];
             } catch (initError) {
               console.error("Error initializing relatedParties:", initError);
-              // Continue with the attempt to add the member anyway
+              // Vẫn tiếp tục thử thêm thành viên
             }
           }
 
-          // Log the exact data we're sending to debug
+          // Log dữ liệu gửi đi để debug
           console.log("Contract ID:", roomContract._id);
           console.log("Account ID to add:", accountId);
           console.log("Account ID type:", typeof accountId);
 
-          // Ensure accountId is a valid string format for ObjectId
+          // Đảm bảo accountId là chuỗi hợp lệ cho ObjectId
           const accountIdString = accountId.toString();
 
-          // Validate ObjectId format before sending to API
+          // Kiểm tra định dạng ObjectId trước khi gửi đến API
           if (!/^[0-9a-fA-F]{24}$/.test(accountIdString)) {
             console.error(
               "Invalid ObjectId format for accountId:",
@@ -303,7 +333,7 @@ const RoomDetail = () => {
             throw new Error("Invalid accountId format");
           }
 
-          // Now add member to contract relatedParties with validated ID
+          // Thêm thành viên vào relatedParties của hợp đồng với ID đã xác thực
           const response = await api.put(
             `/contract/${roomContract._id}/related-parties`,
             {
@@ -313,11 +343,11 @@ const RoomDetail = () => {
 
           console.log("Contract update response:", response.data);
 
-          // Update local contract state only if API call succeeds
+          // Cập nhật state contract local khi API call thành công
           setContracts((prevContracts) =>
             prevContracts.map((contract) => {
               if (contract._id === roomContract._id) {
-                // Use the safe version of relatedParties
+                // Sử dụng phiên bản an toàn của relatedParties
                 const currentRelatedParties = contract.relatedParties || [];
                 return {
                   ...contract,
@@ -337,18 +367,19 @@ const RoomDetail = () => {
             contractError.response?.data || contractError.message
           );
 
-          // Continue execution despite contract update failure
-          // The member is still added to the room, which is the primary operation
+          // Tiếp tục thực hiện mặc dù việc cập nhật hợp đồng thất bại
+          // Thành viên vẫn được thêm vào phòng, đây là hoạt động chính
         }
       }
 
-      // Step 4: Update room status based on member count
+      // Bước 4: Cập nhật trạng thái phòng dựa trên số lượng
+
       await updateRoomStatus(updatedMembers.length);
 
-      // Step 5: Reset input and notify success
+      // Bước 5: Reset input và thông báo thành công
       setNewMemberEmail("");
 
-      // Step 6: Refresh lodger lists to update UI
+      // Bước 6: Làm mới danh sách người thuê để cập nhật UI
       fetchLodgers();
 
       alert("Thêm thành viên thành công!");
@@ -358,13 +389,13 @@ const RoomDetail = () => {
         error.response?.data || error.message
       );
 
-      // Attempt to rollback changes if the initial room update succeeds but subsequent updates fail
+      // Thử rollback các thay đổi nếu việc cập nhật phòng thành công nhưng các bước sau thất bại
       try {
-        // Only attempt rollback if the room update succeeded
+        // Chỉ thử rollback nếu cập nhật phòng thành công
         if (error.response?.status !== 400 && error.response?.status !== 404) {
           console.log("Attempting to rollback changes...");
-          // Rollback could involve removing the member from the room
-          // This would need a new endpoint or could be handled server-side
+          // Rollback có thể gồm việc xóa thành viên khỏi phòng
+          // Cần một endpoint mới hoặc xử lý server-side
         }
       } catch (rollbackError) {
         console.error("Error during rollback:", rollbackError);
@@ -376,14 +407,124 @@ const RoomDetail = () => {
     }
   };
 
+  /**
+   * Xử lý xóa thành viên khỏi phòng
+   */
+
+  const handleRemoveMember = async (accountId) => {
+    // Hiển thị dialog xác nhận
+    if (
+      !window.confirm("Bạn có chắc chắn muốn xóa thành viên này khỏi phòng?")
+    ) {
+      return;
+    }
+
+    try {
+      // Step 1: Remove member from room
+      await api.delete(`/room/${roomId}/member/${accountId}`);
+
+      // Update local room state
+      setRoom((prev) => ({
+        ...prev,
+        members: prev.members.filter(
+          (member) => member.accountId !== accountId
+        ),
+      }));
+
+      // Step 2: Update account by setting roomId to null
+      try {
+        await api.put(`/account/updateLodgerAccount/${accountId}`, {
+          roomId: null,
+          // Reset rental date or set as needed
+        });
+        console.log(
+          `Updated account ${accountId} by removing roomId assignment`
+        );
+      } catch (accountError) {
+        console.error(
+          "Error updating account roomId:",
+          accountError.response?.data || accountError.message
+        );
+      }
+
+      // Step 3: If there's a contract for this room, remove member from relatedParties
+      const roomContract = contracts.find(
+        (contract) => contract.roomId._id.toString() === room._id.toString()
+      );
+
+      if (
+        roomContract &&
+        roomContract.relatedParties &&
+        Array.isArray(roomContract.relatedParties)
+      ) {
+        try {
+          // Remove member from contract relatedParties
+          await api.delete(
+            `/contract/${roomContract._id}/related-parties/${accountId}`
+          );
+
+          // Update local contract state
+          setContracts((prevContracts) =>
+            prevContracts.map((contract) => {
+              if (contract._id === roomContract._id) {
+                return {
+                  ...contract,
+                  relatedParties: contract.relatedParties.filter(
+                    (id) => id.toString() !== accountId.toString()
+                  ),
+                };
+              }
+              return contract;
+            })
+          );
+
+          console.log(
+            `Removed account ${accountId} from contract ${roomContract._id} related parties`
+          );
+        } catch (contractError) {
+          console.error(
+            "Error removing member from contract relatedParties:",
+            contractError.response?.data || contractError.message
+          );
+        }
+      }
+
+      // Step 4: Update room status based on new member count
+      const updatedMembers = room.members.filter(
+        (member) => member.accountId !== accountId
+      );
+      await updateRoomStatus(updatedMembers.length);
+
+      // Step 5: Refresh lodger lists to update UI
+      fetchLodgers();
+
+      alert("Xóa thành viên thành công!");
+    } catch (error) {
+      console.error(
+        "Error removing member:",
+        error.response?.data || error.message
+      );
+      alert(
+        "Không thể xóa thành viên! Vui lòng kiểm tra console để biết chi tiết."
+      );
+    }
+  };
+
+  /**
+   * Xử lý cập nhật thông tin phòng
+   * - Kiểm tra tính hợp lệ của giá phòng
+   * - Gửi thông tin cập nhật đến API
+   * - Cập nhật state local với dữ liệu từ server
+   */
   const handleUpdateRoom = async () => {
     try {
+      // Kiểm tra giá phòng phải lớn hơn 0
       if (!room.priceList?.roomPrice || Number(room.priceList.roomPrice) <= 0) {
         alert("Giá phòng phải lớn hơn 0!");
         return;
       }
 
-      // Chỉ gửi các field được phép cập nhật (loại bỏ status và members)
+      // Chuẩn bị dữ liệu cập nhật (chỉ gửi các trường được phép)
       const updatedRoom = {
         name: room.name,
         floor: room.floor,
@@ -397,15 +538,20 @@ const RoomDetail = () => {
 
       console.log("Dữ liệu gửi đi:", updatedRoom);
 
+      // Gửi request cập nhật
       const response = await api.put(`/room/${roomId}`, updatedRoom);
+
+      // Cập nhật state local với dữ liệu trả về từ server
       setRoom((prev) => ({
         ...prev,
-        ...response.data.room, // Cập nhật lại state với dữ liệu từ server
+        ...response.data.room,
         priceList: {
           roomPrice: response.data.room.priceList.roomPrice,
           deposit: response.data.room.priceList.deposit || 0,
         },
       }));
+
+      // Tắt chế độ chỉnh sửa và thông báo thành công
       setIsEditing(false);
       alert("Cập nhật phòng thành công!");
     } catch (error) {
@@ -419,20 +565,33 @@ const RoomDetail = () => {
     }
   };
 
+  /**
+   * Lấy tên người thuê từ ID tài khoản
+   */
   const getLodgerName = (accountId) => {
     const lodger = lodgers.find((l) => l._id === accountId);
     return lodger ? `${lodger.firstName} ${lodger.lastName}` : "Không tìm thấy";
   };
 
+  /**
+   * Chuyển hướng đến trang tạo hóa đơn cho phòng
+   */
   const handleCreateInvoice = (roomId) => {
     navigate(`/manager/invoice/new-invoice/${roomId}`);
   };
 
+  // ===== RENDERING LOGIC =====
+
+  // Hiển thị trạng thái loading khi đang tải dữ liệu
   if (loading) return <p>Loading...</p>;
+
+  // Hiển thị thông báo lỗi nếu không tìm thấy thông tin phòng
   if (!room) return <p>Không tìm thấy thông tin phòng.</p>;
 
+  // UI chính của trang chi tiết phòng
   return (
     <div className="container mx-auto p-4 flex flex-col min-h-screen">
+      {/* Nút quay lại */}
       <div className="mb-8">
         <div className="w-52">
           <button
@@ -444,6 +603,7 @@ const RoomDetail = () => {
         </div>
       </div>
 
+      {/* Phần thông tin tổng quát về phòng */}
       <div className="bg-gray-300 rounded-lg p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4">Thông tin tổng quát</h2>
         <div className="flex flex-col space-y-4">
@@ -473,6 +633,7 @@ const RoomDetail = () => {
         </div>
       </div>
 
+      {/* Phần thông tin tài chính */}
       <div className="bg-gray-300 rounded-lg p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4">Thông tin tài chính</h2>
         <div className="flex flex-col space-y-4">
@@ -497,17 +658,32 @@ const RoomDetail = () => {
         </div>
       </div>
 
+      {/* Phần thông tin thành viên */}
       <div className="bg-gray-300 rounded-lg p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4">Thông tin thành viên</h2>
         <div className="flex flex-col space-y-4">
+          {/* Danh sách thành viên hiện tại với nút xóa */}
           {lodgers.map((member, index) => (
-            <RoomInput
-              key={index}
-              label={`Thành viên ${index + 1}`}
-              value={`${member.lastName} ${member.firstName}`}
-              editable={false}
-            />
+            <div key={index} className="flex items-center justify-between">
+              <div className="flex-grow">
+                <RoomInput
+                  label={`Thành viên ${index + 1}`}
+                  value={`${member.lastName} ${member.firstName}`}
+                  editable={false}
+                />
+              </div>
+              {isEditing && (
+                <button
+                  onClick={() => handleRemoveMember(member._id)}
+                  className="ml-4 bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600 transition-colors"
+                >
+                  Xóa
+                </button>
+              )}
+            </div>
           ))}
+
+          {/* UI thêm thành viên mới */}
           {isEditing && (
             <>
               <div className="flex flex-col space-y-4">
@@ -536,7 +712,9 @@ const RoomDetail = () => {
         </div>
       </div>
 
+      {/* Các nút tác vụ chính */}
       <div className="mt-auto grid grid-cols-3 gap-4">
+        {/* Nút lưu/chỉnh sửa phòng */}
         {isEditing ? (
           <button
             onClick={handleUpdateRoom}
@@ -552,15 +730,21 @@ const RoomDetail = () => {
             Edit
           </button>
         )}
+
+        {/* Nút xem hóa đơn phòng */}
         <button
           className="bg-green-500 text-white px-6 py-3 rounded w-full"
           onClick={fetchBills}
         >
           Xem hóa đơn phòng
         </button>
+
+        {/* Nút xem báo cáo phòng */}
         <button className="bg-green-500 text-white px-6 py-3 rounded w-full">
           Xem báo cáo phòng
         </button>
+
+        {/* Nút tạo hóa đơn phòng */}
         <button
           onClick={() => handleCreateInvoice(roomId)}
           className="bg-green-500 text-white px-6 py-3 rounded w-full"
@@ -569,6 +753,7 @@ const RoomDetail = () => {
         </button>
       </div>
 
+      {/* Popup hiển thị danh sách hóa đơn */}
       {isBillPopupOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg w-96">
@@ -603,6 +788,9 @@ const RoomDetail = () => {
   );
 };
 
+/**
+ * Component hiển thị một trường input hoặc text tùy thuộc vào trạng thái có thể chỉnh sửa
+ */
 const RoomInput = ({ label, value, onChange, editable, type = "text" }) => {
   return (
     <div className="flex justify-between">
