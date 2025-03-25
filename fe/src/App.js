@@ -37,6 +37,7 @@ import ReportList from "./page/RoomReportList.jsx";
 import LodgerInvoiceList from "./page/LodgerInvoiceList.jsx";
 import LodgerInvoiceDetail from "./page/LodgerInvoiceDetail.jsx";
 import LodgerLayout from "./components/layout/LodgerLayout.jsx";
+import ManagerDashboard from "./page/ManagerDashboard.jsx";
 
 function App() {
   const [accountType, setAccountType] = useState(
@@ -151,6 +152,14 @@ function App() {
 
         {accountType === "Manager" ? (
           <>
+            <Route
+              path="/manager"
+              element={
+                <ManagerLayout>
+                  <ManagerDashboard />
+                </ManagerLayout>
+              }
+            />
             <Route
               path="/manager/invoice-list"
               element={
