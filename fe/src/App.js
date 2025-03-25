@@ -29,6 +29,7 @@ import RoomList from "./page/RoomList.jsx";
 import LodgerInvoice from "./page/LodgerInvoice.jsx";
 import UpdateLodgerAccount from "./page/UpdateLodgerAccount.jsx";
 import TransactionList from "./page/TransactionList.jsx";
+import InvoiceLodgerDetail from "./page/InvoiceLodgerDetail.jsx";
 //import NotFound from "./page/NotFound.jsx";
 import Dashboard from "./page/Dashboard.jsx";
 import ManagerList from "./page/ManagerList.jsx";
@@ -77,6 +78,8 @@ function App() {
               }
             />
             <Route path="/lodger-invoice/:billId" element={<LodgerInvoice />} />
+            {/* <Route path="/lodger-invoice/:billId" element={<InvoiceLodgerDetail />} /> */}
+            
           </>
         ) : (
           <Route path="/home" element={<Navigate to="/login" replace />} />

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import Card from "../components/ui/Card";
@@ -9,10 +9,23 @@ import carousel_img_1 from "../../src/assets/images/carousel_images/carousel_img
 import carousel_img_2 from "../../src/assets/images/carousel_images/carousel_img_2.jpg";
 import carousel_img_3 from "../../src/assets/images/carousel_images/carousel_img_3.jpg";
 import news1 from "../../src/assets/images/news1.jpg";
+import axios from "axios";
 
 const HomePage = () => {
   const carouselImages = [carousel_img_1, carousel_img_2, carousel_img_3];
-  
+  const roomId = JSON.parse(localStorage.getItem("user")).roomId;
+  const [room, setRoom] = useState("");
+
+  useEffect(() => {
+    const fetchRoomData = async() => {
+      try {
+        const response = await axios.get("")
+      } catch (error) {
+        
+      }
+    }
+  }, [roomId])
+
   const newsItems = [
     {
       title: "Nhà trọ nâng cấp xây thêm khu vực",
@@ -48,12 +61,12 @@ const HomePage = () => {
     },
     {
       title: "Tin tức",
-      icon: <AlignJustify  size={70} className="relative text-white" />,
+      icon: <AlignJustify size={70} className="relative text-white" />,
     },
     {
       title: "Báo cáo",
       icon: <FileWarning size={70} className="relative text-white" />,
-    }
+    },
   ];
 
   return (
@@ -84,7 +97,10 @@ const HomePage = () => {
                   key={index}
                   title={card.title}
                   actions={
-                    <Button showIcon={true} className="px-4 py-2 bg-green-500 text-white rounded">
+                    <Button
+                      showIcon={true}
+                      className="px-4 py-2 bg-green-500 text-white rounded"
+                    >
                       View More
                     </Button>
                   }
