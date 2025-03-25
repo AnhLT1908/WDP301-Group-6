@@ -518,53 +518,81 @@ const RoomDetail = () => {
    */
   const handleUpdateRoom = async () => {
     try {
-      // Kiểm tra giá phòng phải lớn hơn 0
-      if (!room.priceList?.roomPrice || Number(room.priceList.roomPrice) <= 0) {
-        alert("Giá phòng phải lớn hơn 0!");
+      // Validation dữ liệu nhập vào - Kiểm tra tên phòng
+      if (!room.name || room.name.trim() === "") {
+        alert("Tên phòng không được để trống!");
         return;
       }
-
-      // Chuẩn bị dữ liệu cập nhật (chỉ gửi các trường được phép)
+  
+      // Validation giá phòng - Đảm bảo là số dương
+      const roomPrice = Number(room.priceList?.roomPrice);
+      if (isNaN(roomPrice) || roomPrice <= 0) {
+        alert("Giá phòng phải là số dương!");
+        return;
+      }
+  
+      // Validation tiền cọc - Đảm bảo là số không âm
+      const deposit = Number(room.priceList?.deposit || 0);
+      if (isNaN(deposit) || deposit < 0) {
+        alert("Tiền cọc phải là số không âm!");
+        return;
+      }
+  
+      // Chuẩn bị dữ liệu cập nhật - Chỉ gửi những trường được phép thay đổi
+      // Các trường floor và area hiện đã được đặt là read-only trong UI
       const updatedRoom = {
-        name: room.name,
-        floor: room.floor,
-        area: room.area,
+        name: room.name.trim(),
         priceList: {
-          roomPrice: Number(room.priceList.roomPrice),
-          deposit: Number(room.priceList.deposit || 0),
+          roomPrice: roomPrice,
+          deposit: deposit,
         },
-        roomBill: room.roomBill,
       };
-
-      console.log("Dữ liệu gửi đi:", updatedRoom);
-
-      // Gửi request cập nhật
+  
+      console.log("Sending room update:", updatedRoom);
+  
+      // Gửi request cập nhật đến API
       const response = await api.put(`/room/${roomId}`, updatedRoom);
-
-      // Cập nhật state local với dữ liệu trả về từ server
+  
+      // Validate kết quả trả về từ API
+      if (!response.data || !response.data.room) {
+        throw new Error("Invalid response from server");
+      }
+  
+      // Cập nhật state local từ dữ liệu server trả về
       setRoom((prev) => ({
         ...prev,
-        ...response.data.room,
+        name: response.data.room.name,
         priceList: {
-          roomPrice: response.data.room.priceList.roomPrice,
-          deposit: response.data.room.priceList.deposit || 0,
+          roomPrice: response.data.room.priceList?.roomPrice || 0,
+          deposit: response.data.room.priceList?.deposit || 0,
         },
+        // Giữ lại các trường khác không được cập nhật
       }));
-
-      // Tắt chế độ chỉnh sửa và thông báo thành công
+  
+      // Thoát khỏi chế độ chỉnh sửa và hiển thị thông báo thành công
       setIsEditing(false);
       alert("Cập nhật phòng thành công!");
     } catch (error) {
-      console.error(
-        "Error updating room:",
-        error.response ? error.response.data : error.message
-      );
-      alert(
-        "Không thể cập nhật phòng! Vui lòng kiểm tra console để biết chi tiết."
-      );
+      // Xử lý lỗi nâng cao với logging chi tiết
+      console.error("Room update failed:", error);
+  
+      // Trích xuất thông điệp lỗi từ response API hoặc message lỗi
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Unknown error occurred";
+  
+      // Log thông tin chi tiết về lỗi để debug
+      console.error("Error details:", {
+        status: error.response?.status,
+        message: errorMessage,
+        data: error.response?.data,
+      });
+  
+      // Hiển thị thông báo lỗi cho người dùng
+      alert(`Không thể cập nhật phòng: ${errorMessage}`);
     }
   };
-
   /**
    * Lấy tên người thuê từ ID tài khoản
    */
@@ -604,6 +632,7 @@ const RoomDetail = () => {
       </div>
 
       {/* Phần thông tin tổng quát về phòng */}
+      {/* Phần thông tin tổng quát về phòng */}
       <div className="bg-gray-300 rounded-lg p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4">Thông tin tổng quát</h2>
         <div className="flex flex-col space-y-4">
@@ -612,18 +641,19 @@ const RoomDetail = () => {
             value={room.name}
             onChange={(val) => handleInputChange("name", val)}
             editable={isEditing}
+            required={true}
           />
           <RoomInput
             label="Tầng nhà"
             value={room.floor}
             onChange={(val) => handleInputChange("floor", val)}
-            editable={isEditing}
+            editable={false} 
           />
           <RoomInput
             label="Diện tích"
-            value={room.area + "m2"}
+            value={`${room.area} m²`}
             onChange={(val) => handleInputChange("area", val)}
-            editable={isEditing}
+            editable={false} 
           />
           <RoomInput
             label="Trạng thái"
@@ -639,21 +669,22 @@ const RoomDetail = () => {
         <div className="flex flex-col space-y-4">
           <RoomInput
             label="Giá phòng"
-            value={
-              room.priceList?.roomPrice?.toLocaleString("vn-VN") + " VND" || ""
-            }
+            value={room.priceList?.roomPrice || ""}
             onChange={(val) => handlePriceChange("roomPrice", val)}
             editable={isEditing}
             type="number"
+            min="1"
+            required={true}
+            suffix="VND"
           />
           <RoomInput
             label="Tiền cọc"
-            value={
-              room.priceList?.deposit?.toLocaleString("vn-VN") + " VND" || ""
-            }
+            value={room.priceList?.deposit || ""}
             onChange={(val) => handlePriceChange("deposit", val)}
             editable={isEditing}
             type="number"
+            min="0"
+            suffix="VND"
           />
         </div>
       </div>
@@ -791,19 +822,38 @@ const RoomDetail = () => {
 /**
  * Component hiển thị một trường input hoặc text tùy thuộc vào trạng thái có thể chỉnh sửa
  */
-const RoomInput = ({ label, value, onChange, editable, type = "text" }) => {
+const RoomInput = ({
+  label,
+  value,
+  onChange,
+  editable,
+  type = "text",
+  required = false,
+  min,
+  suffix,
+}) => {
   return (
-    <div className="flex justify-between">
-      <label className="w-1/4">{label}</label>
+    <div className="flex justify-between items-center">
+      <label className="w-1/4 font-medium">
+        {label}
+      </label>
       {editable ? (
-        <input
-          type={type}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="border rounded p-2 w-3/4"
-        />
+        <div className="w-3/4 flex items-center">
+          <input
+            type={type}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="border rounded p-2 flex-grow"
+            required={required}
+            min={min}
+          />
+          {suffix && <span className="ml-2">{suffix}</span>}
+        </div>
       ) : (
-        <span>{value}</span>
+        <span>
+          {value}
+          {suffix && ` ${suffix}`}
+        </span>
       )}
     </div>
   );
