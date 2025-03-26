@@ -78,7 +78,7 @@ export default function UserProfile() {
         setHouses(houseMap);
 
         const accountResponse = await axiosInstance.get(
-          "/account/lodger-accout-list"
+          "/account/lodger-account-list"
         );
         const accountMap = accountResponse.data.data.reduce((acc, account) => {
           acc[account._id] = `${account.firstName} ${account.lastName}`;
