@@ -73,7 +73,7 @@ const ForgotPassword = () => {
             className="w-2/3 bg-green-500 text-white p-3 rounded-md"
             disabled={loading}
           >
-            {loading ? "Submitting..." : "Submit"}
+            {loading ? "Đang gửi..." : "Tiếp tục"}
           </button>
         </form>
       </div>
