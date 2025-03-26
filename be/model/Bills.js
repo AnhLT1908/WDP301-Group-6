@@ -1,21 +1,24 @@
 import mongoose from 'mongoose';
 
 const priceItemSchema = new mongoose.Schema({
-    name: {  
+    name: {
         type: String,
-        required: true
+        required: false, // Không bắt buộc
+        default: "unknown"
     },
     price: {
         type: Number,
-        required: true
+        required: false, // Không bắt buộc
+        default: 0
     },
-    usage: {  
+    usage: {
         type: Number,
         default: 0
     },
     total: {
         type: Number,
-        required: true
+        required: false, // Không bắt buộc
+        default: 0
     }
 });
 
@@ -64,7 +67,7 @@ const BillSchema = new mongoose.Schema({
     },
     transactionId: {
         type: String,
-        required: true,
+        // required: true,
         unique: true,
     },
 },  

@@ -43,7 +43,7 @@ const LodgerAccountList = () => {
     const fetchMemberOfHouse = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/v1/account/house/${houseManageId}`,
+          `http://localhost:5000/api/v1/account/lodgerAccount/${houseManageId}`,
           {
             params: {
               page: currentPage,

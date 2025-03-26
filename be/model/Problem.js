@@ -8,9 +8,7 @@ const ProblemSchema = new mongoose.Schema({
         required: true
     },
     status:{
-        type: String,
-        enum:["none", "doing", "pending", "done"],
-        default: "none"
+        type: Boolean
     },
     title: {
         type: String,

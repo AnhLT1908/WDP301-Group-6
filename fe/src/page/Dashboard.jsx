@@ -88,7 +88,11 @@ const Dashboard = () => {
 
     const fetchProblemStats = async () => {
       try {
+<<<<<<< HEAD
         const response = await axios.get('http://localhost:5000/api/v1/static/problem', {
+=======
+        const response = await axios.get('http://localhost:5000/api/v1/static/problems', {
+>>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },

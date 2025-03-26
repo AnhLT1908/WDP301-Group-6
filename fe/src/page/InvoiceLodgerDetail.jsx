@@ -1,19 +1,8 @@
-<<<<<<< HEAD
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import axios from "axios";
-
-export default function InvoiceDetail() {
-  const { billId } = useParams(); 
-  const [bill, setBill] = useState(null);
-  const [house, setHouse] = useState([]);
-  const [room, setRoom] = useState([]);
-=======
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 
-export default function InvoiceDetail() {
+export default function InvoiceLodgerDetail() {
   const { billId } = useParams();
   const [bill, setBill] = useState(null);
   const [isPaid, setIsPaid] = useState(false); // Changed from isActive to isPaid for clarity
@@ -25,7 +14,6 @@ export default function InvoiceDetail() {
   const [room, setRoom] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
->>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -51,12 +39,6 @@ export default function InvoiceDetail() {
   useEffect(() => {
     const fetchBill = async () => {
       try {
-<<<<<<< HEAD
-        const res = await axios.get(`http://localhost:5000/api/v1/bill/bill-detail/${billId}`);
-        setBill(res.data.data);
-      } catch (error) {
-        console.error("Error fetching house data:", error);
-=======
         setIsLoading(true);
         const res = await axios.get(
           `http://localhost:5000/api/v1/bill/bill-detail/${billId}`
@@ -77,52 +59,11 @@ export default function InvoiceDetail() {
         console.error("Error fetching bill data:", error);
       } finally {
         setIsLoading(false);
->>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
       }
     };
     fetchBill();
   }, [billId]);
 
-<<<<<<< HEAD
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const {houseRes, roomRes} = await Promise.all([
-                    axios.get(`http://localhost:5000/api/v1/house/`),
-                    axios.get(`http://localhost:5000/api/v1/room/`)
-                ])
-
-                const houseMap = houseRes.data.data.reduce((acc, house) => {
-                    acc[house._id] = house.name;
-                    return acc;
-                  }, {});
-          
-                  const roomMap = roomRes.data.data.reduce((acc, room) => {
-                    acc[room._id] = room.roomNumber;
-                    return acc;
-                  }, {});
-          
-                    setHouse(houseMap);
-                    setRoom(roomMap);
-            }catch (error) {
-                console.error("Error fetching house data:", error);
-            }
-        }
-
-        fetchData();
-    }, [])
-
-  if (!bill) {
-    return <p className="text-center text-gray-500">Loading invocie details...</p>;
-  }
-
-  return (
-    <div className="p-8">
-      <h1 className="text-yellow-500 text-3xl font-bold mb-6">Invoice Detail</h1>
-
-      <div className="bg-white shadow-lg rounded-lg p-6">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4">{bill.note}</h2>
-=======
   const handleUpdateBill = async () => {
     try {
       setIsLoading(true);
@@ -187,7 +128,6 @@ export default function InvoiceDetail() {
     <div className="p-8 ">
       <div>
         <p className="text-yellow-500 font-bold text-3xl">Chi tiết hóa đơn</p>
->>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
       </div>
       <div className="grid grid-cols-2 gap-6">
         <div className="flex flex-col">
@@ -204,49 +144,6 @@ export default function InvoiceDetail() {
             </div>
           </div>
 
-<<<<<<< HEAD
-      {/* House Information */}
-      <div className="bg-white shadow-lg rounded-lg p-6 mt-4">
-        <h2 className="text-xl font-bold mb-4">House Information</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <p><strong>House Name:</strong> {house[bill.houseId] || "N/A"}</p>
-          <p><strong>Room:</strong> {room[bill.roomId] || "N/A"}</p>
-        </div>
-        <button className="mt-4 bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">
-          ✏️ Edit
-        </button>
-      </div>
-
-      {/* Price Information */}
-      <div className="bg-white shadow-lg rounded-lg p-6 mt-4">
-        <h2 className="text-xl font-bold mb-4">Price Information</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <p><strong>Room Price:</strong> {bill.roomPrice} VND</p>
-          <p><strong>Unit Price:</strong> {bill.priceList.totalUnit} VND</p>
-        </div>
-        <button className="mt-4 bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">
-          ✏️ Edit
-        </button>
-      </div>
-
-      {/* Total Price */}
-      <div className="bg-white shadow-lg rounded-lg p-6 mt-4">
-        <h2 className="text-xl font-bold mb-4">Total Price</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <p><strong>Total Price:</strong> {bill.total} VND</p>
-          <p><strong>Status:</strong> {bill.isPaid ? "Paid" : "Unpaid"} VND</p>
-          <p><strong>Payment Method:</strong> {bill.paymentMethod} VND</p>
-        </div>
-      </div>
-
-      {/* QR Code
-      <div className="bg-white shadow-lg rounded-lg p-6 mt-4"> 
-        <QRCodeCanvas value={bill.qrUrl} alt="QR Code" />
-      </div> */}
-    </div>
-  );
-}
-=======
           {/* Price Information */}
           <div className="bg-white shadow-lg rounded-lg p-6 mt-4">
             <h2 className="text-xl font-bold mb-4">Thông tin cơ bản</h2>
@@ -415,4 +312,3 @@ export default function InvoiceDetail() {
     </div>
   );
 }
->>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af

@@ -11,16 +11,34 @@ const RoomDetail = () => {
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const [bills, setBills] = useState([]);
   const [isBillPopupOpen, setIsBillPopupOpen] = useState(false);
+  const [contracts, setContracts] = useState([]);
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
+<<<<<<< HEAD
+=======
+
+  const api = axios.create({
+    baseURL: "http://localhost:5000/api/v1",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+>>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
   useEffect(() => {
     const fetchRoom = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:5000/api/v1/room/${roomId}`
-        );
-        setRoom(res.data.data);
+        const res = await api.get(`/room/${roomId}`);
+        const roomData = {
+          ...res.data.data,
+          priceList: {
+            roomPrice: res.data.data.priceList?.roomPrice || 0,
+            deposit: res.data.data.priceList?.deposit || 0,
+          },
+        };
+        setRoom(roomData);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching room data:", error);
@@ -32,6 +50,7 @@ const RoomDetail = () => {
   useEffect(() => {
     const fetchLodgers = async () => {
       try {
+<<<<<<< HEAD
         const res = await axios.get(
           "http://localhost:5000/api/v1/account/lodger-accout-list",
           {
@@ -40,6 +59,9 @@ const RoomDetail = () => {
             },
           }
         );
+=======
+        const res = await api.get("/account/lodger-accout-list");
+>>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
         setLodgers(res.data.data);
       } catch (error) {
         console.error("Error fetching lodger data:", error);
@@ -48,9 +70,21 @@ const RoomDetail = () => {
     fetchLodgers();
   }, []);
 
+  useEffect(() => {
+    const fetchContracts = async () => {
+      try {
+        const res = await api.get(`/contract/room/${roomId}`);
+        setContracts(res.data.data);
+      } catch (error) {
+        console.error("Error fetching contracts:", error);
+      }
+    };
+    fetchContracts();
+  }, [roomId]);
+
   const fetchBills = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/v1/bill/");
+      const res = await api.get("/bill/");
       const filteredBills = res.data.data.filter(
         (bill) => bill.roomId === roomId
       );
@@ -58,6 +92,16 @@ const RoomDetail = () => {
       setIsBillPopupOpen(true);
     } catch (error) {
       console.error("Error fetching bills:", error);
+    }
+  };
+
+  const updateRoomStatus = async (memberCount) => {
+    try {
+      const newStatus = memberCount < 3 ? "available" : "full"; // Đổi sang string theo backend
+      await api.put(`/room/${roomId}/status`, { status: newStatus });
+      setRoom((prev) => ({ ...prev, status: newStatus === "available" })); // Chuyển lại boolean cho frontend
+    } catch (error) {
+      console.error("Error updating room status:", error);
     }
   };
 
@@ -72,16 +116,11 @@ const RoomDetail = () => {
     }));
   };
 
-  const handleMemberChange = (index, accountId) => {
-    setRoom((prev) => {
-      const newMembers = [...prev.members];
-      newMembers[index] = { accountId };
-      return { ...prev, members: newMembers };
-    });
-  };
-
   const handleAddMember = async () => {
-    if (!newMemberEmail) return;
+    if (!newMemberEmail) {
+      alert("Vui lòng nhập email thành viên!");
+      return;
+    }
 
     const member = lodgers.find((lodger) => lodger.email === newMemberEmail);
     if (!member) {
@@ -90,47 +129,91 @@ const RoomDetail = () => {
     }
 
     const accountId = member._id;
+
+    const contractMembers = contracts
+      .filter((contract) => contract.roomId.toString() === room._id.toString())
+      .flatMap((contract) => [
+        contract.benA.toString(),
+        contract.benB.toString(),
+        ...contract.relatedParties.map((id) => id.toString()),
+      ]);
+
+    if (contractMembers.includes(accountId.toString())) {
+      alert(
+        "Thành viên này đã có trong hợp đồng của phòng (benA, benB hoặc relatedParties)!"
+      );
+      return;
+    }
+
+    const relatedPartiesCount = contracts
+      .filter((contract) => contract.roomId.toString() === room._id.toString())
+      .reduce((total, contract) => total + contract.relatedParties.length, 0);
+
+    if (relatedPartiesCount >= 3) {
+      alert("Số lượng bên liên quan trong hợp đồng đã đạt tối đa 3 người!");
+      return;
+    }
+
+    const currentMemberCount = room.members.length;
+    if (currentMemberCount >= 3) {
+      alert("Phòng đã đạt tối đa 3 thành viên!");
+      return;
+    }
+
     const joinDate = new Date().toISOString();
 
     try {
-      await axios.post(`http://localhost:5000/api/v1/room/${roomId}/member`, {
+      const response = await api.post(`/room/${roomId}/member`, {
         accountId: accountId,
         joinDate: joinDate,
       });
 
+      const updatedMembers = [...room.members, { accountId: accountId, joinDate: joinDate }];
       setRoom((prev) => ({
         ...prev,
-        members: [...prev.members, { accountId: accountId }],
+        members: updatedMembers,
       }));
 
+      await updateRoomStatus(updatedMembers.length);
+
       setNewMemberEmail("");
+      alert("Thêm thành viên thành công!");
     } catch (error) {
-      console.error("Error adding member:", error);
-      alert("Không thể thêm thành viên. Vui lòng thử lại.");
+      console.error("Error adding member:", error.response?.data || error.message);
+      alert("Không thể thêm thành viên! Vui lòng kiểm tra console để biết chi tiết.");
     }
   };
 
   const handleUpdateRoom = async () => {
     try {
-      // Lọc chỉ gửi các trường cần thiết và được phép cập nhật
+      if (!room.priceList?.roomPrice || Number(room.priceList.roomPrice) <= 0) {
+        alert("Giá phòng phải lớn hơn 0!");
+        return;
+      }
+
+      // Chỉ gửi các field được phép cập nhật (loại bỏ status và members)
       const updatedRoom = {
         name: room.name,
         floor: room.floor,
         area: room.area,
-        status: room.status,
-        priceList: room.priceList,
+        priceList: {
+          roomPrice: Number(room.priceList.roomPrice),
+          deposit: Number(room.priceList.deposit || 0),
+        },
         roomBill: room.roomBill,
-        members: room.members,
       };
 
-      console.log("Dữ liệu gửi đi:", updatedRoom); // Debug dữ liệu gửi đi
+      console.log("Dữ liệu gửi đi:", updatedRoom);
 
-      const response = await axios.put(
-        `http://localhost:5000/api/v1/room/${roomId}`,
-        updatedRoom
-      );
-      console.log("Phản hồi từ server:", response.data); // Debug phản hồi
-
+      const response = await api.put(`/room/${roomId}`, updatedRoom);
+      setRoom((prev) => ({
+        ...prev,
+        ...response.data.room, // Cập nhật lại state với dữ liệu từ server
+        priceList: {
+          roomPrice: response.data.room.priceList.roomPrice,
+          deposit: response.data.room.priceList.deposit || 0,
+        },
+      }));
       setIsEditing(false);
       alert("Cập nhật phòng thành công!");
     } catch (error) {
@@ -138,15 +221,17 @@ const RoomDetail = () => {
         "Error updating room:",
         error.response ? error.response.data : error.message
       );
-      alert(
-        "Không thể cập nhật phòng. Vui lòng kiểm tra console để biết chi tiết."
-      );
+      alert("Không thể cập nhật phòng! Vui lòng kiểm tra console để biết chi tiết.");
     }
   };
 
   const getLodgerName = (accountId) => {
     const lodger = lodgers.find((l) => l._id === accountId);
     return lodger ? `${lodger.firstName} ${lodger.lastName}` : "Không tìm thấy";
+  };
+
+  const handleCreateInvoice = (roomId) => {
+    navigate(`/manager/invoice/new-invoice/${roomId}`);
   };
 
   if (loading) return <p>Loading...</p>;
@@ -188,9 +273,8 @@ const RoomDetail = () => {
           />
           <RoomInput
             label="Trạng thái"
-            value={room.status}
-            onChange={(val) => handleInputChange("status", val)}
-            editable={isEditing}
+            value={room.status ? "Available" : "Full"}
+            editable={false}
           />
         </div>
       </div>
@@ -198,15 +282,20 @@ const RoomDetail = () => {
       <div className="bg-gray-300 rounded-lg p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4">Thông tin tài chính</h2>
         <div className="flex flex-col space-y-4">
-          {Object.keys(room.priceList).map((key) => (
-            <RoomInput
-              key={key}
-              label={key}
-              value={room.priceList[key]}
-              onChange={(val) => handlePriceChange(key, val)}
-              editable={isEditing}
-            />
-          ))}
+          <RoomInput
+            label="Giá phòng"
+            value={room.priceList?.roomPrice || ""}
+            onChange={(val) => handlePriceChange("roomPrice", val)}
+            editable={isEditing}
+            type="number"
+          />
+          <RoomInput
+            label="Tiền cọc"
+            value={room.priceList?.deposit || ""}
+            onChange={(val) => handlePriceChange("deposit", val)}
+            editable={isEditing}
+            type="number"
+          />
           <RoomInput
             label="Tiền nhà tháng"
             value={room.roomBill}
@@ -224,8 +313,7 @@ const RoomDetail = () => {
               key={index}
               label={`Thành viên ${index + 1}`}
               value={getLodgerName(member.accountId)}
-              onChange={(val) => handleMemberChange(index, val)}
-              editable={false} // Không cho chỉnh sửa trực tiếp tên ở đây
+              editable={false}
             />
           ))}
           {isEditing && (
@@ -273,6 +361,12 @@ const RoomDetail = () => {
         <button className="bg-green-500 text-white px-6 py-3 rounded w-full">
           Xem báo cáo phòng
         </button>
+        <button
+          onClick={() => handleCreateInvoice(roomId)}
+          className="bg-green-500 text-white px-6 py-3 rounded w-full"
+        >
+          Tạo hóa đơn phòng
+        </button>
       </div>
 
       {isBillPopupOpen && (
@@ -286,7 +380,13 @@ const RoomDetail = () => {
                   <p>Total: {bill.total}</p>
                   <p>Status: {bill.status}</p>
                   <button
+<<<<<<< HEAD
                     onClick={() => navigate(`/manager/invoice-detail/${bill._id}`)}
+=======
+                    onClick={() =>
+                      navigate(`/manager/invoice-detail/${bill._id}`)
+                    }
+>>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
                     className="bg-blue-500 text-white px-4 py-2 rounded mt-2"
                   >
                     Xem chi tiết
@@ -307,13 +407,13 @@ const RoomDetail = () => {
   );
 };
 
-const RoomInput = ({ label, value, onChange, editable }) => {
+const RoomInput = ({ label, value, onChange, editable, type = "text" }) => {
   return (
     <div className="flex justify-between">
       <label className="w-1/4">{label}</label>
       {editable ? (
         <input
-          type="text"
+          type={type}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className="border rounded p-2 w-3/4"

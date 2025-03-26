@@ -1,32 +1,51 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-
 import House1_img from "../assets/images/house_1.jpeg";
 import House2_img from "../assets/images/house_2.jpg";
 import House3_img from "../assets/images/house_3.jpg";
 import { useNavigate } from "react-router-dom";
 
+// Tạo axios instance
+const api = axios.create({
+  baseURL: "http://localhost:5000/api/v1",
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 const HouseList = () => {
   const [houseList, setHouseList] = useState([]);
   const [selectedHouse, setSelectedHouse] = useState(null);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [updateFormData, setUpdateFormData] = useState({});
   const navigate = useNavigate();
-
-  console.log("House list: ", houseList);
-  console.log("Selected house: ", selectedHouse);
 
   useEffect(() => {
     const fetchHouses = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/v1/house/");
-        console.log("House list response: ", response);
+        const response = await api.get("/house/");
         setHouseList(response.data.houses);
       } catch (error) {
         console.error("Error fetching houses:", error);
+        if (error.response?.status === 401) {
+          navigate("/login");
+        }
       }
     };
 
     fetchHouses();
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     if (houseList.length > 0) {
@@ -40,6 +59,84 @@ const HouseList = () => {
 
   const handleTurnBack = () => {
     navigate("/admin");
+  };
+
+  const handleOpenUpdateModal = (house) => {
+    setUpdateFormData({
+      name: house.name,
+      numberOfRoom: house.numberOfRoom,
+      numberOfMember: house.numberOfMember,
+      location: {
+        detailLocation: house.location.detailLocation,
+        ward: house.location.ward,
+        district: house.location.district,
+        province: house.location.province,
+        srcMap: house.location.srcMap,
+      },
+    });
+    setShowUpdateModal(true);
+  };
+
+  const handleUpdateChange = (e) => {
+    const { name, value } = e.target;
+    if (name.includes("location.")) {
+      const field = name.split(".")[1];
+      setUpdateFormData((prev) => ({
+        ...prev,
+        location: {
+          ...prev.location,
+          [field]: value,
+        },
+      }));
+    } else {
+      setUpdateFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+  };
+
+  const handleUpdateHouse = async (houseId) => {
+    try {
+      const response = await api.put(`/house/${houseId}`, updateFormData);
+      setHouseList((prevList) =>
+        prevList.map((house) =>
+          house._id === houseId ? response.data.data : house
+        )
+      );
+      setSelectedHouse(response.data.data);
+      setShowUpdateModal(false);
+      alert("House updated successfully!");
+    } catch (error) {
+      console.error("Error updating house:", error);
+      if (error.response?.status === 401) {
+        navigate("/login");
+      }
+      alert("Failed to update house!");
+    }
+  };
+
+  const handleChangeStatus = async (houseId, currentStatus) => {
+    try {
+      const newStatus = !currentStatus;
+      const response = await api.put(`/house/${houseId}/change-status`, {
+        status: newStatus,
+      });
+      
+      setHouseList((prevList) =>
+        prevList.map((house) =>
+          house._id === houseId ? response.data.data : house
+        )
+      );
+      setSelectedHouse(response.data.data);
+      alert(`House status changed to ${newStatus ? "available" : "unavailable"}!`);
+    } catch (error) {
+      console.error("Error changing house status:", error);
+      if (error.response?.status === 401) {
+        navigate("/login");
+      }
+      alert("Failed to change house status!");
+    }
   };
 
   return (
@@ -90,17 +187,25 @@ const HouseList = () => {
                   </p>
                 </div>
                 <div className="flex justify-around">
-                  {house.status === "available" ? (
-                    <button className="bg-blue-500 text-white px-4 py-2 mt-2 rounded">
-                      Còn phòng
-                    </button>
-                  ) : (
-                    <button className="bg-red-500 text-white px-4 py-2 mt-2 rounded">
-                      Hết phòng
-                    </button>
-                  )}
-                  <button className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 mt-2 rounded">
-                    View more
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleChangeStatus(house._id, house.status);
+                    }}
+                    className={`${
+                      house.status ? "bg-blue-500 hover:bg-blue-700" : "bg-red-500 hover:bg-red-700"
+                    } text-white px-4 py-2 mt-2 rounded`}
+                  >
+                    {house.status ? "Còn phòng" : "Hết phòng"}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenUpdateModal(house);
+                    }}
+                    className="bg-yellow-500 hover:bg-yellow-700 text-white px-4 py-2 mt-2 rounded"
+                  >
+                    Update
                   </button>
                 </div>
               </div>
@@ -126,6 +231,113 @@ const HouseList = () => {
           )}
         </div>
       </div>
+
+      {/* Update Modal */}
+      {showUpdateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg w-1/2">
+            <h2 className="text-2xl font-bold mb-4">Update House</h2>
+            <form>
+              <div className="mb-4">
+                <label className="block mb-2">Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={updateFormData.name || ""}
+                  onChange={handleUpdateChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-2">Number of Rooms</label>
+                <input
+                  type="number"
+                  name="numberOfRoom"
+                  value={updateFormData.numberOfRoom || ""}
+                  onChange={handleUpdateChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-2">Number of Members</label>
+                <input
+                  type="number"
+                  name="numberOfMember"
+                  value={updateFormData.numberOfMember || ""}
+                  onChange={handleUpdateChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-2">Detail Location</label>
+                <input
+                  type="text"
+                  name="location.detailLocation"
+                  value={updateFormData.location?.detailLocation || ""}
+                  onChange={handleUpdateChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-2">Ward</label>
+                <input
+                  type="text"
+                  name="location.ward"
+                  value={updateFormData.location?.ward || ""}
+                  onChange={handleUpdateChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-2">District</label>
+                <input
+                  type="text"
+                  name="location.district"
+                  value={updateFormData.location?.district || ""}
+                  onChange={handleUpdateChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-2">Province</label>
+                <input
+                  type="text"
+                  name="location.province"
+                  value={updateFormData.location?.province || ""}
+                  onChange={handleUpdateChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-2">Map URL</label>
+                <input
+                  type="text"
+                  name="location.srcMap"
+                  value={updateFormData.location?.srcMap || ""}
+                  onChange={handleUpdateChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="flex justify-end gap-4">
+                <button
+                  type="button"
+                  onClick={() => setShowUpdateModal(false)}
+                  className="bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleUpdateHouse(selectedHouse._id)}
+                  className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                >
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

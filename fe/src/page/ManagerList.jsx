@@ -6,17 +6,31 @@ export default function ManagerList() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [houses, setHouses] = useState({});
+<<<<<<< HEAD
+=======
+  const [unassignedHouses, setUnassignedHouses] = useState([]);
+  const [selectedManagerId, setSelectedManagerId] = useState(null);
+  const [selectedHouseId, setSelectedHouseId] = useState("");
+>>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
+<<<<<<< HEAD
     password: "", // Added password field
+=======
+    password: "",
+>>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
     dateOfBirth: "",
     identityCard: "",
     phone: "",
     gender: "",
     status: true,
+<<<<<<< HEAD
     accountType: "Manager", // Capitalized to match validation
+=======
+    accountType: "Manager",
+>>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
   });
 
   const getToken = () => {
@@ -43,6 +57,10 @@ export default function ManagerList() {
 
   useEffect(() => {
     fetchManagers();
+<<<<<<< HEAD
+=======
+    fetchUnassignedHouses();
+>>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
   }, []);
 
   const fetchManagers = async () => {
@@ -50,11 +68,18 @@ export default function ManagerList() {
       const response = await axiosInstance.get("/account/manager");
       const resHouse = await axiosInstance.get("/house");
       const houseMap = resHouse.data.houses.reduce((acc, house) => {
+<<<<<<< HEAD
         acc[house.hostID] = house.name;
         return acc;
       }, {});
       setHouses(houseMap);
       console.log("API Response:", response.data);
+=======
+        acc[house.hostId] = house.name;
+        return acc;
+      }, {});
+      setHouses(houseMap);
+>>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
       if (Array.isArray(response.data.data)) {
         setManagers(response.data.data);
       } else {
@@ -71,6 +96,20 @@ export default function ManagerList() {
     }
   };
 
+<<<<<<< HEAD
+=======
+  const fetchUnassignedHouses = async () => {
+    try {
+      const response = await axiosInstance.get("/house");
+      const unassigned = response.data.houses.filter((house) => !house.hostId);
+      setUnassignedHouses(unassigned);
+    } catch (error) {
+      console.error("Error fetching unassigned houses:", error);
+      setUnassignedHouses([]);
+    }
+  };
+
+>>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -83,6 +122,7 @@ export default function ManagerList() {
     e.preventDefault();
     try {
       const response = await axiosInstance.post("/account/create-manager", formData);
+<<<<<<< HEAD
       
       if (response.status === 201) {
         alert("Manager created successfully!");
@@ -99,13 +139,22 @@ export default function ManagerList() {
           status: true,
           accountType: "Manager",
         });
+=======
+      if (response.status === 201) {
+        alert("Manager created successfully!");
+        setShowForm(false);
+        resetForm();
+>>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
         fetchManagers();
       }
     } catch (error) {
       console.error("Error creating manager:", error);
+<<<<<<< HEAD
       if (error.response?.status === 401) {
         alert("Unauthorized access. Please login again.");
       }
+=======
+>>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
       alert(error.response?.data?.message || "An error occurred while creating the manager");
     }
   };
@@ -113,10 +162,16 @@ export default function ManagerList() {
   const handleChangeStatus = async (managerId, currentStatus) => {
     try {
       const newStatus = !currentStatus;
+<<<<<<< HEAD
       const response = await axiosInstance.put("/account/change-status", {
         status: newStatus,
       });
 
+=======
+      const response = await axiosInstance.patch(`/account/accounts/${managerId}/status`, {
+        status: newStatus,
+      });
+>>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
       if (response.status === 200) {
         alert(response.data.message);
         fetchManagers();
@@ -129,11 +184,60 @@ export default function ManagerList() {
       alert(error.response?.data?.message || "An error occurred while changing the status");
     }
   };
+<<<<<<< HEAD
+=======
+
+  const handleAssignHouse = async (e) => {
+    e.preventDefault();
+    if (!selectedHouseId) {
+      alert("Please select a house to assign.");
+      return;
+    }
+    try {
+      const response = await axiosInstance.post("/account/transfer-manager", {
+        houseId: selectedHouseId,
+        managerId: selectedManagerId,
+      });
+      if (response.status === 200) {
+        alert("House assigned successfully!");
+        setSelectedManagerId(null); // Close the form by resetting selectedManagerId
+        setSelectedHouseId("");
+        fetchManagers();
+        fetchUnassignedHouses();
+      }
+    } catch (error) {
+      console.error("Error assigning house:", error);
+      if (error.response?.status === 401) {
+        alert("Unauthorized access. Please login again.");
+      }
+      alert(error.response?.data?.message || "An error occurred while assigning the house");
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      dateOfBirth: "",
+      identityCard: "",
+      phone: "",
+      gender: "",
+      status: true,
+      accountType: "Manager",
+    });
+  };
+>>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
 
   return (
     <section className="p-8 w-full">
       <h2 className="text-yellow-500 text-2xl font-bold mb-4">Manager List</h2>
+<<<<<<< HEAD
       
+=======
+
+>>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
       <button
         onClick={() => setShowForm(!showForm)}
         className="mb-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
@@ -274,10 +378,16 @@ export default function ManagerList() {
                 <th>Email</th>
                 <th>Phone Number</th>
                 <th>House</th>
+<<<<<<< HEAD
+=======
+                <th>House</th>
+>>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
                 <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
+<<<<<<< HEAD
               {managers.map((manager, index) => (
                 <tr key={index} className="border-t">
                   <td>{manager.firstName + " " + manager.lastName}</td>
@@ -297,6 +407,81 @@ export default function ManagerList() {
                     </button>
                   </td>
                 </tr>
+=======
+              {managers.map((manager) => (
+                <React.Fragment key={manager._id}>
+                  <tr className="border-t">
+                    <td>{manager.firstName + " " + manager.lastName}</td>
+                    <td>{manager.email}</td>
+                    <td>{manager.phone}</td>
+                    <td>{houses[manager._id] || "Not assigned"}</td>
+                    <td>
+                      <button
+                        onClick={() => handleChangeStatus(manager._id, manager.status)}
+                        className={`px-2 py-1 rounded text-white ${
+                          manager.status
+                            ? "bg-green-500 hover:bg-green-600"
+                            : "bg-red-500 hover:bg-red-600"
+                        }`}
+                      >
+                        {manager.status ? "Active" : "Inactive"}
+                      </button>
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => setSelectedManagerId(manager._id)}
+                        className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                      >
+                        Assign House
+                      </button>
+                    </td>
+                  </tr>
+                  {selectedManagerId === manager._id && (
+                    <tr>
+                      <td colSpan="6" className="p-4 bg-gray-100">
+                        <div className="bg-white p-4 rounded-lg shadow">
+                          <h3 className="text-lg font-bold mb-2">
+                            Assign House to {manager.firstName + " " + manager.lastName}
+                          </h3>
+                          <form onSubmit={handleAssignHouse}>
+                            <div className="mb-4">
+                              <label className="block mb-1">Select House</label>
+                              <select
+                                value={selectedHouseId}
+                                onChange={(e) => setSelectedHouseId(e.target.value)}
+                                className="w-full p-2 border rounded"
+                                required
+                              >
+                                <option value="">Select a house</option>
+                                {unassignedHouses.map((house) => (
+                                  <option key={house._id} value={house._id}>
+                                    {house.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                type="submit"
+                                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                              >
+                                Assign House
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedManagerId(null)}
+                                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+>>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
               ))}
             </tbody>
           </table>

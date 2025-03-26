@@ -27,6 +27,12 @@ export default function ManagerSideBar() {
                 <Link to="/manager/lodger-list">Home</Link>
               </li>
               <li className="mb-2 text-[#FDEE2A]">
+                <Link to="/manager/invoice-list">Quản lý Hóa đơn</Link>
+              </li>
+              <li className="mb-2 text-[#FDEE2A]">
+                <Link to="/manager/room/rooms-list">Quản lý phòng trọ</Link>
+              </li>
+              <li className="mb-2 text-[#FDEE2A]">
                 <Link to="/admin/dashboard">Dashboard</Link>
               </li>
               <li className="mb-2 text-[#FDEE2A]">
