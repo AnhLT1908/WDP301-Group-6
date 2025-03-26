@@ -8,6 +8,9 @@ const ContractController = {
   getContractByRoom: catchAsyncErrors(async (req, res, next) => {
     await ContractService.getContractByRoom(req, res, next);
   }),
+  getContractByManager: catchAsyncErrors(async (req, res, next) => {
+    await ContractService.getContractByManager(req, res, next);
+  }),
   getContractById: catchAsyncErrors(async (req, res, next) => {
     await ContractService.getContractById(req, res, next);
   }),

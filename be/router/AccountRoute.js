@@ -61,7 +61,7 @@ AccountRouter.get("/manager", protect, AccountController.getManagerAccounts);
 
 AccountRouter.get(
   "/lodger-account-list",
-  protect,
+  // protect,
   AccountController.getListLodger
 );
 

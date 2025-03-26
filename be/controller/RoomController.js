@@ -48,6 +48,9 @@ const RoomController = {
   GetRoomByHouseId: catchAsyncErrors(async(req, res) =>{
     await RoomService.GetRoomByHouseId(req, res);
   }),
+  GetRoomByManagerId: catchAsyncErrors(async(req, res) =>{
+    await RoomService.GetRoomByManagerId(req, res);
+  }),
   GetLodgerMemberOfHouse: catchAsyncErrors(async(req, res)=>{
     await RoomService.GetMemberLodgerOfHouse(req, res)
   }),
