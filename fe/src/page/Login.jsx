@@ -64,7 +64,7 @@ const Login = ({ setAccountType }) => {
           navigate("/admin");
           break;
         case "Manager":
-          navigate("/manager/house-detail");
+          navigate("/manager");
           break;
         case "Lodger":
           navigate("/home");
