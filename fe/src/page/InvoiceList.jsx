@@ -15,30 +15,6 @@ export default function InvoiceList() {
   useEffect(() => {
     const fetchHouseData = async () => {
       try {
-<<<<<<< HEAD
-        const [billRes, houseRes, roomRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/v1/bill/"),
-          axios.get("http://localhost:5000/api/v1/house/"),
-          axios.get("http://localhost:5000/api/v1/room/")
-        ]);
-
-        console.log(roomRes.data.data);
-        
-        const houseMap = houseRes.data.houses.reduce((acc, house) => {
-          acc[house._id] = house.name;
-          return acc;
-        }, {});
-
-        const roomMap = roomRes.data.data.reduce((acc, room) => {
-          acc[room._id] = room.name;
-          return acc;
-        }, {});
-
-        setBills(billRes.data.data || []);
-        setHouses(houseMap);
-        console.log(houses);
-        setRooms(roomMap);
-=======
         const response = await axios.get(
           "http://localhost:5000/api/v1/house/houseByHost",
           {
@@ -53,7 +29,6 @@ export default function InvoiceList() {
         if (response.data.data && response.data.data.length > 0) {
           setHouses(response.data.data[0]);
         }
->>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
       } catch (error) {
         console.error("Error fetchHouseData: ", error);
       }
@@ -108,13 +83,10 @@ export default function InvoiceList() {
 
   const handleViewDetail = (billId) => {
     navigate(`/manager/invoice-detail/${billId}`);
-<<<<<<< HEAD
-=======
   };
 
   const handleCreateInvoice = () => {
     navigate("/manager/invoice/new-invoice");
->>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
   };
 
   return (

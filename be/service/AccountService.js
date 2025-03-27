@@ -26,14 +26,14 @@ export const GetAll = async (req, res) => {
 
     const totalPages = Math.ceil(totalAccounts / limitPerPage);
 
-        return res.status(201).json({
+        return res.status(200).json({
             pagination: {
                 currentPage: pageNumber,
                 totalPages: totalPages,
                 totalAccounts: totalAccounts,
                 accountsPerPage: data.length,
             },
-            data: data,
+            memberOfHouse: data,
         });
     } catch (error) {
         return res.status(500).json({

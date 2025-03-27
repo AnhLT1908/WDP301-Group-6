@@ -796,13 +796,9 @@ const RoomDetail = () => {
                   <p>Total: {bill.total}</p>
                   <p>Status: {bill.status}</p>
                   <button
-<<<<<<< HEAD
-                    onClick={() => navigate(`/manager/invoice-detail/${bill._id}`)}
-=======
                     onClick={() =>
                       navigate(`/manager/invoice-detail/${bill._id}`)
                     }
->>>>>>> bb8f812a80785cb4d772b78a168fcbda145444af
                     className="bg-blue-500 text-white px-4 py-2 rounded mt-2"
                   >
                     Xem chi tiết
