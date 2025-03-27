@@ -41,6 +41,9 @@ export default function ManagerSideBar() {
               <li className="mb-2 text-[#FDEE2A]">
                 <Link to="/manager/lodger-list">Account List</Link>
               </li>
+              <li className="mb-2 text-[#FDEE2A]">
+                <Link to="/manager/contract">Quản lý hợp đồng</Link>
+              </li>
             </ul>
           )}
         </ul>

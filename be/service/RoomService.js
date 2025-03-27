@@ -687,6 +687,37 @@ export const GetRoomByHouseId = async(req, res) =>{
     });
   }
 }
+export const GetRoomByManagerId = async(req, res) =>{
+  try {
+    const { managerId } = req.params;
+    console.log(managerId);
+    if(!mongoose.Types.ObjectId.isValid(managerId)){
+      return res.status(400).json({
+        message: "Invalid managerId"
+      })
+    }
+
+    const house = await House.find({hostId: managerId});
+    console.log(house);
+    if (!house) {
+      return res.status(404).json({
+        message: "House not found with the provided managerID",
+      });
+    }
+
+    const rooms = await Room.find({ houseId: house.hostId}).populate("house members.accountId utilities roomBill roomReport")
+    return res.status(200).json({
+      message: "Here your Room",
+      rooms
+    })
+  } catch (error) {
+    console.error("Error in GetRoomByHouseId:", error); // Log for debugging
+    return res.status(500).json({
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+}
 
 export const GetMemberLodgerOfHouse = async(req, res) =>{
   try {

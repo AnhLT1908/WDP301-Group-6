@@ -13,8 +13,7 @@ const oneYearFromNow = () => {
 
 export const createContract = async (req, res, next) => {
   try {
-    const { roomId } = req.params;
-    const { benB, description, startDate, endDate } = req.body;
+    const { benB, description, startDate, endDate , roomId} = req.body;
 
     // Kiểm tra roomId hợp lệ
     if (!mongoose.Types.ObjectId.isValid(roomId)) {
@@ -34,12 +33,10 @@ export const createContract = async (req, res, next) => {
     const benA = getCurrentUser(req); // Lấy thông tin người gọi API (Manager)
     console.log("Ben A", benA);
     if (!benA) {
-      return res
-        .status(401)
-        .json({
-          success: false,
-          message: "Không xác định được người gọi API!",
-        });
+      return res.status(401).json({
+        success: false,
+        message: "Không xác định được người gọi API!",
+      });
     }
 
     // Kiểm tra benA (Manager)
@@ -145,12 +142,35 @@ export const getContractByRoom = async (req, res, next) => {
       "benA benB roomId"
     );
     if (!contracts.length) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "Không tìm thấy hợp đồng nào cho phòng này!",
-        });
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy hợp đồng nào cho phòng này!",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: contracts.length,
+      data: contracts,
+    });
+  } catch (error) {
+    console.error("Lỗi trong getContractByRoom:", error);
+    next(error);
+  }
+};
+export const getContractByManager = async (req, res, next) => {
+  try {
+    const { managerId } = req.params;
+
+    const contracts = await Contract.find({ benA: managerId }).populate(
+      "benA benB roomId"
+    );
+
+    if (!contracts.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy hợp đồng!",
+      });
     }
 
     return res.status(200).json({
@@ -239,7 +259,6 @@ export const updateContract = async (req, res, next) => {
       { new: true, runValidators: true }
     ).populate("benA benB roomId");
 
-
     return res.status(200).json({
       success: true,
       message: "Cập nhật hợp đồng thành công!",
@@ -310,12 +329,10 @@ export const getContractsByHouse = async (req, res, next) => {
       roomId: { $in: roomIds },
     }).populate("benA benB roomId");
     if (!contracts.length) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "Không tìm thấy hợp đồng nào cho nhà này!",
-        });
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy hợp đồng nào cho nhà này!",
+      });
     }
 
     return res.status(200).json({
@@ -333,73 +350,79 @@ export const updateContractLodgerSide = async (req, res, next) => {
   try {
     const { contractId } = req.params;
     const { verifyTwoSide } = req.body;
-    const userId = req.user._id
-    console.log("req.user", userId.toString())
- 
+    const userId = req.user._id;
+    console.log("req.user", userId.toString());
+
     // Validate contractId
     if (!mongoose.Types.ObjectId.isValid(contractId)) {
       return res
         .status(400)
         .json({ success: false, message: "contractId không hợp lệ!" });
     }
- 
+
     // Check if only verifyTwoSide field is being updated
-    if (Object.keys(req.body).length !== 1 || !req.body.hasOwnProperty('verifyTwoSide')) {
+    if (
+      Object.keys(req.body).length !== 1 ||
+      !req.body.hasOwnProperty("verifyTwoSide")
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Chỉ được phép cập nhật trường verifyTwoSide!"
+        message: "Chỉ được phép cập nhật trường verifyTwoSide!",
       });
     }
- 
+
     // Validate verifyTwoSide value
-    if (verifyTwoSide !== 'verified' && verifyTwoSide !== 'unverified') {
+    if (verifyTwoSide !== "verified" && verifyTwoSide !== "unverified") {
       return res.status(400).json({
         success: false,
-        message: "Giá trị verifyTwoSide không hợp lệ! Chỉ chấp nhận 'verified' hoặc 'unverified'."
+        message:
+          "Giá trị verifyTwoSide không hợp lệ! Chỉ chấp nhận 'verified' hoặc 'unverified'.",
       });
     }
- 
+
     // Find contract and populate relevant fields
-    const contract = await Contract.findById(contractId)
-      .populate('benA benB roomId');
-    
+    const contract = await Contract.findById(contractId).populate(
+      "benA benB roomId"
+    );
+
     if (!contract) {
       return res
         .status(404)
         .json({ success: false, message: "Không tìm thấy hợp đồng!" });
     }
-    console.log("contract.benB._id", contract.benB._id.toString())
+    console.log("contract.benB._id", contract.benB._id.toString());
     // Check if the user is benB of the contract
     if (contract.benB._id.toString() !== userId.toString()) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Bạn không có quyền cập nhật hợp đồng này!" });
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không có quyền cập nhật hợp đồng này!",
+      });
     }
- 
+
     // Check if the user is a Lodger
-    const account = await mongoose.model('Account').findById(userId);
-    if (!account || account.accountType !== 'Lodger') {
-      return res
-        .status(403)
-        .json({ success: false, message: "Chỉ Lodger mới có quyền thực hiện thao tác này!" });
+    const account = await mongoose.model("Account").findById(userId);
+    if (!account || account.accountType !== "Lodger") {
+      return res.status(403).json({
+        success: false,
+        message: "Chỉ Lodger mới có quyền thực hiện thao tác này!",
+      });
     }
- 
+
     // Update contract
     const updatedContract = await Contract.findByIdAndUpdate(
       contractId,
-      { 
-        verifyTwoSide, 
-        updatedAt: new Date() 
+      {
+        verifyTwoSide,
+        updatedAt: new Date(),
       },
       { new: true, runValidators: true }
-    ).populate('benA benB roomId');
- 
+    ).populate("benA benB roomId");
+
     // Update isContact status for benB
-    await mongoose.model('Account').findByIdAndUpdate(
-      contract.benB._id,
-      { isContact: true }
-    );
- 
+    await mongoose
+      .model("Account")
+      .findByIdAndUpdate(contract.benB._id, { isContact: true });
+
     return res.status(200).json({
       success: true,
       message: "Cập nhật hợp đồng và trạng thái liên hệ thành công!",
@@ -409,9 +432,9 @@ export const updateContractLodgerSide = async (req, res, next) => {
     console.error("Lỗi trong updateContractLodgerSide:", error);
     next(error);
   }
- };
+};
 
- export const addRelatedParty = async (req, res) => {
+export const addRelatedParty = async (req, res) => {
   try {
     const { contractId } = req.params;
     const { accountId } = req.body;
@@ -436,12 +459,16 @@ export const updateContractLodgerSide = async (req, res, next) => {
 
     // Check if account already exists in relatedParties
     if (contract.relatedParties.includes(accountId)) {
-      return res.status(400).json({ message: "Account already exists in relatedParties" });
+      return res
+        .status(400)
+        .json({ message: "Account already exists in relatedParties" });
     }
 
     // Validate maximum limit for relatedParties (4 people)
     if (contract.relatedParties.length >= 4) {
-      return res.status(400).json({ message: "Maximum number of relatedParties reached (4)" });
+      return res
+        .status(400)
+        .json({ message: "Maximum number of relatedParties reached (4)" });
     }
 
     // Add account to relatedParties
@@ -451,11 +478,13 @@ export const updateContractLodgerSide = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "Added account to contract relatedParties",
-      contract
+      contract,
     });
   } catch (error) {
     console.error("Error adding related party:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
 
@@ -478,16 +507,20 @@ export const removeRelatedParty = async (req, res) => {
 
     // Ensure relatedParties is an array
     if (!contract.relatedParties || !Array.isArray(contract.relatedParties)) {
-      return res.status(400).json({ message: "relatedParties is not properly initialized" });
+      return res
+        .status(400)
+        .json({ message: "relatedParties is not properly initialized" });
     }
 
     // Check if account exists in relatedParties
     const partyIndex = contract.relatedParties.findIndex(
-      party => party.toString() === accountId
+      (party) => party.toString() === accountId
     );
-    
+
     if (partyIndex === -1) {
-      return res.status(404).json({ message: "Account not found in relatedParties" });
+      return res
+        .status(404)
+        .json({ message: "Account not found in relatedParties" });
     }
 
     // Remove account from relatedParties
@@ -497,13 +530,13 @@ export const removeRelatedParty = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Account removed from contract relatedParties",
-      contract
+      contract,
     });
   } catch (error) {
     console.error("Error removing related party:", error);
-    return res.status(500).json({ 
-      message: "Server error", 
-      error: error.message 
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
     });
   }
 };
