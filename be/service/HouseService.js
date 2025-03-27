@@ -183,6 +183,7 @@ export const getHouseByHostId = async (req, res) => {
     }
 };
 
+
 export const ChangeHouseStatus = async (req, res, next) => {
   try {
     const { houseId } = req.params;

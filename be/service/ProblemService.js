@@ -24,6 +24,55 @@ export const createTransferRequest = async (req, res, next) => {
 
         // Tạo báo cáo chuyển phòng
         const problem = new Problem({
+            type: "other", 
+            status: "none",
+            title: "Yêu cầu chuyển phòng",
+            content: content || "Tôi muốn chuyển sang phòng khác.",
+            roomId,
+            creatorId,
+            houseId: room.house,
+        });
+        await problem.save();
+
+        // Gửi thông báo cho Manager
+        const manager = await Account.findOne({ accountType: "Manager" });
+        await Notification.create({
+            sender: creatorId,
+            recipients: [{ user: manager._id, isRead: false }],
+            message: `${account.firstName} ${account.lastName} yêu cầu chuyển phòng từ ${room.name}.`,
+            type: "problem",
+            link: `/problems/${problem._id}`,
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: "Yêu cầu chuyển phòng đã được gửi!",
+            data: problem,
+        });
+    } catch (error) {
+        console.error("Lỗi trong createTransferRequest:", error);
+        next(error);
+    }
+};
+export const addOne = async(req, res, next)=>{
+    try {
+        const { roomId, content } = req.body;
+        const creatorId = getCurrentUser(req); // Người gửi yêu cầu
+
+        // Kiểm tra tài khoản
+        const account = await Account.findById(creatorId);
+        if (!account || account.accountType !== "Lodger") {
+            return res.status(403).json({ success: false, message: "Chỉ Lodger mới có thể tạo yêu cầu chuyển phòng!" });
+        }
+
+        // Kiểm tra xem người này có trong phòng không (dựa trên Room.members)
+        const room = await Room.findById(roomId);
+        if (!room || !room.members.some(member => member.accountId.toString() === creatorId)) {
+            return res.status(400).json({ success: false, message: "Bạn không thuộc phòng này!" });
+        }
+
+        // Tạo báo cáo chuyển phòng
+        const problem = new Problem({
             type: "other",
             status: false, // Thay từ "none" thành false
             title: "Yêu cầu chuyển phòng",
@@ -54,52 +103,6 @@ export const createTransferRequest = async (req, res, next) => {
         next(error);
     }
 };
-export const addOne = async (req, res, next) => {
-    try {
-      const { roomId } = req.body;
-      const creatorId = getCurrentUser(req);
-  
-      const room = await Room.findById(roomId).populate({
-        path: "houseId", // Change to match the schema
-        select: "hostId",
-        populate: { path: "hostId", select: "_id" },
-      });
-  
-      if (!room) {
-        return res.status(404).json({ message: "Phòng không tồn tại!" });
-      }
-  
-      console.log("Room:", room);
-      console.log("Room.houseId:", room.houseId);
-      console.log("Room.houseId.hostId:", room.houseId?.hostId);
-  
-      if (!room.houseId || !room.houseId.hostId) {
-        return res.status(400).json({ message: "Phòng không có chủ nhà hợp lệ!" });
-      }
-  
-      const data = await Problem.create({
-        ...req.body,
-        creatorId,
-        houseId: room.houseId._id, // Use room.houseId._id
-      });
-  
-      const recipients = [{ user: room.houseId.hostId._id }];
-  
-      await Notification.create({
-        sender: creatorId,
-        recipient: recipients,
-        message: `Một vấn đề mới đã được thêm vào phòng ${room.name}`,
-      });
-  
-      return res.status(201).json({
-        message: "Thêm vấn đề thành công!",
-        data,
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
 export const deleteOne = async (req, res, next) => {
     try {
         const { problemId } = req.params;
