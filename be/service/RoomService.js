@@ -403,46 +403,47 @@ export const getRoomEquipment = async (req, res) => {
 
 export const addRoom = async (req, res, next) => {
   try {
-      const { houseId, name, floor, status, roomType, roomPrice, deposit, area } = req.body;
+      const { house, name, floor, roomType, roomPrice, deposit, area, status } = req.body;
 
-      if (!houseId || !name || !roomPrice || !area || !floor) {
+      if (!house || !name || !roomPrice || !area || !floor) {
           return res.status(400).json({
               success: false,
-              message: "Thiếu thông tin bắt buộc! (houseId, name, roomPrice, quantityMember, area, email)",
+              message: "Thiếu thông tin bắt buộc! (houseId, name, roomPrice, area, floor)",
           });
       }
 
-      if (!mongoose.Types.ObjectId.isValid(houseId)) {
-        return res.status(400).json({ success: false, message: "Invalid houseId" });
+      if (!mongoose.Types.ObjectId.isValid(house)) {
+          return res.status(400).json({ success: false, message: "Invalid houseId" });
       }
       
-      const house = await House.findById(houseId);      
-      if (!house) {
+      const houses = await House.findById(house);      
+      if (!houses) {
           return res.status(404).json({ success: false, message: "House không tồn tại!" });
       }
 
-      const existingRoom = await Room.findOne({ house: houseId, name });
+      const existingRoom = await Room.findOne({ house: house, name });
       if (existingRoom) {
           return res.status(400).json({ success: false, message: `Phòng '${name}' đã tồn tại.` });
       }
-
+      const validStatus = ["available", "full"];
+      const roomStatus = validStatus.includes(status) ? status : "available";
       const newRoom = await Room.create({
-        name,
-        house: houseId, 
-        floor: floor,
-        area, 
-        priceList: {
-          roomPrice, 
-          deposit: deposit || 0,
-        },
-        status: status && ["full", "available"].includes(status) ? status : "available",
-        utilities: house.utilities || [],
-        deleted: false,
-        deletedAt: null,
+          name,
+          house: house, 
+          floor: floor,
+          area, 
+          priceList: {
+              roomPrice, 
+              deposit: deposit || 0,
+          },
+          status: roomStatus,
+          utilities: houses.utilities || [], // Sửa từ "house" thành "houses"
+          deleted: false,
+          deletedAt: null,
       });
 
-      house.numberOfRoom += 1;
-      await house.save();
+      houses.numberOfRoom += 1; // Sửa từ "house" thành "houses"
+      await houses.save();
 
       return res.status(201).json({
           success: true,
@@ -453,6 +454,7 @@ export const addRoom = async (req, res, next) => {
       next(error);
   }
 };
+
 
 export const GetOne = async (req, res, next) => {
   try {

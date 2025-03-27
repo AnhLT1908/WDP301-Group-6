@@ -2,14 +2,16 @@ import express from "express";
 import AccountController from "../controller/AccountController.js";
 import validateData from "../validations/ValidateData.js";
 import accountValidate from "../validations/AccountValidate.js";
-import { protect, isAuthorized } from "../middleware/verifyToken.js";
+import {protect, isAuthorized} from "../middleware/verifyToken.js";
+import Account from "../model/Account.js";
+
 
 const AccountRouter = express.Router();
 
 AccountRouter.get("/profile", protect, AccountController.getProfile);
 
 AccountRouter.get(
-  "/lodgerAccount/:house",
+  "/house/:houseId",
   /*Token Manager*/ AccountController.GetAll
 );
 
@@ -24,6 +26,10 @@ AccountRouter.get(
   protect,
   AccountController.getLodgerAccount
 );
+
+AccountRouter.delete("/:accountId", protect, AccountController.deleteLodgerIfNotInContract)
+
+AccountRouter.delete("/:accountId", protect, AccountController.deleteLodgerIfNotInContract)
 
 AccountRouter.patch(
   "/:accountId/contact-status",

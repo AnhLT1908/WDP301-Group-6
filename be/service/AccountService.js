@@ -1,73 +1,139 @@
-import Account from "../model/Account.js";
-import bcrypt from "bcrypt";
-import Room from "../model/Room.js";
-import House from "../model/House.js";
-import getCurrentUser from "../utils/getCurrentUser.js";
-import mongoose from "mongoose";
-import Notification from "../model/Notification.js";
+import Account from '../model/Account.js';
+import bcrypt from 'bcrypt';
+import Room from '../model/Room.js';
+import House from '../model/House.js';
+import getCurrentUser from '../utils/getCurrentUser.js';
+import mongoose from 'mongoose';
+import Contract from '../model/Contract.js';
+import Notification from '../model/Notification.js';
 
 export const GetAll = async (req, res) => {
-  try {
-    const { page, limit } = req.query;
-    const pageNumber = parseInt(page) || 1;
-    const limitPerPage = parseInt(limit) || 10;
-    const skip = (pageNumber - 1) * limitPerPage;
-    const { house } = req.params;
-    console.log("House id find room", house);
-    const rooms = await Room.find({ house });
-    console.log("Room list", rooms);
-    const totalAccounts = await Account.countDocuments({
-      roomId: { $in: rooms.map((room) => room._id) },
-    });
-    const data = await Account.find({
-      roomId: { $in: rooms.map((room) => room._id) },
-    })
-      .skip(skip)
-      .limit(limitPerPage)
-      .sort({ createdAt: -1 })
-      .exec();
+    try {
+        const { page, limit } = req.query;
+        const pageNumber = parseInt(page) || 1;
+        const limitPerPage = parseInt(limit) || 10;
+        const skip = (pageNumber - 1) * limitPerPage;
+        const { house } = req.params;
+        console.log("House id find room", house);
+        const rooms = await Room.find({ house });
+        console.log("Room list", rooms);
+        const totalAccounts = await Account.countDocuments({ roomId: { $in: rooms.map((room) => room._id) } });
+        const data = await Account.find({ roomId: { $in: rooms.map((room) => room._id) } })
+            .skip(skip)
+            .limit(limitPerPage)
+            .sort({ createdAt: -1 })
+            .exec();
 
     const totalPages = Math.ceil(totalAccounts / limitPerPage);
 
-    return res.status(201).json({
-      pagination: {
-        currentPage: pageNumber,
-        totalPages: totalPages,
-        totalAccounts: totalAccounts,
-        accountsPerPage: data.length,
-      },
-      memberOfHouse: data,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Lỗi Server Error",
-    });
-  }
+        return res.status(201).json({
+            pagination: {
+                currentPage: pageNumber,
+                totalPages: totalPages,
+                totalAccounts: totalAccounts,
+                accountsPerPage: data.length,
+            },
+            data: data,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: "Lỗi Server Error",
+        });
+    }
 };
 
 export const getLodgerAccount = async (req, res) => {
   const { accountId } = req.params;
-  console.log("Lodger account id", accountId);
+  console.log("Lodger account id", accountId)
   try {
     const accountData = await Account.findById(accountId)
-      .populate("roomId", "name status") // Populate room name and status
+      .populate('roomId', 'name status') // Populate room name and status
       .exec();
 
     if (!accountData) {
-      return res.status(404).json({ message: "Tài khoản không tồn tại" });
+      return res.status(404).json({ message: 'Tài khoản không tồn tại' });
     }
 
     return res.status(200).json({
-      message: "Lấy thông tin tài khoản thành công",
+      message: 'Lấy thông tin tài khoản thành công',
       data: accountData,
     });
   } catch (error) {
     console.error(error);
     return res.status(500).json({
-      message: "Lỗi Server Error",
+      message: 'Lỗi Server Error',
       error: error.message,
     });
   }
+};
+
+export const deleteLodgerIfNotInContract = async (req, res, next) => {
+    try {
+        const { accountId } = req.params; // ID của Lodger cần xóa
+        const currentUserId = getCurrentUser(req); // Người thực hiện thao tác
+
+        // Kiểm tra accountId hợp lệ
+        if (!mongoose.Types.ObjectId.isValid(accountId)) {
+            return res.status(400).json({
+                success: false,
+                message: "accountId không hợp lệ!",
+            });
+        }
+
+        // Kiểm tra quyền của người dùng (Admin hoặc Manager)
+        const currentUser = await Account.findById(currentUserId);
+        if (!currentUser || !["Admin", "Manager"].includes(currentUser.accountType)) {
+            return res.status(403).json({
+                success: false,
+                message: "Chỉ Admin hoặc Manager mới có quyền xóa Lodger!",
+            });
+        }
+
+        // Tìm tài khoản cần xóa
+        const lodger = await Account.findById(accountId);
+        if (!lodger) {
+            return res.status(404).json({
+                success: false,
+                message: "Không tìm thấy tài khoản!",
+            });
+        }
+
+        // Kiểm tra tài khoản phải là Lodger
+        if (lodger.accountType !== "Lodger") {
+            return res.status(400).json({
+                success: false,
+                message: "Tài khoản này không phải Lodger!",
+            });
+        }
+
+        // Kiểm tra xem Lodger có trong hợp đồng nào không
+        const contractAsBenB = await Contract.findOne({ benB: accountId });
+        const contractAsRelatedParty = await Contract.findOne({ relatedParties: accountId });
+
+        if (contractAsBenB || contractAsRelatedParty) {
+            return res.status(400).json({
+                success: false,
+                message: "Không thể xóa Lodger vì tài khoản vẫn tồn tại trong hợp đồng!",
+                contract: contractAsBenB || contractAsRelatedParty,
+            });
+        }
+
+        // Xóa Lodger khỏi danh sách members trong Room (nếu có)
+        if (lodger.roomId) {
+            await Room.updateOne(
+                { _id: lodger.roomId },
+                { $pull: { "members": { accountId: lodger._id } } }
+            );
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: `Lodger ${lodger.firstName} ${lodger.lastName} đã được xóa thành công!`,
+        });
+    } catch (error) {
+        console.error("Lỗi trong deleteLodgerIfNotInContract:", error);
+        next(error);
+    }
 };
 
 export const updateLodgerAccount = async (req, res) => {
@@ -80,7 +146,7 @@ export const updateLodgerAccount = async (req, res) => {
     dateOfBirth,
     identityCard,
     phone,
-    roomId,
+    room,
     rentalDate,
     leaseTerminationDate,
     gender,
@@ -89,22 +155,20 @@ export const updateLodgerAccount = async (req, res) => {
 
   console.log("Received update data: ", req.body);
 
+
   try {
-    // Find the account using a direct MongoDB operation for more control
     const accountData = await Account.findById(accountId);
     if (!accountData) {
-      return res.status(404).json({ message: "Tài khoản không tồn tại" });
+      return res.status(404).json({ message: 'Tài khoản không tồn tại' });
     }
 
-    // Email validation check
     if (email && email !== accountData.email) {
       const checkEmailExists = await Account.findOne({ email: email });
       if (checkEmailExists !== null) {
-        return res.status(400).json({ message: "Email đã tồn tại" });
+        return res.status(400).json({ message: 'Email đã tồn tại' });
       }
     }
 
-    // Password handling
     if (password) {
       const salt = await bcrypt.genSalt(10);
       accountData.password = await bcrypt.hash(password, salt);
@@ -146,11 +210,8 @@ export const updateLodgerAccount = async (req, res) => {
     if (gender !== undefined) accountData.gender = gender;
     if (status !== undefined) accountData.status = status;
 
-    // Save the updated account
-    await accountData.save();
-
-    // Fetch the latest data to ensure response reflects actual DB state
-    const updatedAccount = await Account.findById(accountId);
+        // Save updated account
+        await accountData.save();
 
     return res.status(200).json({
       message: "Cập nhật tài khoản thành công",
@@ -313,24 +374,46 @@ export const CreateLodgerAccount = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Account creation without roomId
-    const accountData = await Account.create({
-      firstName,
-      lastName,
-      email,
-      password: hashedPassword,
-      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-      identityCard,
-      phone,
-      // Explicitly set roomId to null (though it's already the default)
-      roomId: null,
-      rentalDate: rentalDate ? new Date(rentalDate) : null,
-      leaseTerminationDate: leaseTerminationDate
-        ? new Date(leaseTerminationDate)
-        : null,
-      status: status || false,
-      accountType: accountType || "Lodger",
-    });
+        const roomData = await Room.findById(room);
+        if (!roomData) {
+            return res.status(404).json({ message: "Phòng không tồn tại" });
+        }
+
+        if (roomData.members?.length >= roomData.quantityMember) {
+            return res.status(400).json({ message: "Phòng đã đầy" });
+        }
+
+        const accountData = await Account.create({
+            firstName,
+            lastName,
+            email,
+            password: hashedPassword,
+            dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+            identityCard,
+            phone,
+            roomId: roomData._id,
+            rentalDate: rentalDate ? new Date(rentalDate) : null,
+            leaseTerminationDate: leaseTerminationDate ? new Date(leaseTerminationDate) : null,
+            // gender,
+            status: status,
+            accountType: accountType || "Lodger",
+        });
+
+        await Room.findByIdAndUpdate(
+            roomData._id,
+            { 
+                $push: { 
+                    members: {
+                        accountId: accountData._id,
+                        joinDate: rentalDate ? new Date(rentalDate) : new Date()
+                    }
+                },
+                $set: { 
+                    status: roomData.members.length + 1 >= roomData.quantityMember ? "full" : "available"
+                }
+            },
+            { new: true, runValidators: true }
+        );
 
     return res.status(201).json({
       message: "Tạo tài khoản thành công",
@@ -413,13 +496,20 @@ export const UpdateProfile = async (req, res) => {
       return res.status(404).json({ message: "Account không tìm thấy" });
     }
 
-    const { firstName, lastName, phone, avatar } = req.body;
-
-    const updatedAccount = await Account.findByIdAndUpdate(
-      accountId,
-      { firstName, lastName, phone, avatar },
-      { new: true }
-    );
+        const { 
+            firstName,
+            lastName, 
+            phone, 
+            avatar, 
+        } = req.body;
+        const updatedAccount = await Account.findByIdAndUpdate
+        (
+            accountId, {
+            firstName,
+            lastName,
+            phone,
+            avatar,
+        }, { new: true });
 
     const {
       password,
@@ -509,42 +599,41 @@ export const ChangePassword = async (req, res) => {
   try {
     const accountId = getCurrentUser(req);
     const { oldPassword, newPassword } = req.body;
-    const account = await Account.findById(accountId);
-
+    const account = await Account.findById(accountId);Q
     if (!account) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         message: "Tài khoản không tồn tại !",
       });
+    } else {
+      const comparePassword = await bcrypt.compare(
+        oldPassword,
+        account.password
+      );
+      if (!comparePassword) {
+        return res.status(200).json({
+          success: false,
+          message: "Mật khẩu cũ không đúng",
+        });
+      } else {
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+        account.password = hashedPassword;
+        await account.save();
+        return res.status(200).json({
+          success: true,
+          message: "Đổi mật khẩu thành công",
+        });
     }
-
-    const comparePassword = await bcrypt.compare(oldPassword, account.password);
-
-    if (!comparePassword) {
-      return res.status(200).json({
-        success: false,
-        message: "Mật khẩu cũ không đúng",
-      });
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
-    account.password = hashedPassword;
-    await account.save();
-
-    return res.status(200).json({
-      success: true,
-      message: "Đổi mật khẩu thành công",
-    });
-  } catch (error) {
-    console.error(error.message);
+};
+  }catch (error) {
+    console.error(error);
     return res.status(500).json({
-      success: false,
-      message: "Lỗi server",
-      error: error.message,
+      message: "Lỗi Server Error",
     });
   }
-};
+}
+
 
 export const updateAccountContactStatus = async (req, res, next) => {
   try {
