@@ -22,6 +22,7 @@ RoomRouter.put("/:roomId/status", RoomController.ChangeRoomStatus);
 RoomRouter.put("/:roomId", RoomController.updateRoomDetails);
 RoomRouter.patch("/accountId/:accountId/change-room", RoomController.ChangeRoom);
 RoomRouter.delete("/:roomId/member/:accountId", RoomController.removeMember);
+RoomRouter.get("/house/manager/:managerId", RoomController.GetRoomByManagerId);
 
 
 export default RoomRouter;

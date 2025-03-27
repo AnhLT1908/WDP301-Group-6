@@ -40,6 +40,9 @@ const AccountController = {
   }),
   updateAccountContactStatus: catchAsyncErrors(async(req, res, next) =>{
     await AccountService.updateAccountContactStatus(req, res, next)
+  }),
+  deleteLodgerIfNotInContract: catchAsyncErrors(async(req, res, next) => {
+    await AccountService.deleteLodgerIfNotInContract(req, res, next)
   })
 };
 

@@ -53,9 +53,16 @@ const RoomSchema = new Schema(
     members: [
       {
         accountId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Account",
-          required: true,
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Account",
+            required: true,
+            validate: {
+                validator: function (v) {
+                    return v.length <= 4; // Tối đa 4 người
+                },
+                message: 'Số lượng bên liên quan không được vượt quá 4 người'
+            },
+            default: []
         },
         joinDate: {
           type: Date,

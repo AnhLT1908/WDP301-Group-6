@@ -4,11 +4,12 @@ import protect from "../middleware/verifyToken.js";
 const ContractRouter = express.Router();
 // Tạo hóa đơn cho phòng
 ContractRouter.post(
-  "/room/:roomId",
+  "/room",
   protect,
   ContractController.createContract
 );
 ContractRouter.get("/room/:roomId", ContractController.getContractByRoom);
+ContractRouter.get("/manager/:managerId", ContractController.getContractByManager);
 ContractRouter.get("/:contractId", ContractController.getContractById);
 ContractRouter.patch("/:contractId", ContractController.updateContract);
 ContractRouter.delete("/:contractId", ContractController.deleteContract);
@@ -28,3 +29,4 @@ ContractRouter.delete(
 );
 
 export default ContractRouter;
+//
