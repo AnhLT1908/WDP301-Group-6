@@ -10,7 +10,7 @@ import mongoose from "mongoose";
 import axios from "axios";
 
 export const generateTransactionId = () => {
-    return crypto.randomBytes(4).toString('hex').substring(0, 7);
+  return crypto.randomBytes(4).toString("hex").substring(0, 7);
 };
 
 // Hàm tạo URL QR code
@@ -152,9 +152,9 @@ export const getOneBill = async (req, res, next) => {
       data: oneBill,
     });
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 export const getBillsByRoom = async (req, res, next) => {
   try {
@@ -174,7 +174,7 @@ export const getBillsByRoom = async (req, res, next) => {
       data: roomBills,
     });
   } catch (error) {
-      console.error("Lỗi trong autoCheckBillsAndContracts:", error);
+    console.error("Lỗi trong autoCheckBillsAndContracts:", error);
   }
 };
 
@@ -359,10 +359,12 @@ export const addBillinRoom = async (req, res, next) => {
     const formattedMonth = currentMonth.toString().padStart(2, "0");
     console.log("date", currentMonth);
 
-    const billCode = generateTransactionId();
+    const transactionId = generateTransactionId();
+    console.log("transactionId", transactionId);
+    const billCode = `BILL-${roomId}-${Date.now()}-${transactionId}`;
 
     // Tạo mô tả thanh toán
-    const paymentDescription = `${room._id}.${billCode}`;
+    const paymentDescription = `${room._id}.${transactionId}`;
 
     // Sinh URL QR thanh toán
     const { qrUrl } = generateVietQR(totalAmount, paymentDescription);
@@ -377,6 +379,7 @@ export const addBillinRoom = async (req, res, next) => {
       debt,
       total: totalAmount,
       note,
+      transactionId,
       paymentLink: qrUrl,
       isPaid: false,
       paymentMethod: paymentMethod || "Unknown",
@@ -409,130 +412,133 @@ export const addBillinRoom = async (req, res, next) => {
   }
 };
 
-export const confirmBill = async(req, res, next) =>{
+export const confirmBill = async (req, res, next) => {
   try {
-      const { billId } = req.params;
-      const { paymentMethod } = req.body;
-      const bill = await Bills.findById(billId);
-      if (!bill) {
-          return res.status(404).json({ message: "Không tìm thấy hóa đơn!" });
-      }
-      if (bill.isPaid) {
-        return { message: "Bill đã thanh toán rồi !!" };
-      }
-
-      bill.isPaid = true;
-      bill.paymentMethod = paymentMethod;
-
-      await bill.save();
-
-      const roomAccount = await Account.findOne({ roomId: bill.roomId });
-      
-      if (!roomAccount) {
-          throw new Error("Không tìm thấy tài khoản phòng!");
-      }
-
-      const room = await Room.findById(bill.roomId);
-      if (!room) {
-          throw new Error("Không tìm thấy thông tin phòng!");
-      }
-
-      await Notification.create({
-              sender: getCurrentUser(req),
-              recipients: [{ user: roomAccount.id, isRead: false }],
-              message: `Hóa đơn của phòng ${room.name} đã được thanh toán bằng ${paymentMethod === "Cash" ? "Tiền mặt" : "Chuyển khoản"}.`,
-              type: "bill",
-          });
-
-          res.json(bill);
-    } catch (error) {
-      next(error)
+    const { billId } = req.params;
+    const { paymentMethod } = req.body;
+    const bill = await Bills.findById(billId);
+    if (!bill) {
+      return res.status(404).json({ message: "Không tìm thấy hóa đơn!" });
     }
-}
+    if (bill.isPaid) {
+      return { message: "Bill đã thanh toán rồi !!" };
+    }
 
-export const autoConfirmBill = async(billId, paymentMethod = "Banking") =>{
-    try {
-        const bill = await Bills.findById(billId);
-        if (!bill) {
-            return res.status(404).json({ message: "Không tìm thấy hóa đơn!" });
-        }
-        if (bill.isPaid) {
-          return { message: "Bill đã thanh toán rồi !!" };
-        }
-  
-        bill.isPaid = true;
-        bill.paymentMethod = paymentMethod;
-  
-        await bill.save();
-  
-        const roomAccount = await Account.findOne({ roomId: bill.roomId });
-        
-        if (!roomAccount) {
-            throw new Error("Không tìm thấy tài khoản phòng!");
-        }
+    bill.isPaid = true;
+    bill.paymentMethod = paymentMethod;
+
+    await bill.save();
+
+    const roomAccount = await Account.findOne({ roomId: bill.roomId });
+
+    if (!roomAccount) {
+      throw new Error("Không tìm thấy tài khoản phòng!");
+    }
+
+    const room = await Room.findById(bill.roomId);
+    if (!room) {
+      throw new Error("Không tìm thấy thông tin phòng!");
+    }
+
+    await Notification.create({
+      sender: getCurrentUser(req),
+      recipients: [{ user: roomAccount.id, isRead: false }],
+      message: `Hóa đơn của phòng ${room.name} đã được thanh toán bằng ${
+        paymentMethod === "Cash" ? "Tiền mặt" : "Chuyển khoản"
+      }.`,
+      type: "bill",
+    });
+
+    res.json(bill);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const autoConfirmBill = async (billId, paymentMethod = "Banking") => {
+  try {
+    const bill = await Bills.findById(billId);
+    if (!bill) {
+      return res.status(404).json({ message: "Không tìm thấy hóa đơn!" });
+    }
+    if (bill.isPaid) {
+      return { message: "Bill đã thanh toán rồi !!" };
+    }
+
+    bill.isPaid = true;
+    bill.paymentMethod = paymentMethod;
+
+    await bill.save();
+
+    const roomAccount = await Account.findOne({ roomId: bill.roomId });
+
+    if (!roomAccount) {
+      throw new Error("Không tìm thấy tài khoản phòng!");
+    }
 
     const roomBills = await Bills.find({ roomId }).sort({ createdAt: -1 });
 
-        await Notification.create({
-                sender: null,
-                recipients: [{ user: roomAccount.id, isRead: false }],
-                message: `Hóa đơn của phòng ${room.name} đã được thanh toán bằng ${paymentMethod === "Cash" ? "Tiền mặt" : "Chuyển khoản"}.`,
-                type: "bill",
-            });
-  
-            res.json(bill);
-      } catch (error) {
-        next(error)
-      }
-}
+    await Notification.create({
+      sender: null,
+      recipients: [{ user: roomAccount.id, isRead: false }],
+      message: `Hóa đơn của phòng ${room.name} đã được thanh toán bằng ${
+        paymentMethod === "Cash" ? "Tiền mặt" : "Chuyển khoản"
+      }.`,
+      type: "bill",
+    });
+
+    res.json(bill);
+  } catch (error) {
+    next(error);
+  }
+};
 
 //Webhook EndPoint
-export const handleWebHook = async(req, res, next) =>{
+export const handleWebHook = async (req, res, next) => {
   try {
-    const {data} = req.body;
+    const { data } = req.body;
     console.log("Webhook từ Casso:", data);
     //Kiểm tra tính hợp lệ của ApiKey và Webhook
     const apiKey = process.env.CASSO_API_KEY;
-    const signature = req.header["x-api-key"]
-    if(signature !== apiKey){
+    const signature = req.header["x-api-key"];
+    if (signature !== apiKey) {
       return res.status(401).json({ message: "Xác thực webhook thất bại!" });
     }
-    const {description, amount} = data;
+    const { description, amount } = data;
     const transactionMatch = description.match(/Mã giao dịch (\w+)/);
-    if(!transactionMatch){
+    if (!transactionMatch) {
       return res.status(400).json({
-        message: "Không tìm thấy transactionId trong mô tả"
-      })
+        message: "Không tìm thấy transactionId trong mô tả",
+      });
     }
 
     const transactionId = transactionMatch[1];
-    const bill = await Bills.findOne({transactionId});
+    const bill = await Bills.findOne({ transactionId });
 
-    if(!bill){
+    if (!bill) {
       res.status(404).json({
-        message: "Không tìm thấy hóa đơn khớp với transactionId"
-      })
+        message: "Không tìm thấy hóa đơn khớp với transactionId",
+      });
     }
 
-    if(bill.total !== amount){
+    if (bill.total !== amount) {
       res.status(404).json({
-        message: "Số tiền chuyển khoản không khớp với hóa đơn"
-      })
+        message: "Số tiền chuyển khoản không khớp với hóa đơn",
+      });
     }
 
     const updateBill = await autoConfirmBill(bill._id, "Banking");
 
     return res.status(200).json({
       success: true,
-      message:"Hóa đơn đã gửi thành công",
-      data: updateBill
-    })
+      message: "Hóa đơn đã gửi thành công",
+      data: updateBill,
+    });
   } catch (error) {
     console.error("Lỗi trong webhook:", error);
     return res.status(500).json({ message: "Lỗi xử lý webhook!" });
   }
-}
-
+};
 
 export const UpdateBillDetail = async (req, res, next) => {
   try {
@@ -712,7 +718,6 @@ export const updateBillPaymentStatus = async (req, res, next) => {
         runValidators: true,
       }
     );
-
 
     // Return updated bill data
     res.status(200).json({
