@@ -115,7 +115,7 @@ export const updateLodgerAccount = async (req, res) => {
       if (roomId === null) {
         // Explicitly set and mark as modified for null values
         accountData.roomId = null;
-        accountData.markModified('roomId');
+        accountData.markModified("roomId");
       } else {
         // Normal room assignment flow
         const roomData = await Room.findById(roomId);
@@ -138,11 +138,13 @@ export const updateLodgerAccount = async (req, res) => {
     if (firstName !== undefined) accountData.firstName = firstName;
     if (lastName !== undefined) accountData.lastName = lastName;
     if (email !== undefined) accountData.email = email;
-    if (dateOfBirth !== undefined) accountData.dateOfBirth = new Date(dateOfBirth);
+    if (dateOfBirth !== undefined)
+      accountData.dateOfBirth = new Date(dateOfBirth);
     if (identityCard !== undefined) accountData.identityCard = identityCard;
     if (phone !== undefined) accountData.phone = phone;
     if (rentalDate !== undefined) accountData.rentalDate = new Date(rentalDate);
-    if (leaseTerminationDate !== undefined) accountData.leaseTerminationDate = new Date(leaseTerminationDate);
+    if (leaseTerminationDate !== undefined)
+      accountData.leaseTerminationDate = new Date(leaseTerminationDate);
     if (gender !== undefined) accountData.gender = gender;
     if (status !== undefined) accountData.status = status;
 
@@ -449,12 +451,10 @@ export const setManagerInactive = async (req, res, next) => {
     // Kiểm tra quyền Admin
     const admin = await Account.findById(adminId);
     if (!admin || admin.accountType !== "Admin") {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "Chỉ Admin mới có quyền thực hiện hành động này!",
-        });
+      return res.status(403).json({
+        success: false,
+        message: "Chỉ Admin mới có quyền thực hiện hành động này!",
+      });
     }
 
     // Kiểm tra managerId hợp lệ
@@ -474,12 +474,10 @@ export const setManagerInactive = async (req, res, next) => {
 
     // Nếu đã inactive, không cần cập nhật
     if (!manager.status) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Manager này đã ở trạng thái inactive!",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Manager này đã ở trạng thái inactive!",
+      });
     }
 
     // Cập nhật status thành inactive
@@ -727,24 +725,45 @@ export const transferManagerToHouse = async (req, res, next) => {
 
 export const ChangeStatus = async (req, res, next) => {
   try {
-    const accountId = getCurrentUser(req);
+    const adminId = getCurrentUser(req); // Admin thực hiện thao tác
+    const { accountId } = req.params; // ID tài khoản cần thay đổi
     const { status } = req.body;
 
-    if (typeof status !== "boolean") {
-      return res.status(400).json({
+    // Kiểm tra quyền Admin
+    const admin = await Account.findById(adminId);
+    if (!admin || admin.accountType !== "Admin") {
+      return res.status(403).json({
         success: false,
-        message: "Status must be either true or false",
+        message: "Chỉ Admin mới có quyền thay đổi trạng thái tài khoản!",
       });
     }
 
-    const existAccount = await Account.findById(accountId);
-    if (!existAccount) {
+    // Kiểm tra status phải là Boolean
+    if (typeof status !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "Status phải là true hoặc false!",
+      });
+    }
+
+    // Kiểm tra tài khoản cần thay đổi
+    const targetAccount = await Account.findById(accountId);
+    if (!targetAccount) {
       return res.status(404).json({
         success: false,
         message: "Tài khoản không tồn tại!",
       });
     }
 
+    // Không cho phép thay đổi trạng thái của Admin khác
+    if (targetAccount.accountType === "Admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Không thể thay đổi trạng thái của tài khoản Admin!",
+      });
+    }
+
+    // Cập nhật trạng thái
     const updatedAccount = await Account.findByIdAndUpdate(
       accountId,
       { status },
@@ -753,10 +772,13 @@ export const ChangeStatus = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: `Account changed to ${status}`,
+      message: `Trạng thái tài khoản đã được cập nhật thành ${
+        status ? "active" : "inactive"
+      }`,
       data: updatedAccount,
     });
   } catch (error) {
+    console.error("Lỗi trong updateAccountStatus:", error);
     next(error);
   }
 };
