@@ -7,10 +7,7 @@ const HouseSchema = new mongoose.Schema(
       required: true,
     },
     status: {
-      type: String, // Thay từ Boolean sang String
-      enum: ["available", "full"], // Chỉ chấp nhận "available" hoặc "full"
-      default: "available", // Giá trị mặc định
-      required: true,
+      type: Boolean,
   },
     location: {
       district: {

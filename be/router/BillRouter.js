@@ -16,6 +16,7 @@ BillRouter.patch(
   "/bill-update/:billId",
   BillController.updateBillPaymentStatus
 );
+BillRouter.delete("/delete/:billId", BillController.deleteBill);
 BillRouter.post("/evidence/:billId", BillController.uploadBillEvidence);
 BillRouter.delete("/evidence/:billId", BillController.deleteBillEvidence);
 BillRouter.get("/evidence/:billId", BillController.getBillEvidence);

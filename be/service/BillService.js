@@ -879,6 +879,16 @@ export const updateBillPaymentStatus = async (req, res, next) => {
   }
 };
 
+export const deleteBill = async (req, res, next) => {
+  try {
+    const { billId } = req.params;
+    const deletedBill = await Bills.findByIdAndDelete(billId);
+    if (!deletedBill) {
+      return res.status(404).json({ message: "Không tìm thấy hóa đơn" });
+    }
+    res.status(200).json({ message: "Xóa hóa đơn thành công" });
+  } catch (error) {
+    
 const configureStorage = () => {
   const billImagesDir = path.join(
     __dirname,
@@ -1131,6 +1141,7 @@ export const sendBillInformationAgain = async (req, res, next) => {
     res.status(200);
   } catch (error) {
     console.error("Error in sendBillInformationAgain", error);
+
     next(error);
   }
 };

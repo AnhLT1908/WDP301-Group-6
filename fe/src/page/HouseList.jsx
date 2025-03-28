@@ -28,7 +28,24 @@ const HouseList = () => {
   const [houseList, setHouseList] = useState([]);
   const [selectedHouse, setSelectedHouse] = useState(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [updateFormData, setUpdateFormData] = useState({});
+  const [createFormData, setCreateFormData] = useState({
+    name: "",
+    status: true,
+    location: {
+      detailLocation: "",
+      ward: "",
+      district: "",
+      province: "",
+      srcMap: ""
+    },
+    electricPrice: "",
+    waterPrice: "",
+    servicePrice: "",
+    internetPrice: "",
+    rules: ""
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -139,6 +156,56 @@ const HouseList = () => {
     }
   };
 
+  const handleCreateChange = (e) => {
+    const { name, value } = e.target;
+    if (name.includes("location.")) {
+      const field = name.split(".")[1];
+      setCreateFormData((prev) => ({
+        ...prev,
+        location: {
+          ...prev.location,
+          [field]: value,
+        },
+      }));
+    } else {
+      setCreateFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+  };
+
+  const handleCreateHouse = async () => {
+    try {
+      const response = await api.post("/house/create", createFormData);
+      setHouseList((prevList) => [...prevList, response.data.data]);
+      setShowCreateModal(false);
+      setCreateFormData({
+        name: "",
+        status: true,
+        location: {
+          detailLocation: "",
+          ward: "",
+          district: "",
+          province: "",
+          srcMap: ""
+        },
+        electricPrice: "",
+        waterPrice: "",
+        servicePrice: "",
+        internetPrice: "",
+        rules: ""
+      });
+      alert("House created successfully!");
+    } catch (error) {
+      console.error("Error creating house:", error);
+      if (error.response?.status === 401) {
+        navigate("/login");
+      }
+      alert(error.response?.data?.message || "Failed to create house!");
+    }
+  };
+
   return (
     <div className="grid grid-cols-6 gap-4 p-8">
       <div className="col-span-1 flex flex-col gap-4 w-[50%]">
@@ -153,7 +220,10 @@ const HouseList = () => {
       <div className="col-span-2 flex flex-col gap-8 ml-[-70px] mr-[60px]">
         <div className="flex justify-between">
           <h1 className="text-3xl font-bold">Hostel List</h1>
-          <button className="bg-green-500 text-white w-[50%] px-4 py-2 rounded">
+          <button 
+            onClick={() => setShowCreateModal(true)}
+            className="bg-green-500 text-white w-[50%] px-4 py-2 rounded"
+          >
             Create new hostel
           </button>
         </div>
@@ -332,6 +402,143 @@ const HouseList = () => {
                   className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded"
                 >
                   Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg w-1/2 overflow-y-auto max-h-[90vh]">
+            <h2 className="text-2xl font-bold mb-4">Create New House</h2>
+            <form>
+              <div className="mb-4">
+                <label className="block mb-2">Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={createFormData.name}
+                  onChange={handleCreateChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-2">Electric Price</label>
+                <input
+                  type="number"
+                  name="electricPrice"
+                  value={createFormData.electricPrice}
+                  onChange={handleCreateChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-2">Water Price</label>
+                <input
+                  type="number"
+                  name="waterPrice"
+                  value={createFormData.waterPrice}
+                  onChange={handleCreateChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-2">Service Price</label>
+                <input
+                  type="number"
+                  name="servicePrice"
+                  value={createFormData.servicePrice}
+                  onChange={handleCreateChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-2">Internet Price</label>
+                <input
+                  type="number"
+                  name="internetPrice"
+                  value={createFormData.internetPrice}
+                  onChange={handleCreateChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-2">Detail Location</label>
+                <input
+                  type="text"
+                  name="location.detailLocation"
+                  value={createFormData.location.detailLocation}
+                  onChange={handleCreateChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-2">Ward</label>
+                <input
+                  type="text"
+                  name="location.ward"
+                  value={createFormData.location.ward}
+                  onChange={handleCreateChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-2">District</label>
+                <input
+                  type="text"
+                  name="location.district"
+                  value={createFormData.location.district}
+                  onChange={handleCreateChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-2">Province</label>
+                <input
+                  type="text"
+                  name="location.province"
+                  value={createFormData.location.province}
+                  onChange={handleCreateChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-2">Map URL</label>
+                <input
+                  type="text"
+                  name="location.srcMap"
+                  value={createFormData.location.srcMap}
+                  onChange={handleCreateChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-2">Rules</label>
+                <textarea
+                  name="rules"
+                  value={createFormData.rules}
+                  onChange={handleCreateChange}
+                  className="w-full p-2 border rounded"
+                  rows="3"
+                />
+              </div>
+              <div className="flex justify-end gap-4">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateHouse}
+                  className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                >
+                  Create
                 </button>
               </div>
             </form>
