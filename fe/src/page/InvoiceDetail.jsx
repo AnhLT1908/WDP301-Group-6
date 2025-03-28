@@ -13,6 +13,7 @@ export default function InvoiceDetail() {
   const [house, setHouse] = useState([]);
   const [room, setRoom] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const navigate = useNavigate();
 
   const formatDate = (dateString) => {
@@ -44,6 +45,7 @@ export default function InvoiceDetail() {
           `http://localhost:5000/api/v1/bill/bill-detail/${billId}`
         );
         const billData = res.data.data;
+        console.log("Bill data", billData);
         setBill(billData);
 
         // Initialize states with bill data - using the actual isPaid value
@@ -99,6 +101,35 @@ export default function InvoiceDetail() {
     }
   };
 
+  useEffect(() => {
+    let timer;
+    if (isSending) {
+      // Khi isSending được đặt thành true, bắt đầu đếm ngược 10 giây
+      timer = setTimeout(() => {
+        setIsSending(false);
+      }, 10000);
+    }
+
+    // Cleanup function để tránh memory leak
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [isSending]); // Chạy lại effect khi isSending thay đổi
+
+  // Sau đó đơn giản hóa hàm sendBillInformation
+  const sendBillInformation = async (billId) => {
+    setIsSending(true);
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/v1/bill/sendBill/${billId}`
+      );
+      console.log("Response send bill: ", response);
+    } catch (error) {
+      console.error("Error sendBillInformation: ", error);
+      // Không cần setTimeout ở đây nữa vì useEffect sẽ xử lý
+    }
+  };
+
   // Check for changes whenever relevant state changes
   useEffect(() => {
     checkForChanges();
@@ -116,6 +147,23 @@ export default function InvoiceDetail() {
 
   const handleTurnBack = () => {
     navigate("/manager/invoice-list");
+  };
+
+  const resolveImagePath = (path) => {
+    if (!path) return "";
+
+    // For debugging
+    console.log("Attempting to resolve path:", path);
+
+    // Direct access if it's an absolute URL
+    if (path.startsWith("http")) return path;
+
+    // Handle relative paths from backend
+    // This approach works if the backend is configured to serve static files
+    return `http://localhost:5000/${path.replace(/^\/+/, "")}`;
+
+    // Alternative: If images are served from your React public folder
+    // return `${process.env.PUBLIC_URL}/${path.replace(/^\/+/, '')}`;
   };
 
   if (!bill || isLoading) {
@@ -297,14 +345,26 @@ export default function InvoiceDetail() {
                 >
                   {isLoading ? "Đang cập nhật..." : "Cập nhật"}
                 </button>
+                <button
+                  type="button"
+                  className="bg-orange-400 p-2 px-4 rounded-md text-white hover:bg-orange-600"
+                  onClick={() => sendBillInformation(bill?._id)}
+                  disabled={isSending}
+                >
+                  {isSending ? "Đang gửi..." : "Gửi lại thông tin hóa đơn"}
+                </button>
               </div>
             </form>
           </div>
         </div>
         <div className="flex flex-col items-center justify-center">
           <img
-            src={bill.paymentLink}
-            className="object-cover w-fit rounded-md shadow-md"
+            src={
+              bill.billEvidence === null
+                ? bill.paymentLink
+                : resolveImagePath(bill.billEvidence)
+            }
+            className="object-fill w-[600px] h-[800px] rounded-md shadow-md"
             alt="billQr"
           />
         </div>

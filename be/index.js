@@ -9,16 +9,23 @@ import morgan from "morgan";
 import indexRouter from "./router/IndexRoute.js";
 import helmet from "helmet";
 import ConnectDB from "./config/connectDB.js";
-import './cron.js'
+import path from "path";
+import "./cron.js";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.SERVER_PORT;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const corsOptions = {
   origin: true, // Allow requests from all origins
   credentials: true, // allow sending cookies from the client
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  exposedHeaders: ["Content-Length", "Content-Type", "Content-Disposition"],
 };
 
 ConnectDB();
@@ -45,6 +52,20 @@ app.use(
   })
 );
 
+app.use(
+  "/assets/images/billImages",
+  (req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET");
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    next();
+  },
+  express.static(path.join(__dirname, "../fe/src/assets/images/billImages"))
+);
+app.use(
+  "/billImages",
+  express.static(path.join(__dirname, "../fe/src/assets/images/billImages"))
+);
 app.use(passport.initialize());
 app.use(passport.session());
 

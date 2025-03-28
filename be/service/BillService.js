@@ -9,6 +9,14 @@ import DefaultPrice from "../model/DefaultPrice.js";
 import mongoose from "mongoose";
 import axios from "axios";
 import sendEmail from "../utils/mailer.js";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export const generateTransactionId = () => {
   return crypto.randomBytes(4).toString("hex").substring(0, 7);
@@ -24,8 +32,15 @@ export const generateVietQR = (amount, courseName) => {
   }.png?amount=${amount}&addInfo=${encodeURIComponent(
     courseName
   )}&accountName=${encodeURIComponent(config2.bankInfo.accountName)}`;
+  const qrUrlNoAmount = `https://img.vietqr.io/image/${
+    config2.bankInfo.bankId
+  }-${config2.bankInfo.bankAccount}-${
+    config2.bankInfo.template
+  }.png?addInfo=${encodeURIComponent(
+    courseName
+  )}&accountName=${encodeURIComponent(config2.bankInfo.accountName)}`;
 
-  return { qrUrl, transactionId };
+  return { qrUrl, transactionId, qrUrlNoAmount };
 };
 
 export const getTransactions = async (req, res, next) => {
@@ -471,8 +486,9 @@ export const addBillinRoom = async (req, res, next) => {
     console.log("Debt", typeof intDebt);
     console.log("========================================");
     const totalAmount = room.priceList.roomPrice + utilitiesTotal + intDebt;
+    const totalAmountToMoney = totalAmount.toLocaleString("vn-VN");
     console.log("========================================");
-    console.log("totalAmount", totalAmount);
+    console.log("totalAmount", totalAmountToMoney);
     // Sinh mã giao dịch và mã hóa đơn
 
     const currentDate = new Date();
@@ -482,8 +498,7 @@ export const addBillinRoom = async (req, res, next) => {
 
     const transactionId = generateTransactionId();
     console.log("transactionId", transactionId);
-    const billCode = `BILL-${roomId}-${Date.now()}-${transactionId}`;
-
+    const billCode = `BILL-ROOM${room.name}-MONTH${formattedMonth}`;
 
     // Tạo mô tả thanh toán
     const paymentDescription = `${room._id}.${transactionId}`;
@@ -519,17 +534,11 @@ export const addBillinRoom = async (req, res, next) => {
       await Notification.create({
         sender: getCurrentUser(req),
         recipients: [{ user: contactAccount._id, isRead: false }],
-        message: `Hóa đơn phòng ${room.name} đã được tạo (Tổng: ${totalAmount} VND)`,
+        message: `Hóa đơn phòng ${room.name} đã được tạo (Tổng: ${totalAmountToMoney} VND)`,
         type: "bill",
       });
 
-      const emailText = `
-            Kính gửi ${contactAccount.firstName} ${contactAccount.lastName},
-            Một hóa đơn mới đã được tạo cho phòng ${room.name}.
-            Mã hóa đơn: ${billCode}
-            Tổng tiền: ${totalAmount} VND
-            Link thanh toán: ${qrUrl}
-        `;
+      const emailText = `Kính gửi ${contactAccount.firstName} ${contactAccount.lastName}!\nMột hóa đơn mới đã được tạo cho phòng ${room.name}.\nMã hóa đơn: ${billCode}\nTổng tiền: ${totalAmountToMoney} VND\nLink thanh toán: ${qrUrl}`;
 
       await sendEmail({
         from: "WDPGroup6@gmail.com",
@@ -879,6 +888,260 @@ export const deleteBill = async (req, res, next) => {
     }
     res.status(200).json({ message: "Xóa hóa đơn thành công" });
   } catch (error) {
+    
+const configureStorage = () => {
+  const billImagesDir = path.join(
+    __dirname,
+    "../../fe/src/assets/images/billImages"
+  );
+
+  if (!fs.existsSync(billImagesDir)) {
+    fs.mkdirSync(billImagesDir, { recursive: true });
+  }
+
+  return multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, billImagesDir);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+      const fileExtension = path.extname(file.originalname);
+      const filename = `bill-${req.params.billId}-${uniqueSuffix}-${fileExtension}`;
+      cb(null, filename);
+    },
+  });
+};
+
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "image/gif"];
+
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(
+      new Error("Invalid file type. Only JPEG, PNG, JPG and GIF are allowed."),
+      false
+    );
+  }
+};
+
+const upload = multer({
+  storage: configureStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: fileFilter,
+});
+
+export const uploadBillEvidence = async (req, res, next) => {
+  // Set up single file upload middleware
+  const uploadMiddleware = upload.single("billEvidence");
+
+  uploadMiddleware(req, res, async (err) => {
+    try {
+      // Handle upload errors
+      if (err) {
+        if (err instanceof multer.MulterError) {
+          // Multer-specific errors
+          if (err.code === "LIMIT_FILE_SIZE") {
+            return res.status(400).json({
+              success: false,
+              message: "File size exceeds the 5MB limit.",
+            });
+          }
+          return res.status(400).json({
+            success: false,
+            message: `Upload error: ${err.message}`,
+          });
+        }
+
+        // Other errors
+        return res.status(400).json({
+          success: false,
+          message: err.message,
+        });
+      }
+
+      // Check if file was provided
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: "No file uploaded.",
+        });
+      }
+
+      const { billId } = req.params;
+
+      // Find the bill and update the evidence field
+      const bill = await Bills.findById(billId)
+        .populate("roomId")
+        .populate("houseId");
+      console.log("bill", bill);
+      const room = bill.roomId;
+      const roomId = room._id;
+      const _id = bill.houseId.hostId;
+      console.log("Host id", _id);
+      console.log("Room Id", room);
+      if (!bill) {
+        // Remove uploaded file if bill not found
+        if (req.file && req.file.path) {
+          fs.unlinkSync(req.file.path);
+        }
+
+        return res.status(404).json({
+          success: false,
+          message: "Bill not found.",
+        });
+      }
+
+      const contactAccount =
+        (await Account.findOne({ _id, isContact: true })) ||
+        (await Account.findOne({ _id }));
+      console.log("Find contact account", contactAccount);
+
+      if (contactAccount) {
+        const emailText = `Lưu ý!\nPhòng ${room.name} đã tải ảnh thanh toán hóa đơn lên.\nVui lòng kiểm tra hóa đơn có mã là\n${bill.billCode}\nđể xác nhận và chuyển trạng thái.`;
+
+        await sendEmail({
+          from: "WDPGroup6@gmail.com",
+          to: contactAccount.email,
+          subject: `Phòng ${room.name} thanh toán hóa đơn ${bill.billCode}`,
+          text: emailText,
+        });
+      }
+
+      // Store relative path to frontend assets directory
+      const relativePath = `/assets/images/billImages/${req.file.filename}`;
+
+      // Update bill with evidence path
+      bill.billEvidence = relativePath;
+      await bill.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Bill evidence uploaded successfully.",
+        data: {
+          billId: bill._id,
+          billCode: bill.billCode,
+          billEvidence: bill.billEvidence,
+        },
+      });
+    } catch (error) {
+      // Clean up file on error
+      if (req.file && req.file.path) {
+        fs.unlinkSync(req.file.path);
+      }
+
+      console.error("Error in uploadBillEvidence:", error);
+      next(error);
+    }
+  });
+};
+
+export const deleteBillEvidence = async (req, res, next) => {
+  try {
+    const { billId } = req.params;
+
+    // Find the bill
+    const bill = await Bills.findById(billId);
+
+    if (!bill) {
+      return res.status(404).json({
+        success: false,
+        message: "Bill not found.",
+      });
+    }
+
+    // Check if bill has evidence
+    if (!bill.billEvidence) {
+      return res.status(400).json({
+        success: false,
+        message: "No evidence attached to this bill.",
+      });
+    }
+
+    // Extract filename from path
+    const filename = bill.billEvidence.split("/").pop();
+    const filePath = path.join(
+      __dirname,
+      "../../fe/src/assets/images/billImages",
+      filename
+    );
+
+    // Delete file if it exists
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    // Update bill to remove evidence reference
+    bill.billEvidence = null;
+    await bill.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Bill evidence deleted successfully.",
+    });
+  } catch (error) {
+    console.error("Error in deleteBillEvidence:", error);
+    next(error);
+  }
+};
+
+export const getBillEvidence = async (req, res, next) => {
+  try {
+    const { billId } = req.params;
+
+    const bill = await Bills.findById(billId);
+
+    if (!bill) {
+      return res.status(404).json({
+        success: false,
+        message: "Bill not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        billId: bill._id,
+        billCode: bill.billCode,
+        billEvidence: bill.billEvidence,
+      },
+    });
+  } catch (error) {
+    console.error("Error in getBillEvidence:", error);
+    next(error);
+  }
+};
+
+export const sendBillInformationAgain = async (req, res, next) => {
+  try {
+    const { billId } = req.params;
+    const bill = await Bills.findById(billId).populate("roomId");
+    console.log("Bill find:", bill);
+    const roomId = bill.roomId._id;
+    const roomName = bill.roomId.name;
+    const transactionId = generateTransactionId();
+    const billDescription = `${roomId}.${transactionId}`;
+
+    const { qrUrlNoAmount } = generateVietQR(0, billDescription);
+    console.log("qrUrlNoAmount", qrUrlNoAmount);
+    const contactAccount =
+      (await Account.findOne({ roomId, isContact: true })) ||
+      (await Account.findOne({ roomId }));
+    console.log("Find contact account", contactAccount);
+    if (contactAccount) {
+      const emailText = `Kính gửi ${contactAccount.firstName} ${contactAccount.lastName}!\nGiao dịch của bạn chưa đủ số tiền hoặc không hợp lệ.\nVui lòng kiểm tra giao dịch trước đó và thông tin hóa đơn mã ${bill.billCode}.\nSau khi kiểm tra nếu có thắc mắc vui lòng gửi báo cáo đến quản lý, nếu không có thắc mắc hãy bổ sung tiền hóa đơn vào tài khoản dưới đây.\nĐường link mã QR:\n${qrUrlNoAmount}.\nTrân trọng cảm ơn!`;
+
+      await sendEmail({
+        from: "WDPGroup6@gmail.com",
+        to: contactAccount.email,
+        subject: `Giao dịch có vấn đề, Phòng ${roomName} mã hóa đơn ${bill.billCode}`,
+        text: emailText,
+      });
+    }
+    res.status(200);
+  } catch (error) {
+    console.error("Error in sendBillInformationAgain", error);
+
     next(error);
   }
 };

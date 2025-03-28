@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import BillEvidenceUpload from "../components/BillEvidenceUpload";
 
 export default function LodgerInvoiceDetail() {
   const { billId } = useParams();
@@ -38,6 +39,14 @@ export default function LodgerInvoiceDetail() {
 
   const handleTurnBack = () => {
     navigate(`/lodger-invoice-list/${bill.roomId._id}`);
+  };
+
+  const handleEvidenceUploadSuccess = (data) => {
+    // Update the bill state with the new evidence
+    setBill((prevBill) => ({
+      ...prevBill,
+      billEvidence: data.billEvidence,
+    }));
   };
 
   if (!bill || isLoading) {
@@ -174,6 +183,11 @@ export default function LodgerInvoiceDetail() {
               </p>
             </div>
           </div>
+          <BillEvidenceUpload
+            billId={billId}
+            isPaid={bill.isPaid}
+            onUploadSuccess={handleEvidenceUploadSuccess}
+          />
         </div>
         {/* <div className="flex flex-col items-center justify-center">
           <img
