@@ -16,5 +16,6 @@ BillRouter.patch(
   "/bill-update/:billId",
   BillController.updateBillPaymentStatus
 );
+BillRouter.delete("/delete/:billId", BillController.deleteBill);
 
 export default BillRouter;

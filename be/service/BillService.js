@@ -869,3 +869,16 @@ export const updateBillPaymentStatus = async (req, res, next) => {
     next(error);
   }
 };
+
+export const deleteBill = async (req, res, next) => {
+  try {
+    const { billId } = req.params;
+    const deletedBill = await Bills.findByIdAndDelete(billId);
+    if (!deletedBill) {
+      return res.status(404).json({ message: "Không tìm thấy hóa đơn" });
+    }
+    res.status(200).json({ message: "Xóa hóa đơn thành công" });
+  } catch (error) {
+    next(error);
+  }
+};

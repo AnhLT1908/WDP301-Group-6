@@ -7,7 +7,7 @@ import Account from '../model/Account.js';
 
 export const addHouse = async (req, res, next) => { 
     try {
-        const { name, status, location, electricPrice, waterPrice, servicePrice, internetPrice, rules, hostId } = req.body;
+        const { name, status, location, electricPrice, waterPrice, servicePrice, internetPrice, rules } = req.body;
         
         if (!electricPrice || !waterPrice || !servicePrice) {
             return res.status(400).json({
@@ -32,14 +32,6 @@ export const addHouse = async (req, res, next) => {
             });
         }
 
-        const hostUser = await Account.findById(hostId);
-        if (!hostUser || hostUser.accountType !== "Manager") {
-            return res.status(400).json({
-                success: false,
-                message: "hostId phải là một tài khoản có role Manager!",
-            });
-        }
-
         const house = new House({
             name,
             status,
@@ -57,7 +49,6 @@ export const addHouse = async (req, res, next) => {
                 internetPrice
             }],
             rules,
-            hostId,
         });
 
         await house.save();

@@ -25,7 +25,11 @@ const BillController = {
     }),
     updateBillPaymentStatus: catchAsyncErrors(async (req, res, next) => {
       await BillService.updateBillPaymentStatus(req, res, next);
-  })
+    }),
+    deleteBill: catchAsyncErrors(async (req, res, next) => {
+      await BillService.deleteBill(req, res, next);
+    }),
+
 };
 
 

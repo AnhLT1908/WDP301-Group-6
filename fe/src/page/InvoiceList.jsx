@@ -89,24 +89,36 @@ export default function InvoiceList() {
     navigate("/manager/invoice/new-invoice");
   };
 
+  const handleDeleteBill = async (billId) => {
+    if (window.confirm("Are you sure you want to delete this bill?")) {
+      try {
+        const response = await axios.delete(
+          `http://localhost:5000/api/v1/bill/delete/${billId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        
+        // Remove the deleted bill from the state
+        setBills((prevBills) => prevBills.filter((bill) => bill._id !== billId));
+        alert(response.data.message || "Bill deleted successfully");
+      } catch (error) {
+        console.error("Error deleting bill:", error);
+        alert(
+          error.response?.data?.message || "Failed to delete bill"
+        );
+      }
+    }
+  };
+
   return (
     <div className="mb-8 flex flex-col">
-      {/* Card Container */}
-      {/* <div className="m-6">
-        <button className="flex justify-center items-center rounded-md font-medium text-white bg-green-600 p-6 w-[100px] h-[50px]">
-          Back
-        </button>
-      </div> */}
       <div className="shadow overflow-hidden m-6">
         {/* Card Header */}
         <div className="flex justify-between items-center rounded-lg bg-gradient-to-r from-green-700 to-green-500 p-6 mx-6">
           <h6 className="text-white text-lg font-medium">Invoice List</h6>
-          {/* <button
-            onClick={handleCreateAccount}
-            className="bg-white text-green-500 hover:bg-green-900  transition duration-300 font-bold px-6 py-2 rounded-xl shadow-md"
-          >
-            Create new account
-          </button> */}
         </div>
         {/* Card Body */}
         <div className="overflow-x-auto px-0 pt-0 pb-2">
@@ -135,7 +147,7 @@ export default function InvoiceList() {
             <tbody>
               {bills.map((bill, index) => {
                 const cellClass = `py-3 px-6 ${
-                  index === bill.length - 1
+                  index === bills.length - 1
                     ? ""
                     : "border-b border-blue-gray-50"
                 }`;
@@ -185,12 +197,20 @@ export default function InvoiceList() {
                     </td>
 
                     <td className={cellClass}>
-                      <a
-                        href={`/manager/invoice-detail/${bill._id}`}
-                        className="text-xs font-semibold text-blue-gray-600 hover:underline"
-                      >
-                        Edit
-                      </a>
+                      <div className="flex gap-2">
+                        <a
+                          href={`/manager/invoice-detail/${bill._id}`}
+                          className="text-xs font-semibold text-blue-600 hover:underline"
+                        >
+                          Edit
+                        </a>
+                        <button
+                          onClick={() => handleDeleteBill(bill._id)}
+                          className="text-xs font-semibold text-red-600 hover:underline"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -199,40 +219,6 @@ export default function InvoiceList() {
           </table>
         </div>
       </div>
-      {/* <div className="flex justify-center items-center mt-6">
-        <button
-          onClick={() => handleChangePages(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="flex items-center justify-center mr-2 w-[80px] bg-green-500 hover:bg-green-700 p-2 rounded-lg text-base font-semibold text-white"
-        >
-          Previous
-        </button>
-        <div className="flex items-center space-x-2">
-          {[...Array(totalPages)].map((_, index) => {
-            const pageNum = index + 1;
-            return (
-              <button
-                key={pageNum}
-                onClick={() => handleChangePages(pageNum)}
-                className={`flex items-center justify-center px-3 py-1 text-lg font-semibold rounded-md ${
-                  pageNum === currentPage
-                    ? "bg-green-600 text-white"
-                    : "bg-gray-200 text-green-500 hover:bg-gray-300"
-                }`}
-              >
-                {pageNum}
-              </button>
-            );
-          })}
-        </div>
-        <button
-          onClick={() => handleChangePages(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="flex justify-center items-center ml-2 w-[80px] bg-green-500 hover:bg-green-700 p-2 rounded-lg text-base font-semibold text-white"
-        >
-          Next
-        </button>
-      </div> */}
     </div>
   );
 }
