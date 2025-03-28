@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import authorsTableData from "../data/authors-table-data";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
