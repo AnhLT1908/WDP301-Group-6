@@ -888,7 +888,9 @@ export const deleteBill = async (req, res, next) => {
     }
     res.status(200).json({ message: "Xóa hóa đơn thành công" });
   } catch (error) {
-    
+    console.error("Error delete bill: ", error);
+  }
+};
 const configureStorage = () => {
   const billImagesDir = path.join(
     __dirname,
