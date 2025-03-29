@@ -55,6 +55,7 @@ function Header() {
             <Link to="/features" className={`${isActiveLink("/features")}`}>Features</Link>
             <Link to="/categories" className={`${isActiveLink("/categories")}`}>Categories</Link>
             <Link to="/contact" className={`${isActiveLink("/contact")}`}>Contact</Link>
+            <Link to="/contract" className={`${isActiveLink("/contract")}`}>Contract</Link>
           </nav>
 
           <div className="md:hidden">

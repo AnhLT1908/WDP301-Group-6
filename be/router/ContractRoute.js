@@ -14,6 +14,7 @@ ContractRouter.get("/:contractId", ContractController.getContractById);
 ContractRouter.patch("/:contractId", ContractController.updateContract);
 ContractRouter.delete("/:contractId", ContractController.deleteContract);
 ContractRouter.get("/house/:houseId", ContractController.getContractsByHouse);
+ContractRouter.get("/lodger/:lodgerId", ContractController.getContractsByLodger);
 ContractRouter.patch(
   "/lodger/:contractId",
   protect,

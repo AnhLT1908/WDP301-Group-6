@@ -13,7 +13,7 @@ const oneYearFromNow = () => {
 
 export const createContract = async (req, res, next) => {
   try {
-    const { benB, description, startDate, endDate , roomId} = req.body;
+    const { benB, description, startDate, endDate, roomId } = req.body;
 
     // Kiểm tra roomId hợp lệ
     if (!mongoose.Types.ObjectId.isValid(roomId)) {
@@ -158,6 +158,38 @@ export const getContractByRoom = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getContractsByLodger = async (req, res, next) => {
+  try {
+    const { lodgerId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(lodgerId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "lodgerId không hợp lệ!" });
+    }
+
+    const contracts = await Contract.find({ benB: lodgerId }).populate(
+      "benA benB roomId"
+    );
+    if (!contracts.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy hợp đồng nào cho người thuê này!",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: contracts.length,
+      data: contracts,
+    });
+  } catch (error) {
+    console.error("Lỗi trong getContractsByLodger:", error);
+    next(error);
+  }
+};
+
 export const getContractByManager = async (req, res, next) => {
   try {
     const { managerId } = req.params;

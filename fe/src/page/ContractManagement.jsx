@@ -130,6 +130,43 @@ const ContractManagement = () => {
     };
 
     if (isEditMode) {
+      try {
+        // Define the data to be sent to the API based on your backend requirements
+        const contractData = {
+          description: formData.description,
+          status: formData.status,
+          verifyTwoSide: formData.verifyTwoSide,
+          startDate: formData.startDate,
+          endDate: formData.endDate,
+        };
+
+        // Make the API call
+        const response = await Axios.patch(
+          `http://localhost:5000/api/v1/contract/${selectedContract}`,
+          contractData,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        const result = await response.json();
+
+        // Check if the update was successful
+        if (result.success) {
+          // Update the local state with the data returned from the API
+          const updatedContracts = contracts.map((c) =>
+            c._id === selectedContract ? result.data : c
+          );
+          setContracts(updatedContracts);
+        }
+      } catch (error) {
+        console.error("Error updating contract:", error);
+      } finally {
+        setIsEditMode(false);
+      }
+
       const updatedContracts = contracts.map((c) =>
         c._id === selectedContract ? newContractData : c
       );
