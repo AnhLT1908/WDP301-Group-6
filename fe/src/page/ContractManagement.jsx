@@ -77,27 +77,34 @@ const ContractManagement = () => {
   const openModal = (contractId = null) => {
     if (contractId) {
       const contract = contracts.find((c) => c._id === contractId);
-      console.log(contract);
+
       if (contract) {
+        setSelectedContract(contractId);
+
         setFormData({
           description: contract.description || "",
-          roomId: contract.roomId?.name || "",
-          benA: contract.benA?.name || "",
-          benB: contract.benB?.name || "",
+          roomId: contract.roomId?._id || "",
+          benB: contract.benB?._id || "",
+          benBName: contract.benB
+            ? `${contract.benB.lastName || ""} ${
+                contract.benB.firstName || ""
+              }`.trim()
+            : "",
+
           status: contract.status || "valid",
           verifyTwoSide: contract.verifyTwoSide || "unverified",
-          startDate: contract.startDate.split("T")[0] || "",
-          endDate: contract.endDate.split("T")[0] || "",
+          startDate: contract.startDate ? contract.startDate.split("T")[0] : "",
+          endDate: contract.endDate ? contract.endDate.split("T")[0] : "",
         });
+
         setIsEditMode(true);
-        setSelectedContract(contractId);
       }
     } else {
       setFormData({
         description: "",
         roomId: "",
-        benA: "",
         benB: "",
+        benBName: "",
         status: "valid",
         verifyTwoSide: "unverified",
         startDate: new Date().toISOString().split("T")[0],
@@ -105,33 +112,19 @@ const ContractManagement = () => {
           .toISOString()
           .split("T")[0],
       });
+
       setIsEditMode(false);
       setSelectedContract(null);
     }
+
     setShowModal(true);
   };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    const newContractData = {
-      _id: isEditMode ? selectedContract : `new-${Date.now()}`,
-      description: formData.description,
-      roomId: formData.roomId || null,
-      benA: formData.benA || null,
-      benB: formData.benB || null,
-      status: formData.status,
-      verifyTwoSide: formData.verifyTwoSide,
-      startDate: new Date(formData.startDate).toISOString(),
-      endDate: new Date(formData.endDate).toISOString(),
-      createdAt: isEditMode
-        ? contracts.find((c) => c._id === selectedContract)?.createdAt
-        : new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
 
-    if (isEditMode) {
-      try {
-        // Define the data to be sent to the API based on your backend requirements
+    try {
+      if (isEditMode) {
         const contractData = {
           description: formData.description,
           status: formData.status,
@@ -139,41 +132,48 @@ const ContractManagement = () => {
           startDate: formData.startDate,
           endDate: formData.endDate,
         };
-
-        // Make the API call
         const response = await Axios.patch(
           `http://localhost:5000/api/v1/contract/${selectedContract}`,
           contractData,
           {
             headers: {
               "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
             },
           }
         );
-
-        const result = await response.json();
-
-        // Check if the update was successful
-        if (result.success) {
-          // Update the local state with the data returned from the API
-          const updatedContracts = contracts.map((c) =>
-            c._id === selectedContract ? result.data : c
+        if (response.data && response.data.success) {
+          const existingContract = contracts.find(
+            (c) => c._id === selectedContract
           );
-          setContracts(updatedContracts);
-        }
-      } catch (error) {
-        console.error("Error updating contract:", error);
-      } finally {
-        setIsEditMode(false);
-      }
+          const updatedContract = {
+            ...existingContract,
+            description: formData.description,
+            status: formData.status,
+            verifyTwoSide: formData.verifyTwoSide,
+            startDate: formData.startDate,
+            endDate: formData.endDate,
+            updatedAt: new Date().toISOString(),
+            benB: existingContract.benB,
+            roomId: existingContract.roomId,
+            benA: existingContract.benA,
+          };
 
-      const updatedContracts = contracts.map((c) =>
-        c._id === selectedContract ? newContractData : c
-      );
-      setContracts(updatedContracts);
-    } else {
-      try {
-        const res = await Axios.post(
+          setContracts(
+            contracts.map((c) =>
+              c._id === selectedContract ? updatedContract : c
+            )
+          );
+
+          alert("Cập nhật hợp đồng thành công!");
+        } else {
+          alert(
+            "Cập nhật không thành công: " +
+              (response.data.message || "Lỗi không xác định")
+          );
+        }
+      } else {
+        const response = await Axios.post(
           "http://localhost:5000/api/v1/contract/room",
           formData,
           {
@@ -182,14 +182,43 @@ const ContractManagement = () => {
             },
           }
         );
-        setContracts([...contracts, newContractData]);
 
-        alert(res.data.message);
-      } catch (error) {
-        alert(error.response.data.message);
+        if (response.data && response.data.success) {
+          if (response.data.data) {
+            setContracts([...contracts, response.data.data]);
+          } else {
+            const newContractData = {
+              _id: `temp-${Date.now()}`,
+              description: formData.description,
+              roomId: { _id: formData.roomId, name: formData.roomId },
+              benA: {
+                _id: managerId,
+                name: `${parsedData.lastName} ${parsedData.firstName}`,
+              },
+              benB: { _id: formData.benB },
+              status: formData.status,
+              verifyTwoSide: formData.verifyTwoSide,
+              startDate: formData.startDate,
+              endDate: formData.endDate,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            };
+            setContracts([...contracts, newContractData]);
+          }
+
+          alert(response.data.message || "Tạo hợp đồng thành công!");
+        } else {
+          alert(response.data.message || "Tạo hợp đồng không thành công!");
+        }
       }
+
+      setShowModal(false);
+    } catch (error) {
+      console.error("Lỗi xử lý hợp đồng:", error);
+      alert(
+        error.response?.data?.message || "Đã xảy ra lỗi khi xử lý hợp đồng!"
+      );
     }
-    setShowModal(false);
   };
 
   const handleDeleteContract = async (contractId) => {
@@ -233,7 +262,7 @@ const ContractManagement = () => {
               onClick={() => openModal(contract._id)}
             >
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                Hợp Đồng Phòng {contract.roomId.name}
+                Hợp Đồng Phòng {contract?.roomId?.name}
               </h3>
               <p className="text-gray-600">
                 Điều Khoản: {contract.description}{" "}
@@ -340,28 +369,45 @@ const ContractManagement = () => {
                     {`${parsedData.lastName} ${parsedData.firstName}`}
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Bên B
-                  </label>
-                  <select
-                    value={formData.benB}
-                    onChange={(e) =>
-                      setFormData((prevFormData) => ({
-                        ...prevFormData,
-                        benB: e.target.value,
-                      }))
-                    }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"
-                  >
-                    <option value="">Chọn người đại diện bên B</option>
-                    {listLodger.map((lodger, index) => (
-                      <option key={index} value={lodger._id}>
-                        {lodger.firstName} {lodger.lastName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {isEditMode === true ? (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Bên B
+                    </label>
+                    <div className="mt-1 block w-full rounded-md shadow-md p-2">
+                      {formData.benBName || "Không có thông tin"}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Bên B
+                    </label>
+                    <select
+                      value={formData.benB}
+                      onChange={(e) => {
+                        const selectedLodger = listLodger.find(
+                          (lodger) => lodger._id === e.target.value
+                        );
+                        setFormData((prevFormData) => ({
+                          ...prevFormData,
+                          benB: e.target.value,
+                          benBName: selectedLodger
+                            ? `${selectedLodger.firstName} ${selectedLodger.lastName}`
+                            : "",
+                        }));
+                      }}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"
+                    >
+                      <option value="">Chọn người đại diện bên B</option>
+                      {listLodger.map((lodger, index) => (
+                        <option key={index} value={lodger._id}>
+                          {lodger.firstName} {lodger.lastName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Hiệu Lực Từ Ngày

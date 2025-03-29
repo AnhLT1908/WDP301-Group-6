@@ -55,17 +55,18 @@ export default function DashboardSideBar() {
           {menuOpen && (
             <ul className="ml-4">
               <li className="mb-2 text-[#FDEE2A]">
-                <Link to="/admin">Home</Link>
+                <Link to="/admin">Trang Chủ</Link>
               </li>
               <li className="mb-2 text-[#FDEE2A]">
-                <Link to="/admin/dashboard">Dashboard</Link>
+                <Link to="/admin/dashboard">Dashboard Thống Kê</Link>
               </li>
-              {/* <li className="mb-2 text-[#FDEE2A]">
-                <Link to="/admin/account-list">Account List</Link>
-              </li> */}
               <li className="mb-2 text-[#FDEE2A]">
-                <Link to="/admin/house-list">House List</Link>
+                <Link to="/admin/manager-list">Danh Sách Tài Khoản Người Quản Lý</Link>
               </li>
+              <li className="mb-2 text-[#FDEE2A]">
+                <Link to="/admin/house-list">Danh Sách Khu Nhà Trọ</Link>
+              </li>
+              
             </ul>
           )}
         </ul>

@@ -16,7 +16,6 @@ export default function ManagerHeader() {
     const userData = localStorage.getItem("user");
     if (userData) {
       const parsedUser = JSON.parse(userData);
-      console.log("User data header", parsedUser);
       setUserName(`${parsedUser.lastName} ${parsedUser.firstName}` || "Manager");
       setAccountId(parsedUser._id);
       setAccountType(parsedUser.accountType);
@@ -32,7 +31,6 @@ export default function ManagerHeader() {
             headers: { Authorization: `Bearer ${token}`, "host-Id": accountId },
           }
         );
-        console.log("House Response:", response.data.data);
         if (response.data.data && response.data.data.length > 0) {
           setHouse(response.data.data[0]);
         }
@@ -42,9 +40,6 @@ export default function ManagerHeader() {
     };
     fecthHouseData();
   }, [token, accountId]);
-
-  console.log("Header House", house);
-
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("accountType");
@@ -68,16 +63,16 @@ export default function ManagerHeader() {
           <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded shadow-lg z-50">
             <ul>
               <li className="p-2 hover:bg-gray-200 cursor-pointer">
-                User Profile
+                Thông Tin Cá Nhân
               </li>
               <li className="p-2 hover:bg-gray-200 cursor-pointer">
-                Change Password
+                Đổi Mật Khẩu
               </li>
               <li
                 className="p-2 hover:bg-gray-200 cursor-pointer"
                 onClick={handleLogout}
               >
-                Logout
+                Đăng Xuất
               </li>
             </ul>
           </div>

@@ -26,14 +26,9 @@ const HomePageAdmin = () => {
       link: "/admin/dashboard",
     },
     {
-      title: "Tin tức",
-      icon: <ListPlus size={70} className="relative text-white" />,
-      link: "/admin/news",
-    },
-    {
       title: "Tài khoản",
       icon: <UserCog size={70} className="relative text-white" />,
-      link: "/admin/account-list",
+      link: "/admin/manager-list",
     },
   ];
 
@@ -55,10 +50,10 @@ const HomePageAdmin = () => {
               >
                 Quản lý
               </div>
-              <div className="absolute top-1/2 left-[200px] w-[1390px] border-t-2 border-gray-200"></div>
-              <div className="absolute top-2/3 left-[190px] w-[1400px] border-t-2 border-gray-200"></div>
+              <div className="absolute top-1/2 left-[200px] w-[1350px] border-t-2 border-gray-200"></div>
+              <div className="absolute top-2/3 left-[190px] w-[1360px] border-t-2 border-gray-200"></div>
             </div>
-            <div className="flex justify-around">
+            <div className="flex justify-between px-7">
               {featureCards.map((card, index) => (
                 <Card
                   key={index}
@@ -70,7 +65,7 @@ const HomePageAdmin = () => {
                           showIcon={true}
                           className="px-4 py-2 bg-white text-green-500 rounded font-semibold hover:bg-[#FDEE2A]"
                         >
-                          View More
+                          Xem Thêm
                         </Button>
                       </Link>
                     </div>

@@ -93,6 +93,7 @@ const RoomDetail = () => {
     }
   };
 
+  console.log("Room lodger", lodgers);
   // Gọi hàm fetchLodgers khi roomId thay đổi
   useEffect(() => {
     fetchLodgers();
@@ -601,6 +602,8 @@ const RoomDetail = () => {
     return lodger ? `${lodger.firstName} ${lodger.lastName}` : "Không tìm thấy";
   };
 
+  console.log("Bill here", bills);
+
   /**
    * Chuyển hướng đến trang tạo hóa đơn cho phòng
    */
@@ -697,11 +700,19 @@ const RoomDetail = () => {
           {lodgers.map((member, index) => (
             <div key={index} className="flex items-center justify-between">
               <div className="flex-grow">
-                <RoomInput
-                  label={`Thành viên ${index + 1}`}
-                  value={`${member.lastName} ${member.firstName}`}
-                  editable={false}
-                />
+                {member.isContact === true ? (
+                  <RoomInput
+                    label={`Thành viên ${index + 1} (Người đại diện hợp đồng)`}
+                    value={`${member.lastName} ${member.firstName}`}
+                    editable={false}
+                  />
+                ) : (
+                  <RoomInput
+                    label={`Thành viên ${index + 1}`}
+                    value={`${member.lastName} ${member.firstName}`}
+                    editable={false}
+                  />
+                )}
               </div>
               {isEditing && (
                 <button
@@ -744,7 +755,7 @@ const RoomDetail = () => {
       </div>
 
       {/* Các nút tác vụ chính */}
-      <div className="mt-auto grid grid-cols-4 gap-4">
+      <div className="mt-auto grid grid-cols-3 gap-4">
         {/* Nút lưu/chỉnh sửa phòng */}
         {isEditing ? (
           <button
@@ -761,11 +772,6 @@ const RoomDetail = () => {
             Cập nhật thông tin phòng
           </button>
         )}
-
-        {/* Nút xem báo cáo phòng */}
-        <button className="bg-green-500 hover:bg-green-800 transition duration-200 text-white px-6 py-3 rounded w-full">
-          Xem báo cáo phòng
-        </button>
 
         {/* Nút xem hóa đơn phòng */}
         <button
@@ -792,9 +798,21 @@ const RoomDetail = () => {
             <ul>
               {bills.map((bill) => (
                 <li key={bill._id} className="mb-4">
-                  <p>Note: {bill.note}</p>
-                  <p>Total: {bill.total}</p>
-                  <p>Status: {bill.status}</p>
+                  <p>
+                    <strong>Mã hóa đơn:</strong> {bill.billCode}
+                  </p>
+                  <p>
+                    <strong>Tổng tiền:</strong>{" "}
+                    {bill.total.toLocaleString("vn-VN")} VND
+                  </p>
+                  <p>
+                    <strong>Trạng thái:</strong>{" "}
+                    <span className={bill.isPaid === true ? "text-green-600" : "text-red-600"}>
+                      {bill.isPaid === true
+                        ? "Đã thanh toán"
+                        : "Chưa thanh toán"}
+                    </span>
+                  </p>
                   <button
                     onClick={() =>
                       navigate(`/manager/invoice-detail/${bill._id}`)

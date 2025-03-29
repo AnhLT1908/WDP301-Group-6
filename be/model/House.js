@@ -37,6 +37,7 @@ const HouseSchema = new mongoose.Schema(
     },
     numberOfMember: {
       type: Number,
+      default: 0,
     },
     DefaultPrice: [
       {

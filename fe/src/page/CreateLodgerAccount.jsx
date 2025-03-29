@@ -73,7 +73,6 @@ const CreateLodgerAccount = () => {
 
   // Validation functions
   const validatePassword = (password) => {
-
     if (password.length < 8) {
       return "Mật khẩu phải có ít nhất 8 ký tự";
     }

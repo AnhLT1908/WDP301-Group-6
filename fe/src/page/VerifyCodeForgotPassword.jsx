@@ -22,15 +22,15 @@ const VerifyCodeForgotPassword = () => {
     console.log(`Verify Code submitted: ${passwordResetCode}`);
 
     if (!passwordResetCode) {
-      setError("Please fill in this field.");
+      setError("Vui lòng điền vào mục trên màn hình.");
       return;
     }
     if (passwordResetCode.length !== 6) {
-      setError("The verification code must be 6 character numbers long.");
+      setError("Mã xác minh phải dài 6 ký tự.");
       return;
     }
     if (isNaN(passwordResetCode)) {
-      setError("The verification code must be a number.");
+      setError("Mã xác minh phải là số.");
       return;
     }
 
@@ -67,9 +67,9 @@ const VerifyCodeForgotPassword = () => {
           alt="Logo"
           className="absolute top-[40px] left-[60px] w-[120px] h-[90px]"
         />
-        <h1 className="text-3xl font-bold mb-6">Verify code</h1>
+        <h1 className="text-3xl font-bold mb-6">Mã Xác Minh</h1>
         <p className="text-gray-600 mb-6">
-          An authentication code has been sent to your email.
+          Mã xác thực đã được gửi tới email của bạn.{" "}
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -78,14 +78,14 @@ const VerifyCodeForgotPassword = () => {
             type="text"
             value={passwordResetCode}
             onChange={(e) => setPasswordResetCode(e.target.value)}
-            placeholder="Enter code here"
+            placeholder="Nhập mã ở đây"
             className="w-2/3 p-3 mb-4 border border-gray-300 rounded-md"
           />
           <button
             type="submit"
             className="w-2/3 bg-green-500 text-white p-3 rounded-md"
           >
-            Verify
+            Xác Minh
           </button>
         </form>
       </div>

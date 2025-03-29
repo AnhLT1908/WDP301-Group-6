@@ -7,9 +7,8 @@ const Footer = () => {
     <footer className="bg-[#0D9F4C] py-8 mt-6">
       <div className=" mx-auto px-6 flex  items-start justify-around">
         {/* Website logo and name */}
-        <div className="flex flex-col items-center text-[#FDEE2A] text-lg font-semibold mb-3">
+        <div className="flex flex-col items-center text-[#FDEE2A] text-lg font-semibold">
           <img src={logo} alt="logo" className="w-[90px] h-[70px]" />
-          <span>Nhà Trọ Tuấn Cường 1</span>
         </div>
 
         {/* Navigation Links on one row */}

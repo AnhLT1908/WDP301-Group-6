@@ -4,11 +4,14 @@ import Footer from "../components/layout/Footer";
 import Card from "../components/ui/Card";
 import Carousel from "../components/ui/Carousel";
 import Button from "../components/form/Button";
-import { House, DoorOpen, ReceiptText, FileWarning } from "lucide-react";
+import { Handshake, DoorOpen, ReceiptText, FileWarning } from "lucide-react";
 import carousel_img_1 from "../../src/assets/images/carousel_images/carousel_img_1.jpg";
 import carousel_img_2 from "../../src/assets/images/carousel_images/carousel_img_2.jpg";
 import carousel_img_3 from "../../src/assets/images/carousel_images/carousel_img_3.jpg";
 import news1 from "../../src/assets/images/news1.jpg";
+import news2 from "../../src/assets/images/news2.jpg";
+import news3 from "../../src/assets/images/news3.jpg";
+import news4 from "../../src/assets/images/news4.jpg";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -19,36 +22,33 @@ const HomePage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchRoomData = async() => {
+    const fetchRoomData = async () => {
       try {
-        const response = await axios.get("")
-      } catch (error) {
-        
-      }
-    }
-  }, [roomId])
+        const response = await axios.get("");
+      } catch (error) {}
+    };
+  }, [roomId]);
 
   const newsItems = [
     {
       title: "Nhà trọ nâng cấp xây thêm khu vực",
       image: news1,
-      date: "20 JANUARY, 2025",
-      readTime: "20 MINS",
+      date: "20 Tháng 3, 2025",
     },
     {
-      title: "Fortnite Ratings Are Skyrocketing",
-      date: "27 AUGUST, 2024",
-      readTime: "15 MINS",
+      title: "Nhà xe trọ Tuấn Cường chuẩn bị nâng cấp",
+      image: news2,
+      date: "10 Tháng 3, 2025",
     },
     {
-      title: "Everything You Need To Know About",
-      date: "27 AUGUST, 2024",
-      readTime: "25 MINS",
+      title: "Hành lang trọ Tuấn Cường 2 đang được sửa chữa",
+      image: news3,
+      date: "24 Tháng 2, 2025",
     },
     {
-      title: "We Can’t Wait To Try This Gaming Area",
-      date: "27 AUGUST, 2024",
-      readTime: "18 MINS",
+      title: "Trọ Tuấn Cường 3 sắp hoàn thành",
+      image: news4,
+      date: "12 Tháng 12, 2024",
     },
   ];
 
@@ -57,28 +57,28 @@ const HomePage = () => {
   };
 
   const handleRoomNavigate = (roomId) => {
-    navigate(`/room/${roomId}`);
+    navigate(`/room-detail/${roomId}`);
+  };
+
+  const handleContractNavigate = (roomId) => {
+    navigate(`/contract`);
   };
 
   const featureCards = [
     {
-      title: "Khu nhà trọ",
-      icon: <House size={70} className="relative text-white" />,
-      action: null,
-    },
-    {
-      title: "Phòng trọ",
+      title: "Phòng Trọ",
       icon: <DoorOpen size={70} className="relative text-white" />,
       action: () => handleRoomNavigate(roomId),
     },
     {
-      title: "Tin tức",
+      title: "Hóa Đơn",
       icon: <ReceiptText size={70} className="relative text-white" />,
       action: () => handleBillNavigate(roomId),
     },
     {
-      title: "Báo cáo",
-      icon: <FileWarning size={70} className="relative text-white" />,
+      title: "Hợp Đồng",
+      icon: <Handshake size={70} className="relative text-white" />,
+      action: handleContractNavigate,
     },
   ];
 
@@ -101,10 +101,10 @@ const HomePage = () => {
               >
                 Tính năng
               </div>
-              <div className="absolute top-1/2 left-[200px] w-[1570px] border-t-2 border-gray-200"></div>
-              <div className="absolute top-2/3 left-[190px] w-[1580px] border-t-2 border-gray-200"></div>
+              <div className="absolute top-1/2 left-[200px] w-[1540px] border-t-2 border-gray-200"></div>
+              <div className="absolute top-2/3 left-[190px] w-[1550px] border-t-2 border-gray-200"></div>
             </div>
-            <div className="flex justify-around">
+            <div className="flex justify-between px-20">
               {featureCards.map((card, index) => (
                 <Card
                   key={index}
@@ -145,12 +145,7 @@ const HomePage = () => {
                 img={newsItems[0].image}
                 cardImgClassName="w-[700px] h-[400px] object-fill rounded-lg"
                 className="bg-white border border-gray-200 rounded-lg shadow-sm p-6"
-                children={`By Admin on ${newsItems[0].date} | ${newsItems[0].readTime}`}
-                actions={
-                  <Button className="px-4 py-2 bg-green-500 text-white rounded">
-                    Read More
-                  </Button>
-                }
+                children={`Đăng bởi Admin vào ${newsItems[0].date}`}
               />
             </div>
 
@@ -160,13 +155,8 @@ const HomePage = () => {
                   key={index}
                   title={item.title}
                   className="flex bg-white border border-gray-200 rounded-lg shadow-sm p-3 mr-[30px]"
-                  children={`By Admin on ${item.date} | ${item.readTime}`}
-                  actions={
-                    <Button className="px-4 py-2 bg-green-500 text-white rounded">
-                      Read More
-                    </Button>
-                  }
-                  img={news1}
+                  children={`Đăng bởi Admin vào ${item.date}`}
+                  img={item.image}
                   cardImgClassName="w-[150px] h-[150px] mr-[30px] rounded-lg"
                 />
               ))}

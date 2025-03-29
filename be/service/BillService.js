@@ -194,125 +194,125 @@ export const getBillsByRoom = async (req, res, next) => {
   }
 };
 
-export const autoCheckBillsAndContracts = async () => {
-  try {
-    console.log("Bắt đầu kiểm tra hóa đơn và hợp đồng...");
-    const now = new Date();
+// export const autoCheckBillsAndContracts = async () => {
+//   try {
+//     console.log("Bắt đầu kiểm tra hóa đơn và hợp đồng...");
+//     const now = new Date();
 
-    // Lấy tất cả hóa đơn chưa thanh toán
-    const unpaidBills = await Bills.find({ isPaid: false }).populate("roomId");
+//     // Lấy tất cả hóa đơn chưa thanh toán
+//     const unpaidBills = await Bills.find({ isPaid: false }).populate("roomId");
 
-    for (const bill of unpaidBills) {
-      const roomId = bill.roomId._id;
-      const createdAt = new Date(bill.createdAt);
-      const daysSinceCreation = Math.floor(
-        (now - createdAt) / (1000 * 60 * 60 * 24)
-      );
+//     for (const bill of unpaidBills) {
+//       const roomId = bill.roomId._id;
+//       const createdAt = new Date(bill.createdAt);
+//       const daysSinceCreation = Math.floor(
+//         (now - createdAt) / (1000 * 60 * 60 * 24)
+//       );
 
-      // 1. Sau 30 ngày: Cộng vào debt cho hóa đơn tiếp theo
-      if (daysSinceCreation >= 2) {
-        // Để test, đang dùng 2 ngày thay vì 30
-        const nextBill = await Bills.findOne({
-          roomId,
-          createdAt: { $gt: bill.createdAt },
-          isPaid: false,
-        });
+//       // 1. Sau 30 ngày: Cộng vào debt cho hóa đơn tiếp theo
+//       if (daysSinceCreation >= 2) {
+//         // Để test, đang dùng 2 ngày thay vì 30
+//         const nextBill = await Bills.findOne({
+//           roomId,
+//           createdAt: { $gt: bill.createdAt },
+//           isPaid: false,
+//         });
 
-        if (nextBill) {
-          if (!nextBill.transactionId) {
-            nextBill.transactionId = `AUTO-${Date.now()}`;
-          }
-          nextBill.debt = (nextBill.debt || 0) + bill.total;
-          nextBill.note = `${nextBill.note || ""} | Nợ từ hóa đơn ${
-            bill.billCode
-          }: ${bill.total}`;
+//         if (nextBill) {
+//           if (!nextBill.transactionId) {
+//             nextBill.transactionId = `AUTO-${Date.now()}`;
+//           }
+//           nextBill.debt = (nextBill.debt || 0) + bill.total;
+//           nextBill.note = `${nextBill.note || ""} | Nợ từ hóa đơn ${
+//             bill.billCode
+//           }: ${bill.total}`;
 
-          // Kiểm tra và bổ sung priceList nếu rỗng
-          if (!nextBill.priceList || nextBill.priceList.length === 0) {
-            nextBill.priceList = [
-              {
-                name: "default", // Giá trị mặc định
-                price: 0, // Giá trị mặc định
-                usage: 0,
-                total: 0, // Giá trị mặc định
-              },
-            ];
-          }
+//           // Kiểm tra và bổ sung priceList nếu rỗng
+//           if (!nextBill.priceList || nextBill.priceList.length === 0) {
+//             nextBill.priceList = [
+//               {
+//                 name: "default", // Giá trị mặc định
+//                 price: 0, // Giá trị mặc định
+//                 usage: 0,
+//                 total: 0, // Giá trị mặc định
+//               },
+//             ];
+//           }
 
-          await nextBill.save();
-        } else if (!bill.logged) {
-          console.log(
-            `Hóa đơn ${bill.billCode} quá hạn 30 ngày nhưng chưa có hóa đơn mới để cộng nợ.`
-          );
-          bill.logged = true;
-          await bill.save();
-        }
-      }
+//           await nextBill.save();
+//         } else if (!bill.logged) {
+//           console.log(
+//             `Hóa đơn ${bill.billCode} quá hạn 30 ngày nhưng chưa có hóa đơn mới để cộng nợ.`
+//           );
+//           bill.logged = true;
+//           await bill.save();
+//         }
+//       }
 
-      // 2. Sau 60 ngày và > 2 hóa đơn chưa thanh toán: Vô hiệu hóa tài khoản
-      if (daysSinceCreation >= 3) {
-        // Để test, đang dùng 3 ngày thay vì 60
-        const unpaidCount = await Bills.countDocuments({
-          roomId,
-          isPaid: false,
-        });
-        if (unpaidCount > 2) {
-          const contactAccount = await Account.findOne({
-            roomId,
-            isContact: true,
-          });
-          if (contactAccount && contactAccount.status !== false) {
-            contactAccount.status = false;
-            await contactAccount.save({ validateBeforeSave: false });
-            await Notification.create({
-              sender: null,
-              recipients: [{ user: contactAccount._id, isRead: false }],
-              message: `Tài khoản của bạn đã bị vô hiệu hóa do có hơn 2 hóa đơn chưa thanh toán quá 60 ngày!`,
-              type: "account_status",
-            });
-          }
-        }
-      }
-    }
+//       // 2. Sau 60 ngày và > 2 hóa đơn chưa thanh toán: Vô hiệu hóa tài khoản
+//       if (daysSinceCreation >= 3) {
+//         // Để test, đang dùng 3 ngày thay vì 60
+//         const unpaidCount = await Bills.countDocuments({
+//           roomId,
+//           isPaid: false,
+//         });
+//         if (unpaidCount > 2) {
+//           const contactAccount = await Account.findOne({
+//             roomId,
+//             isContact: true,
+//           });
+//           if (contactAccount && contactAccount.status !== false) {
+//             contactAccount.status = false;
+//             await contactAccount.save({ validateBeforeSave: false });
+//             await Notification.create({
+//               sender: null,
+//               recipients: [{ user: contactAccount._id, isRead: false }],
+//               message: `Tài khoản của bạn đã bị vô hiệu hóa do có hơn 2 hóa đơn chưa thanh toán quá 60 ngày!`,
+//               type: "account_status",
+//             });
+//           }
+//         }
+//       }
+//     }
 
-    // 3. Kiểm tra tài khoản bị vô hiệu hóa quá 15 ngày: Hủy hợp đồng
-    const disabledAccounts = await Account.find({
-      status: false,
-      isContact: true,
-    }).populate("roomId");
-    for (const account of disabledAccounts) {
-      const roomId = account.roomId?._id;
-      if (!roomId) continue;
+//     // 3. Kiểm tra tài khoản bị vô hiệu hóa quá 15 ngày: Hủy hợp đồng
+//     const disabledAccounts = await Account.find({
+//       status: false,
+//       isContact: true,
+//     }).populate("roomId");
+//     for (const account of disabledAccounts) {
+//       const roomId = account.roomId?._id;
+//       if (!roomId) continue;
 
-      const unpaidCount = await Bills.countDocuments({ roomId, isPaid: false });
-      if (unpaidCount > 2) {
-        const lastUpdate = new Date(account.updatedAt);
-        const daysSinceDisabled = Math.floor(
-          (now - lastUpdate) / (1000 * 60 * 60 * 24)
-        );
+//       const unpaidCount = await Bills.countDocuments({ roomId, isPaid: false });
+//       if (unpaidCount > 2) {
+//         const lastUpdate = new Date(account.updatedAt);
+//         const daysSinceDisabled = Math.floor(
+//           (now - lastUpdate) / (1000 * 60 * 60 * 24)
+//         );
 
-        if (daysSinceDisabled >= 2) {
-          // Để test, đang dùng 2 ngày thay vì 15
-          const contract = await Contract.findOne({ roomId, status: "valid" });
-          if (contract) {
-            contract.status = "expired";
-            await contract.save();
-            await Notification.create({
-              sender: null,
-              recipients: [{ user: account._id, isRead: false }],
-              message: `Hợp đồng của phòng ${account.roomId.name} đã bị hủy do không thanh toán hóa đơn sau 15 ngày bị vô hiệu hóa!`,
-              type: "contract",
-            });
-          }
-        }
-      }
-    }
+//         if (daysSinceDisabled >= 2) {
+//           // Để test, đang dùng 2 ngày thay vì 15
+//           const contract = await Contract.findOne({ roomId, status: "valid" });
+//           if (contract) {
+//             contract.status = "expired";
+//             await contract.save();
+//             await Notification.create({
+//               sender: null,
+//               recipients: [{ user: account._id, isRead: false }],
+//               message: `Hợp đồng của phòng ${account.roomId.name} đã bị hủy do không thanh toán hóa đơn sau 15 ngày bị vô hiệu hóa!`,
+//               type: "contract",
+//             });
+//           }
+//         }
+//       }
+//     }
 
-    console.log("Đã kiểm tra và xử lý hóa đơn/hợp đồng tự động.");
-  } catch (error) {
-    console.error("Lỗi trong autoCheckBillsAndContracts:", error);
-  }
-};
+//     console.log("Đã kiểm tra và xử lý hóa đơn/hợp đồng tự động.");
+//   } catch (error) {
+//     console.error("Lỗi trong autoCheckBillsAndContracts:", error);
+//   }
+// };
 
 export const addBillinRoom = async (req, res, next) => {
   try {

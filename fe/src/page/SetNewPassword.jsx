@@ -9,7 +9,7 @@ const SetNewPassword = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
-  const [showTooltip, setShowTooltip] = useState(false); // Tooltip visibility
+  const [showTooltip, setShowTooltip] = useState(false);
   const location = useLocation();
   const { id } = location.state || {};
   const navigate = useNavigate();
@@ -26,26 +26,26 @@ const SetNewPassword = () => {
 
     // Check if both fields are filled
     if (!password || !confirmPassword) {
-      setError("Please fill in all fields.");
+      setError("Vui lòng điền vào tất cả các trường.");
       return;
     }
 
     // Check if the password is at least 8 characters long
     if (password.length < 8) {
-      setError("The password must be at least 8 characters long.");
+      setError("Mật khẩu phải dài ít nhất 8 ký tự.");
       return;
     }
 
     // Check if the password matches the confirm password
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError("Mật khẩu không khớp.");
       return;
     }
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$/;
     if (!passwordRegex.test(password)) {
       setError(
-        "Invalid password. Please hover over the info icon for more information on how to set a valid password."
+        "Mật khẩu không hợp lệ. Vui lòng di chuột qua biểu tượng thông tin để biết thêm thông tin về cách đặt mật khẩu hợp lệ."
       );
       return;
     }
@@ -76,13 +76,13 @@ const SetNewPassword = () => {
           alt="Logo"
           className="absolute top-[40px] left-[60px] w-[120px] h-[90px]"
         />
-        <h1 className="text-3xl font-bold mb-6">Set a password</h1>
+        <h1 className="text-3xl font-bold mb-6">Thiết Lập Mật Khẩu Mới</h1>
 
         {/* Tooltip and info icon */}
         <div className="flex items-center mb-6">
           <p className="text-gray-600 mr-2">
-            Your previous password has been reset. Please set a new password for
-            your account.
+            Mật khẩu trước đó của bạn đã được đặt lại. Vui lòng đặt mật khẩu mới
+            cho tài khoản của bạn.
           </p>
           <div className="relative">
             <Info
@@ -123,21 +123,21 @@ const SetNewPassword = () => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter new password here"
+            placeholder="Nhập mật khẩu mới ở đây"
             className="w-2/3 p-3 mb-4 border border-gray-300 rounded-md"
           />
           <input
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Confirm your password"
+            placeholder="Nhập lại mật khẩu đã nhập"
             className="w-2/3 p-3 mb-4 border border-gray-300 rounded-md"
           />
           <button
             type="submit"
             className="w-2/3 bg-green-500 text-white p-3 rounded-md"
           >
-            Set password
+            Tạo mật khẩu
           </button>
         </form>
       </div>

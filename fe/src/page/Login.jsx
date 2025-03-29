@@ -97,8 +97,8 @@ const Login = ({ setAccountType }) => {
       )}
       <div className="w-1/2 bg-white ml-[110px]">
         <img src={logo} alt="Logo" className="absolute top-[20px] left-[40px] w-[120px] h-[90px]" />
-        <h2 className="text-3xl font-bold mb-4">Login</h2>
-        <p className="text-lg mb-8">Login to access your travelwise account</p>
+        <h2 className="text-3xl font-bold mb-4">Màn Hình Đăng Nhập</h2>
+        <p className="text-lg mb-8">Đăng nhập để truy cập tài khoản của bạn</p>
         {errors.general && <p className="text-red-500 text-center mb-4">{errors.general}</p>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">

@@ -46,13 +46,14 @@ export default function NewInvoice() {
       try {
         const token = localStorage.getItem("token");
         const res = await axios.get(
-          `http://localhost:5000/api/v1/house/${room.house}`,
+          `http://localhost:5000/api/v1/house/${room.house?._id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
+        console.log("==Fetching house===", res.data.data);
         if (res.data.data) {
           setHouse(res.data.data);
         }
@@ -60,10 +61,10 @@ export default function NewInvoice() {
         console.error("Error fetching house data:", error);
       }
     };
-    if (room.house) {
+    if (room.house?._id) {
       fetchHouseData();
     }
-  }, [room.house]);
+  }, [room.house?._id]);
 
   // Fetch room data using roomId from URL params
   useEffect(() => {
@@ -195,6 +196,10 @@ export default function NewInvoice() {
 
   // =============== FORM VALIDATION AND HANDLING ===============
   // Validate form before submission
+  function capitalizeFirstLetter(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
   const validateForm = () => {
     const errors = {};
     if (isNaN(invoice.debt) || invoice.debt === "") {
@@ -202,8 +207,14 @@ export default function NewInvoice() {
     }
 
     invoice.customPriceList.forEach((item, index) => {
-      if (isNaN(item.currentUsage) || item.currentUsage === "") {
+      if (item.currentUsage === "" || String(item.currentUsage).trim() === "") {
+        errors[`currentUsage_${index}`] = `${item.name} usage cannot be empty`;
+      } else if (isNaN(item.currentUsage)) {
         errors[`currentUsage_${index}`] = `${item.name} usage must be a number`;
+      } else if (Number(item.currentUsage) < 0) {
+        errors[
+          `currentUsage_${index}`
+        ] = `${item.name} usage cannot be negative`;
       } else if (
         item.currentUsage <=
         roomPreviosMonthBill?.priceList?.find(
