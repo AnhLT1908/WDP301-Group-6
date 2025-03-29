@@ -95,7 +95,10 @@ const ManagerDashboard = () => {
           if (endDate > currentDate) {
             errors.problemEndDate = "End date cannot be in the future";
           }
-          if (filters.problemStartDate && new Date(filters.problemStartDate) > endDate) {
+          if (
+            filters.problemStartDate &&
+            new Date(filters.problemStartDate) > endDate
+          ) {
             errors.problemEndDate = "End date cannot be before start date";
           }
         }
@@ -110,46 +113,55 @@ const ManagerDashboard = () => {
   const fetchStatistics = async () => {
     try {
       const endpoints = [
-        { 
-          url: "/api/v1/static/house/revenues", 
+        {
+          url: "/api/v1/static/house/revenues",
           statKey: "revenue",
-          params: { year: filters.revenueYear }
+          params: { year: filters.revenueYear },
         },
-        { 
-          url: "/api/v1/static/house/bills", 
+        {
+          url: "/api/v1/static/house/bills",
           statKey: "bills",
           params: {
             month: filters.billMonth || null,
-            isPaid: filters.billIsPaid === "" ? null : filters.billIsPaid === "true",
-          }
+            isPaid:
+              filters.billIsPaid === "" ? null : filters.billIsPaid === "true",
+          },
         },
-        { 
-          url: "/api/v1/static/house/problems", 
+        {
+          url: "/api/v1/static/house/problems",
           statKey: "problems",
           params: {
             startDate: filters.problemStartDate || null,
             endDate: filters.problemEndDate || null,
-            status: filters.problemStatus === "" ? null : filters.problemStatus === "true",
-          }
+            status:
+              filters.problemStatus === ""
+                ? null
+                : filters.problemStatus === "true",
+          },
         },
       ];
 
       console.log("Fetching with params:");
-      endpoints.forEach(endpoint => console.log(`${endpoint.url}:`, endpoint.params));
+      endpoints.forEach((endpoint) =>
+        console.log(`${endpoint.url}:`, endpoint.params)
+      );
 
       const requests = endpoints.map((endpoint) =>
         axios.get(`http://localhost:5000${endpoint.url}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-          params: endpoint.params
+          params: endpoint.params,
         })
       );
 
       const responses = await Promise.all(requests);
       const updatedStats = {};
       endpoints.forEach((endpoint, index) => {
-        console.log(`Raw response from ${endpoint.url}:`, responses[index].data);
+        console.log(
+          `Raw response from ${endpoint.url}:`,
+          responses[index].data
+        );
         updatedStats[endpoint.statKey] = responses[index].data;
       });
 
@@ -170,8 +182,13 @@ const ManagerDashboard = () => {
 
   // Fetch lại khi filters thay đổi
   useEffect(() => {
-    const criticalErrors = ["revenueYear", "billMonth", "problemStartDate", "problemEndDate"];
-    const hasCriticalError = criticalErrors.some(key => errors[key]);
+    const criticalErrors = [
+      "revenueYear",
+      "billMonth",
+      "problemStartDate",
+      "problemEndDate",
+    ];
+    const hasCriticalError = criticalErrors.some((key) => errors[key]);
     if (!hasCriticalError) {
       fetchStatistics();
     }
@@ -191,75 +208,126 @@ const ManagerDashboard = () => {
 
   const chartConfigurations = {
     monthlyRevenueBar: {
-      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-      datasets: [{
-        label: `Monthly Revenue (${stats.revenue.year})`,
-        data: stats.revenue.revenueByMonth,
-        backgroundColor: "#42A5F5",
-      }],
+      labels: [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ],
+      datasets: [
+        {
+          label: `Doanh Thu Tháng (${stats.revenue.year})`,
+          data: stats.revenue.revenueByMonth,
+          backgroundColor: "#42A5F5",
+        },
+      ],
     },
     billStatusPie: {
-      labels: ["Paid Bills", "Unpaid Bills"],
-      datasets: [{
-        data: [
-          stats.bills.reduce((sum, house) => sum + (house.billIsPaid || 0), 0),
-          stats.bills.reduce((sum, house) => sum + (house.billIsNotPaid || 0), 0)
-        ],
-        backgroundColor: ["#4CAF50", "#F44336"],
-      }],
+      labels: ["Đã Thanh Toán", "Chưa Thanh Toán"],
+      datasets: [
+        {
+          data: [
+            stats.bills.reduce(
+              (sum, house) => sum + (house.billIsPaid || 0),
+              0
+            ),
+            stats.bills.reduce(
+              (sum, house) => sum + (house.billIsNotPaid || 0),
+              0
+            ),
+          ],
+          backgroundColor: ["#4CAF50", "#F44336"],
+        },
+      ],
     },
     problemStatusPie: {
-      labels: ["Resolved", "Unresolved"],
-      datasets: [{
-        data: [
-          stats.problems.resolvedProblems || 0,
-          stats.problems.unresolvedProblems || 0
-        ],
-        backgroundColor: ["#4CAF50", "#FF6384"],
-      }],
+      labels: ["Đã Xử Lý", "Chưa Xử Lý"],
+      datasets: [
+        {
+          data: [
+            stats.problems.resolvedProblems || 0,
+            stats.problems.unresolvedProblems || 0,
+          ],
+          backgroundColor: ["#4CAF50", "#FF6384"],
+        },
+      ],
     },
     billCountBar: {
-      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-      datasets: [{
-        label: `Bill Count (${stats.revenue.year})`,
-        data: stats.revenue.billCountByMonth,
-        backgroundColor: "#FFC107",
-      }],
+      labels: [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ],
+      datasets: [
+        {
+          label: `Tổng Số Lượng Hóa Đơn Tháng (${stats.revenue.year})`,
+          data: stats.revenue.billCountByMonth,
+          backgroundColor: "#FFC107",
+        },
+      ],
     },
   };
 
   return (
     <div className="p-5 max-w-6xl mx-auto">
       <h1 className="text-center text-3xl font-bold text-gray-800 mb-8">
-        Manager Dashboard - House Statistics
+        Dashboard Quản Lý - Thống Kê Nhà Trọ
       </h1>
 
       {/* Key Performance Indicators */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
         <div className="bg-gray-100 p-5 rounded-lg text-center shadow-md">
-          <h3 className="text-lg font-medium text-gray-600">Total Revenue</h3>
+          <h3 className="text-lg font-medium text-gray-600">Tổng Doanh Thu</h3>
           <p className="text-2xl font-bold text-gray-800 mt-2">
             {stats.revenue.totalAnnualRevenue.toLocaleString()} VND
           </p>
         </div>
         <div className="bg-gray-100 p-5 rounded-lg text-center shadow-md">
-          <h3 className="text-lg font-medium text-gray-600">Total Bills</h3>
+          <h3 className="text-lg font-medium text-gray-600">Tổng Hóa Đơn</h3>
           <p className="text-2xl font-bold text-gray-800 mt-2">
-            {stats.bills.reduce((sum, house) => sum + (house.totalBills || 0), 0)}
+            {stats.bills.reduce(
+              (sum, house) => sum + (house.totalBills || 0),
+              0
+            )}
           </p>
         </div>
         <div className="bg-gray-100 p-5 rounded-lg text-center shadow-md">
-          <h3 className="text-lg font-medium text-gray-600">Total Problems</h3>
+          <h3 className="text-lg font-medium text-gray-600">Tổng Báo Cáo</h3>
           <p className="text-2xl font-bold text-gray-800 mt-2">
             {stats.problems.totalProblems || 0}
           </p>
         </div>
         <div className="bg-gray-100 p-5 rounded-lg text-center shadow-md">
-          <h3 className="text-lg font-medium text-gray-600">Paid Percentage</h3>
+          <h3 className="text-lg font-medium text-gray-600">
+            Phần Trăm Thanh Toán
+          </h3>
           <p className="text-2xl font-bold text-gray-800 mt-2">
-            {stats.bills.length > 0 
-              ? (stats.bills.reduce((sum, house) => sum + (house.paidPercentage || 0), 0) / stats.bills.length).toFixed(2)
-              : 0}%
+            {stats.bills.length > 0
+              ? (
+                  stats.bills.reduce(
+                    (sum, house) => sum + (house.paidPercentage || 0),
+                    0
+                  ) / stats.bills.length
+                ).toFixed(2)
+              : 0}
+            %
           </p>
         </div>
       </div>
@@ -267,11 +335,11 @@ const ManagerDashboard = () => {
       {/* Revenue Section */}
       <div className="bg-white p-5 rounded-lg shadow-md mb-10">
         <h3 className="text-center text-xl font-semibold text-gray-700 mb-5">
-          Revenue Statistics
+          Thống Kê Doanh Thu
         </h3>
         <div className="flex flex-wrap gap-4 mb-5 justify-center">
           <div>
-            <label className="block text-gray-700 mb-2">Year</label>
+            <label className="block text-gray-700 mb-2">Năm</label>
             <input
               type="number"
               name="revenueYear"
@@ -287,32 +355,38 @@ const ManagerDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
             <h4 className="text-center text-lg font-semibold text-gray-700 mb-5">
-              Monthly Revenue ({stats.revenue.year})
+              Doanh Thu Tháng ({stats.revenue.year})
             </h4>
             <Bar data={chartConfigurations.monthlyRevenueBar} />
           </div>
           <div>
             <h4 className="text-center text-lg font-semibold text-gray-700 mb-5">
-              Monthly Bill Count ({stats.revenue.year})
+              Số Lượng Hóa Đơn Hàng Tháng ({stats.revenue.year})
             </h4>
             <Bar data={chartConfigurations.billCountBar} />
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-5">
           <div className="text-center">
-            <h4 className="text-md font-medium text-gray-600">Avg. Monthly Revenue</h4>
+            <h4 className="text-md font-medium text-gray-600">
+              Doanh Thu Trung Bình Hàng Tháng
+            </h4>
             <p className="text-lg font-bold">
               {stats.revenue.averageMonthlyRevenue.toLocaleString()} VND
             </p>
           </div>
           <div className="text-center">
-            <h4 className="text-md font-medium text-gray-600">Highest Revenue Month</h4>
+            <h4 className="text-md font-medium text-gray-600">
+              Doanh Thu Tháng Cao Nhất
+            </h4>
             <p className="text-lg font-bold">
               {stats.revenue.highestRevenueMonth.toLocaleString()} VND
             </p>
           </div>
           <div className="text-center">
-            <h4 className="text-md font-medium text-gray-600">Lowest Revenue Month</h4>
+            <h4 className="text-md font-medium text-gray-600">
+              Doanh Thu Tháng Thấp Nhất
+            </h4>
             <p className="text-lg font-bold">
               {stats.revenue.lowestRevenueMonth.toLocaleString()} VND
             </p>
@@ -323,11 +397,11 @@ const ManagerDashboard = () => {
       {/* Bills Section */}
       <div className="bg-white p-5 rounded-lg shadow-md mb-10">
         <h3 className="text-center text-xl font-semibold text-gray-700 mb-5">
-          Bill Statistics
+          Thống Kê Hóa Đơn
         </h3>
         <div className="flex flex-wrap gap-4 mb-5 justify-center">
           <div>
-            <label className="block text-gray-700 mb-2">Month (MM-YYYY)</label>
+            <label className="block text-gray-700 mb-2">Tháng (MM-YYYY)</label>
             <input
               type="text"
               name="billMonth"
@@ -341,38 +415,54 @@ const ManagerDashboard = () => {
             )}
           </div>
           <div>
-            <label className="block text-gray-700 mb-2">Status</label>
+            <label className="block text-gray-700 mb-2">Trạng Thái</label>
             <select
               name="billIsPaid"
               value={filters.billIsPaid}
               onChange={handleFilterChange}
               className="p-2 rounded border"
             >
-              <option value="">All</option>
-              <option value="true">Paid</option>
-              <option value="false">Unpaid</option>
+              <option value="">Tất Cả</option>
+              <option value="true">Đã Thanh Toán</option>
+              <option value="false">Chưa Thanh Toán</option>
             </select>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
             <h4 className="text-center text-lg font-semibold text-gray-700 mb-5">
-              Bill Status Distribution
+              Biểu Đồ Tình Trạng Hóa Đơn
             </h4>
             <Pie data={chartConfigurations.billStatusPie} />
           </div>
           <div className="mt-5">
             <div className="grid grid-cols-2 gap-3">
               <div className="text-center">
-                <h4 className="text-md font-medium text-gray-600">Total Paid Amount</h4>
+                <h4 className="text-md font-medium text-gray-600">
+                  Tổng Tiền Đã Thanh Toán
+                </h4>
                 <p className="text-lg font-bold">
-                  {stats.bills.reduce((sum, house) => sum + (house.totalBillIsPaid || 0), 0).toLocaleString()} VND
+                  {stats.bills
+                    .reduce(
+                      (sum, house) => sum + (house.totalBillIsPaid || 0),
+                      0
+                    )
+                    .toLocaleString()}{" "}
+                  VND
                 </p>
               </div>
               <div className="text-center">
-                <h4 className="text-md font-medium text-gray-600">Total Unpaid Amount</h4>
+                <h4 className="text-md font-medium text-gray-600">
+                  Tổng Tiền Chưa Thanh Toán
+                </h4>
                 <p className="text-lg font-bold">
-                  {stats.bills.reduce((sum, house) => sum + (house.totalBillIsNotPaid || 0), 0).toLocaleString()} VND
+                  {stats.bills
+                    .reduce(
+                      (sum, house) => sum + (house.totalBillIsNotPaid || 0),
+                      0
+                    )
+                    .toLocaleString()}{" "}
+                  VND
                 </p>
               </div>
             </div>
@@ -383,11 +473,11 @@ const ManagerDashboard = () => {
       {/* Problems Section */}
       <div className="bg-white p-5 rounded-lg shadow-md mb-10">
         <h3 className="text-center text-xl font-semibold text-gray-700 mb-5">
-          Problem Statistics
+          Thống Kê Vấn Đề Báo Cáo
         </h3>
         <div className="flex flex-wrap gap-4 mb-5 justify-center">
           <div>
-            <label className="block text-gray-700 mb-2">Start Date</label>
+            <label className="block text-gray-700 mb-2">Từ Ngày</label>
             <input
               type="date"
               name="problemStartDate"
@@ -396,11 +486,13 @@ const ManagerDashboard = () => {
               className="p-2 rounded border"
             />
             {errors.problemStartDate && (
-              <p className="text-red-500 text-sm mt-1">{errors.problemStartDate}</p>
+              <p className="text-red-500 text-sm mt-1">
+                {errors.problemStartDate}
+              </p>
             )}
           </div>
           <div>
-            <label className="block text-gray-700 mb-2">End Date</label>
+            <label className="block text-gray-700 mb-2">Đến Ngày</label>
             <input
               type="date"
               name="problemEndDate"
@@ -409,27 +501,29 @@ const ManagerDashboard = () => {
               className="p-2 rounded border"
             />
             {errors.problemEndDate && (
-              <p className="text-red-500 text-sm mt-1">{errors.problemEndDate}</p>
+              <p className="text-red-500 text-sm mt-1">
+                {errors.problemEndDate}
+              </p>
             )}
           </div>
           <div>
-            <label className="block text-gray-700 mb-2">Status</label>
+            <label className="block text-gray-700 mb-2">Trạng Thái</label>
             <select
               name="problemStatus"
               value={filters.problemStatus}
               onChange={handleFilterChange}
               className="p-2 rounded border"
             >
-              <option value="">All</option>
-              <option value="true">Resolved</option>
-              <option value="false">Unresolved</option>
+              <option value="">Tất Cả</option>
+              <option value="true">Đã Xử Lý</option>
+              <option value="false">Chưa Xử Lý</option>
             </select>
           </div>
         </div>
         <div className="flex justify-center">
           <div className="w-full max-w-md">
             <h4 className="text-center text-lg font-semibold text-gray-700 mb-5">
-              Problem Status Distribution
+              Biểu Đồ Trạng Thái Báo Cáo
             </h4>
             <Pie data={chartConfigurations.problemStatusPie} />
           </div>

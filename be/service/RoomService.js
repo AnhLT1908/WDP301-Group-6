@@ -403,12 +403,12 @@ export const getRoomEquipment = async (req, res) => {
 
 export const addRoom = async (req, res, next) => {
   try {
-      const { house, name, floor, roomType, roomPrice, deposit, area, status } = req.body;
+      const { house, name, floor, roomPrice, deposit, area, status } = req.body;
 
       if (!house || !name || !roomPrice || !area || !floor) {
           return res.status(400).json({
               success: false,
-              message: "Thiếu thông tin bắt buộc! (houseId, name, roomPrice, area, floor)",
+              message: "Vui lòng điền các trường có dấu sao đỏ",
           });
       }
 
@@ -425,8 +425,6 @@ export const addRoom = async (req, res, next) => {
       if (existingRoom) {
           return res.status(400).json({ success: false, message: `Phòng '${name}' đã tồn tại.` });
       }
-      const validStatus = ["available", "full"];
-      const roomStatus = validStatus.includes(status) ? status : "available";
       const newRoom = await Room.create({
           name,
           house: house, 
@@ -436,13 +434,13 @@ export const addRoom = async (req, res, next) => {
               roomPrice, 
               deposit: deposit || 0,
           },
-          status: roomStatus,
-          utilities: houses.utilities || [], // Sửa từ "house" thành "houses"
+          status: status,
+          utilities: houses.utilities || [],
           deleted: false,
           deletedAt: null,
       });
 
-      houses.numberOfRoom += 1; // Sửa từ "house" thành "houses"
+      houses.numberOfRoom += 1;
       await houses.save();
 
       return res.status(201).json({

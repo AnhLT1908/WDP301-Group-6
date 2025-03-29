@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { Eye } from "lucide-react";
 
 const LodgerAccountList = () => {
   const [houseManageId, setHouseManageId] = useState("");
@@ -74,6 +75,10 @@ const LodgerAccountList = () => {
     }
   };
 
+  const handleViewDetail = (memberId) => {
+    navigate(`/manager/update-lodger-account/${memberId}`);
+  };
+
   const handleCreateAccount = () => {
     navigate("/manager/create-lodger-account");
   };
@@ -92,12 +97,14 @@ const LodgerAccountList = () => {
       <div className="shadow overflow-hidden m-6">
         {/* Card Header */}
         <div className="flex justify-between items-center rounded-lg bg-gradient-to-r from-green-700 to-green-500 p-6 mx-6">
-          <h6 className="text-white text-lg font-medium">Lodger List</h6>
+          <h6 className="text-white text-lg font-medium">
+            Danh sách người thuê trọ
+          </h6>
           <button
             onClick={handleCreateAccount}
             className="bg-white text-green-500 hover:bg-green-900  transition duration-300 font-bold px-6 py-2 rounded-xl shadow-md"
           >
-            Create new account
+            Tạo tài khoản người thuê mới
           </button>
         </div>
         {/* Card Body */}
@@ -105,18 +112,23 @@ const LodgerAccountList = () => {
           <table className="w-full min-w-[640px] table-auto">
             <thead>
               <tr>
-                {["Name", "Email", "Phone", "Room", "Status", "Actions"].map(
-                  (el) => (
-                    <th
-                      key={el}
-                      className="border-b border-blue-gray-50 py-3 px-6 text-left"
-                    >
-                      <span className="text-[11px] font-bold uppercase text-blue-gray-400">
-                        {el}
-                      </span>
-                    </th>
-                  )
-                )}
+                {[
+                  "Tên",
+                  "Email",
+                  "Điện thoại",
+                  "Phòng",
+                  "Trạng thái",
+                  "Tính năng",
+                ].map((el) => (
+                  <th
+                    key={el}
+                    className="border-b border-blue-gray-50 py-3 px-6 text-left"
+                  >
+                    <span className="text-[11px] font-bold uppercase text-blue-gray-400">
+                      {el}
+                    </span>
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -167,17 +179,14 @@ const LodgerAccountList = () => {
                             : "bg-gray-600 text-white"
                         }`}
                       >
-                        {member.status ? "Rented" : "Cancel"}
+                        {member.status ? "Đang thuê" : "Không thuê"}
                       </span>
                     </td>
 
                     <td className={cellClass}>
-                      <a
-                        href={`/manager/update-lodger-account/${member._id}`}
-                        className="text-xs font-semibold text-blue-gray-600 hover:underline"
-                      >
-                        Edit
-                      </a>
+                      <button className="flex items-center" onClick={() => handleViewDetail(member._id)}>
+                        <Eye size={20} className="text-blue-600 hover:text-blue-800"/>
+                      </button>
                     </td>
                   </tr>
                 );
@@ -190,9 +199,13 @@ const LodgerAccountList = () => {
         <button
           onClick={() => handleChangePages(currentPage - 1)}
           disabled={currentPage === 1}
-          className="flex items-center justify-center mr-2 w-[80px] bg-green-500 hover:bg-green-700 p-2 rounded-lg text-base font-semibold text-white"
+          className={`flex items-center justify-center mr-2 w-[110px] ${
+            currentPage === 1
+              ? "bg-gray-400"
+              : "bg-green-500 hover:bg-green-700"
+          } p-2 rounded-lg text-base font-semibold text-white`}
         >
-          Previous
+          Trang Trước
         </button>
         <div className="flex items-center space-x-2">
           {[...Array(totalPages)].map((_, index) => {
@@ -215,9 +228,13 @@ const LodgerAccountList = () => {
         <button
           onClick={() => handleChangePages(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="flex justify-center items-center ml-2 w-[80px] bg-green-500 hover:bg-green-700 p-2 rounded-lg text-base font-semibold text-white"
+          className={`flex items-center justify-center ml-2 w-[110px] ${
+            currentPage === totalPages
+              ? "bg-gray-400"
+              : "bg-green-500 hover:bg-green-700"
+          } p-2 rounded-lg text-base font-semibold text-white`}
         >
-          Next
+          Trang Sau
         </button>
       </div>
     </div>
