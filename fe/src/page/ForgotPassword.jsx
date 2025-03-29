@@ -15,7 +15,7 @@ const ForgotPassword = () => {
     console.log(`Email submitted: ${email}`);
 
     if (!email) {
-      setError("Please fill in this fields.");
+      setError("Vui lòng điền vào các mục trên màn hình.");
       return;
     }
 
@@ -34,7 +34,7 @@ const ForgotPassword = () => {
       .catch((err) => {
         console.error("Front-end post forgot password error: ", err);
         if (err.response && err.response.data && err.response.data.message) {
-          setError("Email does not exist. Please try again!");
+          setError("Email không tồn tại. Vui lòng thử lại!");
         } else {
           setError("An error occurred. Please try again later.");
         }
@@ -52,10 +52,10 @@ const ForgotPassword = () => {
           alt="Logo"
           className="absolute top-[40px] left-[60px] w-[120px] h-[90px]"
         />
-        <h1 className="text-3xl font-bold mb-6">Forgot your password?</h1>
+        <h1 className="text-3xl font-bold mb-6">Quên Mật Khẩu?</h1>
         <p className="text-gray-600 mb-6">
-          Don’t worry, happens to all of us. Enter your email below to recover
-          your password.
+          Đừng lo lắng, điều này xảy ra với tất cả chúng ta. Nhập email của bạn
+          bên dưới để khôi phục mật khẩu.
         </p>
 
         <form onSubmit={handleSubmit}>

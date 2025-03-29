@@ -15,31 +15,24 @@ export const createContract = async (req, res, next) => {
   try {
     const { benB, description, startDate, endDate, roomId } = req.body;
 
-    // Kiểm tra roomId hợp lệ
     if (!mongoose.Types.ObjectId.isValid(roomId)) {
       return res
         .status(400)
         .json({ success: false, message: "roomId không hợp lệ!" });
     }
-
-    // Kiểm tra phòng tồn tại
     const room = await Room.findById(roomId).populate("house");
     if (!room) {
       return res
         .status(404)
         .json({ success: false, message: "Không tìm thấy phòng!" });
     }
-
-    const benA = getCurrentUser(req); // Lấy thông tin người gọi API (Manager)
-    console.log("Ben A", benA);
+    const benA = getCurrentUser(req);
     if (!benA) {
       return res.status(401).json({
         success: false,
         message: "Không xác định được người gọi API!",
       });
     }
-
-    // Kiểm tra benA (Manager)
     const benAAccount = await Account.findById(benA);
     if (!benAAccount || benAAccount.accountType !== "Manager") {
       return res.status(403).json({
@@ -47,14 +40,11 @@ export const createContract = async (req, res, next) => {
         message: "Bên A phải là tài khoản Manager (chủ trọ)!",
       });
     }
-
-    // Kiểm tra benB (Lodger)
     if (!mongoose.Types.ObjectId.isValid(benB)) {
       return res
         .status(400)
         .json({ success: false, message: "benB không hợp lệ!" });
     }
-
     const benBAccount = await Account.findById(benB);
     if (!benBAccount || benBAccount.accountType !== "Lodger") {
       return res.status(400).json({
@@ -62,12 +52,8 @@ export const createContract = async (req, res, next) => {
         message: "Bên B phải là tài khoản Lodger!",
       });
     }
-
-    // Xử lý startDate và endDate
     const contractStartDate = startDate ? new Date(startDate) : new Date();
     const contractEndDate = endDate ? new Date(endDate) : oneYearFromNow();
-
-    // Kiểm tra định dạng ngày hợp lệ
     if (
       isNaN(contractStartDate.getTime()) ||
       isNaN(contractEndDate.getTime())
@@ -77,16 +63,12 @@ export const createContract = async (req, res, next) => {
         message: "startDate hoặc endDate không hợp lệ!",
       });
     }
-
-    // Kiểm tra startDate < endDate
     if (contractStartDate >= contractEndDate) {
       return res.status(400).json({
         success: false,
         message: "startDate phải nhỏ hơn endDate!",
       });
     }
-
-    // Kiểm tra xem phòng đã có hợp đồng nào khác trong khoảng thời gian này chưa
     const overlappingContract = await Contract.findOne({
       roomId,
       status: "valid",
@@ -105,8 +87,16 @@ export const createContract = async (req, res, next) => {
         overlappingContract,
       });
     }
-
-    // Tạo hợp đồng mới
+    const isMemberAlreadyInRoom = room.members.some(
+      (member) =>
+        member.accountId && member.accountId.toString() === benB.toString()
+    );
+    if (!isMemberAlreadyInRoom && room.members.length >= room.quantityMember) {
+      return res.status(400).json({
+        success: false,
+        message: "Phòng đã đạt số lượng thành viên tối đa!",
+      });
+    }
     const contract = new Contract({
       roomId,
       benA,
@@ -115,16 +105,84 @@ export const createContract = async (req, res, next) => {
       startDate: contractStartDate,
       endDate: contractEndDate,
     });
-    await contract.save();
+    const savedContract = await contract.save();
+    if (!savedContract) {
+      return res.status(500).json({
+        success: false,
+        message: "Không thể tạo hợp đồng!",
+      });
+    }
+    if (!isMemberAlreadyInRoom) {
+      try {
+        const memberJoinDate = contractStartDate;
+        const updatedRoom = await Room.findByIdAndUpdate(
+          roomId,
+          {
+            $push: {
+              members: {
+                accountId: benB,
+                joinDate: memberJoinDate,
+              },
+            },
+            $set: {
+              status:
+                room.members.length + 1 >= room.quantityMember ? false : true,
+            },
+          },
+          { new: true, runValidators: true }
+        );
+        if (!updatedRoom) {
+          await Contract.findByIdAndDelete(savedContract._id);
+          return res.status(500).json({
+            success: false,
+            message: "Không thể cập nhật phòng!",
+          });
+        }
+        const updatedAccount = await Account.findByIdAndUpdate(
+          benB,
+          {
+            roomId: roomId,
+            rentalDate: memberJoinDate,
+            isContact: true,
+          },
+          { new: true }
+        );
+
+        if (!updatedAccount) {
+          await Contract.findByIdAndDelete(savedContract._id);
+
+          await Room.findByIdAndUpdate(roomId, {
+            $pull: {
+              members: { accountId: benB },
+            },
+            $set: {
+              status: room.members.length < room.quantityMember,
+            },
+          });
+
+          return res.status(500).json({
+            success: false,
+            message: "Không thể cập nhật tài khoản người thuê!",
+          });
+        }
+      } catch (error) {
+        await Contract.findByIdAndDelete(savedContract._id);
+        throw error;
+      }
+    }
 
     return res.status(201).json({
       success: true,
-      message: "Tạo hợp đồng thành công!",
-      data: contract,
+      message: "Tạo hợp đồng thành công và cập nhật phòng cho người thuê!",
+      data: savedContract,
     });
   } catch (error) {
     console.error("Lỗi trong createContract:", error);
-    next(error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server khi tạo hợp đồng!",
+      error: error.message,
+    });
   }
 };
 

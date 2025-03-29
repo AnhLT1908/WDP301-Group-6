@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 export default function UserProfile() {
   const [user, setUser] = useState(null);
   const [room, setRoom] = useState({});
+  const [houseId, setHouseId] = useState("");
   const [houses, setHouses] = useState({});
   const [accounts, setAccounts] = useState({});
   const [bills, setBills] = useState([]);
@@ -21,6 +22,7 @@ export default function UserProfile() {
     type: "",
     content: "",
     roomId: "",
+    houseId: "",
   });
   const [transferForm, setTransferForm] = useState({
     content: "",
@@ -50,19 +52,36 @@ export default function UserProfile() {
     (error) => Promise.reject(error)
   );
 
+  // Load user data from localStorage
   useEffect(() => {
-    const fetchUserData = async () => {
+    const loadUserData = () => {
       try {
         const userData = localStorage.getItem("user");
         if (!userData) {
           console.log("No user data found");
-          return;
+          return null;
         }
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
         setReportForm((prev) => ({ ...prev, roomId: parsedUser.roomId }));
         setTransferForm((prev) => ({ ...prev, roomId: parsedUser.roomId }));
+        return parsedUser;
+      } catch (err) {
+        console.error("Error loading user data:", err);
+        return null;
+      }
+    };
 
+    loadUserData();
+  }, []);
+
+  // Fetch room data and houseId when user data is available
+  useEffect(() => {
+    const fetchRoomAndHouseData = async () => {
+      if (!user || !user.roomId) return;
+
+      try {
+        // Get room data
         const roomResponse = await axiosInstance.get("/room");
         const roomMap = roomResponse.data.data.reduce((acc, room) => {
           acc[room._id] = room.name;
@@ -70,6 +89,32 @@ export default function UserProfile() {
         }, {});
         setRoom(roomMap);
 
+        // Get house ID from room
+        const roomFindIdResponse = await axiosInstance.get(
+          `/room/${user.roomId}`
+        );
+        const fetchedHouseId = roomFindIdResponse.data.data.house;
+        setHouseId(fetchedHouseId);
+        console.log("House ID fetched:", fetchedHouseId);
+
+        // Update report form with house ID
+        setReportForm((prev) => ({
+          ...prev,
+          houseId: fetchedHouseId,
+        }));
+      } catch (err) {
+        console.error("Error fetching room and house data:", err);
+      }
+    };
+
+    fetchRoomAndHouseData();
+  }, [user]);
+
+  // Fetch houses and accounts data
+  useEffect(() => {
+    const fetchHousesAndAccounts = async () => {
+      try {
+        // Get houses data
         const houseResponse = await axiosInstance.get("/house");
         const houseMap = houseResponse.data.houses.reduce((acc, house) => {
           acc[house._id] = house.name;
@@ -77,6 +122,7 @@ export default function UserProfile() {
         }, {});
         setHouses(houseMap);
 
+        // Get accounts data
         const accountResponse = await axiosInstance.get(
           "/account/lodger-account-list"
         );
@@ -86,12 +132,23 @@ export default function UserProfile() {
         }, {});
         setAccounts(accountMap);
       } catch (err) {
-        console.error("Error fetching user data:", err);
+        console.error("Error fetching houses and accounts data:", err);
       }
     };
 
-    fetchUserData();
+    fetchHousesAndAccounts();
   }, []);
+
+  // Update report form when opening the report popup
+  useEffect(() => {
+    if (isReportPopupOpen) {
+      setReportForm((prev) => ({
+        ...prev,
+        roomId: user?.roomId || "",
+        houseId: houseId || "",
+      }));
+    }
+  }, [isReportPopupOpen, user, houseId]);
 
   const fetchBills = async () => {
     try {
@@ -109,8 +166,9 @@ export default function UserProfile() {
   const fetchReports = async () => {
     try {
       const reportResponse = await axiosInstance.get("/problem");
+      console.log("Problem Response here: ", reportResponse)
       const filteredReports = reportResponse.data.data.filter(
-        (report) => report.roomId === user?.roomId
+        (report) => report.roomId?._id === user?.roomId
       );
       setReports(filteredReports);
       setIsReportsListPopupOpen(true);
@@ -118,6 +176,8 @@ export default function UserProfile() {
       console.error("Error fetching reports:", error);
     }
   };
+
+  console.log("Problem Response: ", reports)
 
   const fetchReportDetail = async (problemId) => {
     try {
@@ -143,20 +203,27 @@ export default function UserProfile() {
 
   const handleReportSubmit = async (e) => {
     e.preventDefault();
+
+    // Log the form data before submission for debugging
+    console.log("Submitting report with data:", reportForm);
+
     try {
       const response = await axiosInstance.post("/problem/Add-problem", {
         title: reportForm.title,
         type: reportForm.type,
         content: reportForm.content,
         roomId: reportForm.roomId,
+        houseId: reportForm.houseId, // This should now have the correct value
       });
+
       console.log("Report created:", response.data);
       setIsReportPopupOpen(false);
       setReportForm({
         title: "",
         type: "",
         content: "",
-        roomId: user?.roomId,
+        roomId: user?.roomId || "",
+        houseId: houseId || "",
       });
       alert("Báo cáo đã được tạo thành công!");
     } catch (error) {
@@ -176,7 +243,7 @@ export default function UserProfile() {
       setIsTransferPopupOpen(false);
       setTransferForm({
         content: "",
-        roomId: user?.roomId,
+        roomId: user?.roomId || "",
       });
       alert("Yêu cầu chuyển phòng đã được gửi thành công!");
     } catch (error) {
@@ -202,45 +269,39 @@ export default function UserProfile() {
     <div>
       <Header />
       <div className="max-w-4xl mx-auto p-8">
-        <h1 className="text-2xl font-bold mb-6">User Profile</h1>
+        <h1 className="text-2xl font-bold mb-6">Thông Tin Cá Nhân</h1>
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex items-center">
-            <div className="w-16 h-16 bg-gray-300 rounded-full flex-shrink-0"></div>
             <div className="ml-4">
               <p className="text-lg font-medium">
-                {user?.firstName + " " + user?.lastName}
+                <strong>Họ và Tên: </strong>
+                {user?.lastName + " " + user?.firstName}
               </p>
-              <p className="text-gray-600">{user?.accountType}</p>
+              <p className="text-gray-600"><strong>Vai trò: </strong>{user?.accountType === "Lodger" ? "Người thuê trọ" : "Chưa xác nhận"}</p>
             </div>
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-lg font-bold mb-4">User Information</h2>
+          <h2 className="text-lg font-bold mb-4">Thông Tin Liên Quan:</h2>
           <p>
-            <strong>Identify Card:</strong> {user?.identityCard}
+            <strong>Căn Cước Công Dân:</strong> {user?.identityCard}
           </p>
           <p>
             <strong>Email:</strong> {user?.email}
           </p>
           <p>
-            <strong>Phone:</strong> {user?.phone}
+            <strong>Số Điện Thoại:</strong> {user?.phone}
           </p>
           <p>
-            <strong>Gender:</strong> {user?.gender}
+            <strong>Giới Tính:</strong> {user?.gender}
           </p>
           <p>
-            <strong>Room:</strong> {room[user?.roomId]}
+            <strong>Phòng Đang Thuê:</strong> {room[user?.roomId]}
           </p>
         </div>
 
         <div className="mt-4 grid grid-cols-3 gap-4">
-          <button
-            className="bg-green-500 text-white px-6 py-3 rounded w-full"
-            onClick={fetchBills}
-          >
-            Xem hóa đơn phòng
-          </button>
           <button
             className="bg-blue-500 text-white px-6 py-3 rounded w-full"
             onClick={() => setIsReportPopupOpen(true)}

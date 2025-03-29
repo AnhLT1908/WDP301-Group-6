@@ -21,7 +21,7 @@ const accountValidate = {
     identityCard: Joi.string().allow(null, ""),
     phone: Joi.string()
       .allow(null, "")
-      .pattern(new RegExp("^(\\+84|0)[3-9][0-9]{9}$")),
+      .pattern(new RegExp("^(\\+84|0)[3-9][0-9]{8}$")),
     room: Joi.string(),
     rentalDate: Joi.string().allow(null, ""),
     leaseTerminationDate: Joi.string().allow(null, ""),

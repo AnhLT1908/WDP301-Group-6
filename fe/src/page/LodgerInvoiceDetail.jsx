@@ -8,6 +8,11 @@ export default function LodgerInvoiceDetail() {
   const [bill, setBill] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const data = localStorage.getItem("user");
+  const token = localStorage.getItem("token");
+  const user = data ? JSON.parse(data) : null;
+
+  console.log("User: ", user);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -66,8 +71,20 @@ export default function LodgerInvoiceDetail() {
         </button>
         <p className="text-yellow-500 font-bold text-3xl">Chi tiết hóa đơn</p>
       </div>
-      <div className="flex justify-center">
-        <div className="flex flex-col w-1/2">
+      <div
+        className={
+          user?.isContact === true
+            ? "grid grid-cols-2 gap-6"
+            : "flex justify-center"
+        }
+      >
+        <div
+          className={
+            user?.isContact === true
+              ? "flex flex-col ml-10"
+              : "flex flex-col w-1/2"
+          }
+        >
           {/* Room Information */}
           <div className="bg-white shadow-lg rounded-lg p-6 mt-4">
             <h2 className="text-xl font-bold mb-4">Thông tin phòng trọ</h2>
@@ -189,13 +206,17 @@ export default function LodgerInvoiceDetail() {
             onUploadSuccess={handleEvidenceUploadSuccess}
           />
         </div>
-        {/* <div className="flex flex-col items-center justify-center">
-          <img
-            src={bill.paymentLink}
-            className="object-cover w-fit rounded-md shadow-md"
-            alt="billQr"
-          />
-        </div> */}
+        {user?.isContact === true ? (
+          <div className="flex flex-col items-center justify-center">
+            <img
+              src={bill.paymentLink}
+              className="object-cover w-fit rounded-md shadow-md"
+              alt="billQr"
+            />
+          </div>
+        ) : (
+          <div></div>
+        )}
       </div>
     </div>
   );

@@ -161,31 +161,26 @@ export const statisticHouselBills = async (req, res, next) => {
     }
 
     // Destructure query parameters with optional chaining and default values
-    const { 
-      month, 
-      isPaid = null, 
-      houseId = null, 
-      roomId = null 
-    } = req.query;
+    const { month, isPaid = null, houseId = null, roomId = null } = req.query;
 
     const currentUser = req.user;
 
     // Validate user account type
     if (currentUser.accountType !== "Manager") {
-      return res.status(403).json({ 
-        message: "Access denied. Requires Manager account type" 
+      return res.status(403).json({
+        message: "Access denied. Requires Manager account type",
       });
     }
 
     // Find houses owned by the current user
-    const userHouses = await House.find({ 
-      hostId: currentUser._id, 
-      deleted: false 
+    const userHouses = await House.find({
+      hostId: currentUser._id,
+      deleted: false,
     });
 
-    console.log("userHouses",userHouses)
+    console.log("userHouses", userHouses);
     // Extract house IDs to use in bill filtering
-    const userHouseIds = userHouses.map(house => house._id);
+    const userHouseIds = userHouses.map((house) => house._id);
 
     // Construct dynamic date filter for monthly bill statistics
     let dateFilter = {};
@@ -206,11 +201,11 @@ export const statisticHouselBills = async (req, res, next) => {
       ...dateFilter,
       houseId: { $in: userHouseIds }, // Restrict to user's houses
       ...(isPaid !== null && { isPaid }),
-      ...(houseId && { 
-        houseId: new mongoose.Types.ObjectId(houseId) 
+      ...(houseId && {
+        houseId: new mongoose.Types.ObjectId(houseId),
       }),
-      ...(roomId && { 
-        roomId: new mongoose.Types.ObjectId(roomId) 
+      ...(roomId && {
+        roomId: new mongoose.Types.ObjectId(roomId),
       }),
     };
 
@@ -248,8 +243,8 @@ export const statisticHouselBills = async (req, res, next) => {
           grandTotal: 1,
           paidPercentage: {
             $multiply: [
-              { $divide: ["$billIsPaid", { $max: ["$totalBills", 1] }] }, 
-              100
+              { $divide: ["$billIsPaid", { $max: ["$totalBills", 1] }] },
+              100,
             ],
           },
         },
@@ -260,33 +255,36 @@ export const statisticHouselBills = async (req, res, next) => {
           from: "houses", // Ensure this matches your collection name
           localField: "houseId",
           foreignField: "_id",
-          as: "houseDetails"
-        }
+          as: "houseDetails",
+        },
       },
       {
-        $unwind: "$houseDetails"
+        $unwind: "$houseDetails",
       },
       {
         $addFields: {
-          houseName: "$houseDetails.name"
-        }
-      }
+          houseName: "$houseDetails.name",
+        },
+      },
     ]);
 
     // Handle scenario with no bills
-    const stats = billStats.length > 0
-      ? billStats
-      : [{
-          billIsPaid: 0,
-          totalBillIsPaid: 0,
-          billIsNotPaid: 0,
-          totalBillIsNotPaid: 0,
-          totalBills: 0,
-          grandTotal: 0,
-          paidPercentage: 0,
-          houseId: null,
-          houseName: null
-        }];
+    const stats =
+      billStats.length > 0
+        ? billStats
+        : [
+            {
+              billIsPaid: 0,
+              totalBillIsPaid: 0,
+              billIsNotPaid: 0,
+              totalBillIsNotPaid: 0,
+              totalBills: 0,
+              grandTotal: 0,
+              paidPercentage: 0,
+              houseId: null,
+              houseName: null,
+            },
+          ];
 
     res.json(stats);
   } catch (error) {
@@ -502,8 +500,9 @@ export const statisticRevenue = async (req, res, next) => {
         (sum, revenue) => sum + revenue,
         0
       ),
-      averageMonthlyRevenue:
-        revenueByMonth.reduce((sum, revenue) => sum + revenue, 0) / 12,
+      averageMonthlyRevenue: Math.floor(
+        revenueByMonth.reduce((sum, revenue) => sum + revenue, 0) / 12
+      ),
       highestRevenueMonth: Math.max(...revenueByMonth),
       lowestRevenueMonth: Math.min(...revenueByMonth),
     };
@@ -519,8 +518,8 @@ export const statisticHouseProblem = async (req, res, next) => {
   try {
     // Validate user authentication and authorization
     if (!req.user || req.user.accountType !== "Manager") {
-      return res.status(403).json({ 
-        message: "Access denied. Requires Manager account type" 
+      return res.status(403).json({
+        message: "Access denied. Requires Manager account type",
       });
     }
 
@@ -534,13 +533,13 @@ export const statisticHouseProblem = async (req, res, next) => {
     } = req.query;
 
     // Find houses owned by the current user
-    const userHouses = await House.find({ 
-      hostId: req.user._id, 
-      deleted: false 
+    const userHouses = await House.find({
+      hostId: req.user._id,
+      deleted: false,
     });
 
     // Extract house IDs to use in problem filtering
-    const userHouseIds = userHouses.map(house => house._id);
+    const userHouseIds = userHouses.map((house) => house._id);
 
     // Construct dynamic date filter
     const dateFilter = {};
@@ -558,8 +557,8 @@ export const statisticHouseProblem = async (req, res, next) => {
       ...dateFilter,
       ...(type && { type }),
       ...(status !== null && { status }),
-      ...(houseId && { 
-        houseId: new mongoose.Types.ObjectId(houseId) 
+      ...(houseId && {
+        houseId: new mongoose.Types.ObjectId(houseId),
       }),
     };
 
@@ -583,11 +582,11 @@ export const statisticHouseProblem = async (req, res, next) => {
                 problemsByType: {
                   $push: {
                     type: "$type",
-                    status: "$status"
-                  }
-                }
-              }
-            }
+                    status: "$status",
+                  },
+                },
+              },
+            },
           ],
           // Overall statistics
           overallStats: [
@@ -601,31 +600,36 @@ export const statisticHouseProblem = async (req, res, next) => {
                 unresolvedProblems: {
                   $sum: { $cond: [{ $eq: ["$status", false] }, 1, 0] },
                 },
-              }
-            }
-          ]
-        }
+              },
+            },
+          ],
+        },
       },
       {
         $project: {
           _id: 0,
           problemByHouse: 1,
           totalProblems: { $arrayElemAt: ["$overallStats.totalProblems", 0] },
-          resolvedProblems: { $arrayElemAt: ["$overallStats.resolvedProblems", 0] },
-          unresolvedProblems: { $arrayElemAt: ["$overallStats.unresolvedProblems", 0] },
-        }
-      }
+          resolvedProblems: {
+            $arrayElemAt: ["$overallStats.resolvedProblems", 0],
+          },
+          unresolvedProblems: {
+            $arrayElemAt: ["$overallStats.unresolvedProblems", 0],
+          },
+        },
+      },
     ]);
 
     // Handle scenario with no problems
-    const stats = problemStats.length > 0
-      ? problemStats[0]
-      : {
-          problemByHouse: [],
-          totalProblems: 0,
-          resolvedProblems: 0,
-          unresolvedProblems: 0
-        };
+    const stats =
+      problemStats.length > 0
+        ? problemStats[0]
+        : {
+            problemByHouse: [],
+            totalProblems: 0,
+            resolvedProblems: 0,
+            unresolvedProblems: 0,
+          };
 
     res.json(stats);
   } catch (error) {
@@ -638,19 +642,19 @@ export const statisticHouseRevenue = async (req, res, next) => {
   try {
     // Validate user authentication and authorization
     if (!req.user || req.user.accountType !== "Manager") {
-      return res.status(403).json({ 
-        message: "Access denied. Requires Manager account type" 
+      return res.status(403).json({
+        message: "Access denied. Requires Manager account type",
       });
     }
 
     // Find houses owned by the current user
-    const userHouses = await House.find({ 
-      hostId: req.user._id, 
-      deleted: false 
+    const userHouses = await House.find({
+      hostId: req.user._id,
+      deleted: false,
     });
 
     // Extract house IDs to use in bill filtering
-    const userHouseIds = userHouses.map(house => house._id);
+    const userHouseIds = userHouses.map((house) => house._id);
 
     // Allow optional year specification via query parameter
     const { year: requestedYear } = req.query;
@@ -672,9 +676,9 @@ export const statisticHouseRevenue = async (req, res, next) => {
       },
       {
         $group: {
-          _id: { 
+          _id: {
             month: { $month: "$createdAt" },
-            houseId: "$houseId"
+            houseId: "$houseId",
           },
           totalRevenue: { $sum: "$total" },
           billCount: { $sum: 1 },
@@ -689,14 +693,14 @@ export const statisticHouseRevenue = async (req, res, next) => {
             $push: {
               houseId: "$_id.houseId",
               revenue: "$totalRevenue",
-              billCount: "$billCount"
-            }
-          }
-        }
+              billCount: "$billCount",
+            },
+          },
+        },
       },
       {
         $sort: { _id: 1 },
-      }
+      },
     ]);
 
     // Initialize revenue and bill count arrays
@@ -705,12 +709,19 @@ export const statisticHouseRevenue = async (req, res, next) => {
     const houseRevenueByMonth = Array(12).fill([]);
 
     // Populate revenue and bill count arrays
-    revenueStats.forEach(({ _id: month, totalMonthlyRevenue, totalMonthlyBills, houseDetails }) => {
-      // Adjust for zero-based array indexing
-      revenueByMonth[month - 1] = totalMonthlyRevenue;
-      billCountByMonth[month - 1] = totalMonthlyBills;
-      houseRevenueByMonth[month - 1] = houseDetails;
-    });
+    revenueStats.forEach(
+      ({
+        _id: month,
+        totalMonthlyRevenue,
+        totalMonthlyBills,
+        houseDetails,
+      }) => {
+        // Adjust for zero-based array indexing
+        revenueByMonth[month - 1] = totalMonthlyRevenue;
+        billCountByMonth[month - 1] = totalMonthlyBills;
+        houseRevenueByMonth[month - 1] = houseDetails;
+      }
+    );
 
     // Calculate comprehensive revenue statistics
     const annualStats = {
@@ -718,8 +729,13 @@ export const statisticHouseRevenue = async (req, res, next) => {
       revenueByMonth,
       billCountByMonth,
       houseRevenueByMonth,
-      totalAnnualRevenue: revenueByMonth.reduce((sum, revenue) => sum + revenue, 0),
-      averageMonthlyRevenue: revenueByMonth.reduce((sum, revenue) => sum + revenue, 0) / 12,
+      totalAnnualRevenue: revenueByMonth.reduce(
+        (sum, revenue) => sum + revenue,
+        0
+      ),
+      averageMonthlyRevenue: Math.floor(
+        revenueByMonth.reduce((sum, revenue) => sum + revenue, 0) / 12
+      ),
       highestRevenueMonth: Math.max(...revenueByMonth),
       lowestRevenueMonth: Math.min(...revenueByMonth),
     };

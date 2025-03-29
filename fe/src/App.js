@@ -40,6 +40,7 @@ import LodgerLayout from "./components/layout/LodgerLayout.jsx";
 import ManagerDashboard from "./page/ManagerDashboard.jsx";
 import ContractManagement from "./page/ContractManagement.jsx";
 import LodgerContract from "./page/LodgerContract.jsx";
+import LodgerRoomDetail from "./page/LodgerRoomDetail.jsx";
 
 function App() {
   const [accountType, setAccountType] = useState(
@@ -68,19 +69,11 @@ function App() {
           <>
             <Route path="/home" element={<HomePage />} />
             <Route
-              path="/house-list"
+              path="/room-detail/:roomId"
               element={
-                <ManagerLayout>
-                  <HouseList />
-                </ManagerLayout>
-              }
-            />
-            <Route
-              path="/room-detail"
-              element={
-                <ManagerLayout>
-                  <RoomDetail />
-                </ManagerLayout>
+                <LodgerLayout>
+                  <LodgerRoomDetail />
+                </LodgerLayout>
               }
             />
             <Route
@@ -127,15 +120,6 @@ function App() {
               element={
                 <DashboardLayout>
                   <Dashboard />
-                </DashboardLayout>
-              }
-            />
-
-            <Route
-              path="/admin/account-list"
-              element={
-                <DashboardLayout>
-                  <AccountList />
                 </DashboardLayout>
               }
             />

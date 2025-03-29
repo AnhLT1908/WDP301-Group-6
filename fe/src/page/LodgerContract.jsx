@@ -25,6 +25,8 @@ const LodgerContract = () => {
     fetchContract();
   }, []);
 
+  console.log("contracts", contracts);
+
   const handleVerifyContract = (id, verifyTwoSide) => {
     const newVerifyTwoSide =
       verifyTwoSide === "verified" ? "unverified" : "verified";
@@ -57,11 +59,12 @@ const LodgerContract = () => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    const date = new Date(dateString);
+    return (
+      `${date.getDate().toString().padStart(2, "0")}/` +
+      `${date.getMonth().toString().padStart(2, "0")}/` +
+      `${date.getFullYear()}`
+    );
   };
   const openConfirmModal = () => {
     setShowModal(true);
@@ -73,7 +76,7 @@ const LodgerContract = () => {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <h1 className="text-2xl font-bold mb-6">Contract Details</h1>
+      <h1 className="text-2xl font-bold mb-6">Chi Tiết Hợp Đồng</h1>
       {error ? (
         <div className="text-red-600 font-semibold">{error}</div>
       ) : (
@@ -87,20 +90,19 @@ const LodgerContract = () => {
             <div className="border-b p-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold">
-                  Contract for {contract.roomId?.name || "Unknown"}
+                  Hợp Đồng Phòng {contract.roomId?.name || "Unknown"}
                 </h2>
                 <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  className={`px-3 py-1 rounded-md text-sm font-medium ${
                     contract.status === "valid"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-gray-100 text-gray-800"
+                      ? "bg-green-300 text-green-800"
+                      : "bg-gray-300 text-gray-800"
                   }`}
                 >
-                  {contract.status}
+                  {contract.status === "valid"
+                    ? "Còn Hiệu Lực"
+                    : "Hết Hiệu Lực"}
                 </span>
-              </div>
-              <div className="text-sm text-gray-500 mt-1">
-                ID: {contract._id}
               </div>
             </div>
 
@@ -109,31 +111,31 @@ const LodgerContract = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">
-                    Room Information
+                    Thông tin phòng:
                   </h3>
                   <div className="space-y-2">
                     <p>
-                      <span className="font-medium">Room Name:</span>{" "}
+                      <span className="font-medium">Tên Phòng:</span>{" "}
                       {contract.roomId?.name || "unknonwn"}
                     </p>
                     <p>
-                      <span className="font-medium">Floor:</span>{" "}
+                      <span className="font-medium">Tầng:</span>{" "}
                       {contract.roomId?.floor || "unknonwn"}
                     </p>
                     <p>
-                      <span className="font-medium">Area:</span>{" "}
+                      <span className="font-medium">Diện Tích:</span>{" "}
                       {contract.roomId?.area || "unknonwn"} m²
                     </p>
                     <p>
-                      <span className="font-medium">Room Price:</span>{" "}
+                      <span className="font-medium">Giá Phòng:</span>{" "}
                       {contract.roomId?.priceList.roomPrice.toLocaleString() ||
                         "unknonwn"}{" "}
                       VND
                     </p>
                     <p>
-                      <span className="font-medium">Deposit:</span>{" "}
+                      <span className="font-medium">Tiền Cọc:</span>{" "}
                       {contract.roomId?.priceList.deposit.toLocaleString() ||
-                        "unknonwn"}{" "}
+                        "Không có tiền cọc"}{" "}
                       VND
                     </p>
                   </div>
@@ -141,31 +143,29 @@ const LodgerContract = () => {
 
                 <div>
                   <h3 className="text-lg font-semibold mb-2">
-                    Contract Period
+                    Thời Gian Hiệu Lực
                   </h3>
                   <div className="space-y-2">
                     <p>
-                      <span className="font-medium">Start Date:</span>{" "}
+                      <span className="font-medium">Từ Ngày:</span>{" "}
                       {formatDate(contract.startDate)}
                     </p>
                     <p>
-                      <span className="font-medium">End Date:</span>{" "}
+                      <span className="font-medium">Đến Ngày:</span>{" "}
                       {formatDate(contract.endDate)}
                     </p>
                     <p>
-                      <span className="font-medium">Status:</span>{" "}
-                      {contract.status}
-                    </p>
-                    <p>
-                      <span className="font-medium">Verification Status:</span>
+                      <span className="font-medium">Trạng Thái Xác Nhận:</span>
                       <span
                         className={`ml-2 px-2 py-1 rounded-md text-xs font-medium ${
                           contract.verifyTwoSide === "verified"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
+                            ? "bg-green-200 text-green-800"
+                            : "bg-yellow-200 text-yellow-800"
                         }`}
                       >
-                        {contract.verifyTwoSide}
+                        {contract.verifyTwoSide === "verified"
+                          ? "Đã xác nhận"
+                          : "Chưa xác nhận"}
                       </span>
                     </p>
                   </div>
@@ -175,39 +175,41 @@ const LodgerContract = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">
-                    Party A (Owner/Manager)
+                    Bên A (Quản Lý Nhà Trọ)
                   </h3>
                   <div className="space-y-2">
                     <p>
-                      <span className="font-medium">Name:</span>{" "}
-                      {contract.benA?.name || "unknonwn"}
+                      <span className="font-medium">Họ và Tên:</span>{" "}
+                      {contract.benA?.lastName +
+                        " " +
+                        contract.benA?.firstName || "unknonwn"}
                     </p>
                     <p>
                       <span className="font-medium">Email:</span>{" "}
                       {contract.benA?.email || "unknonwn"}
                     </p>
                     <p>
-                      <span className="font-medium">Role:</span>{" "}
-                      {contract.benA?.accountType || "unknonwn"}
+                      <span className="font-medium">Số Điện Thoại:</span>{" "}
+                      {contract.benA?.phone || "unknonwn"}
                     </p>
                   </div>
                 </div>
 
                 <div>
                   <h3 className="text-lg font-semibold mb-2">
-                    Party B (Lodger)
+                    Bên B (Người Đại Diện Thuê Phòng)
                   </h3>
                   <div className="space-y-2">
                     <p>
-                      <span className="font-medium">Name:</span>{" "}
-                      {contract.benB.firstName} {contract.benB.lastName}
+                      <span className="font-medium">Họ và Tên:</span>{" "}
+                      {contract.benB.lastName} {contract.benB.firstName}
                     </p>
                     <p>
                       <span className="font-medium">Email:</span>{" "}
                       {contract.benB.email}
                     </p>
                     <p>
-                      <span className="font-medium">Phone:</span>{" "}
+                      <span className="font-medium">Số Điện Thoại:</span>{" "}
                       {contract.benB.phone}
                     </p>
                   </div>
@@ -216,7 +218,7 @@ const LodgerContract = () => {
 
               {contract.description && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Description</h3>
+                  <h3 className="text-lg font-semibold mb-2">Điều Khoản Hợp Đồng:</h3>
                   <p>{contract.description}</p>
                 </div>
               )}
@@ -230,24 +232,23 @@ const LodgerContract = () => {
                     className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors"
                     onClick={openConfirmModal}
                   >
-                    Verify Contract
+                    Xác Nhận Hợp Đồng
                   </button>
                   {showModal && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                       <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
                         <h3 className="text-lg font-medium text-gray-900 mb-4">
-                          Confirm Contract Verification
+                          Xác Nhận Hợp Đồng
                         </h3>
                         <p className="text-gray-600 mb-6">
-                          Are you sure you want to verify this contract? This
-                          action cannot be undone.
+                          Bạn có chắc chắn muốn xác nhận hợp đồng này không? Sau khi đã xác nhận sẽ không thể thay đổi trạng thái.
                         </p>
                         <div className="flex justify-end space-x-3">
                           <button
                             className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-800 transition-colors"
                             onClick={closeConfirmModal}
                           >
-                            Cancel
+                            Hủy
                           </button>
                           <button
                             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
@@ -259,7 +260,7 @@ const LodgerContract = () => {
                               closeConfirmModal();
                             }}
                           >
-                            Verify
+                            Xác Nhận
                           </button>
                         </div>
                       </div>
@@ -267,8 +268,8 @@ const LodgerContract = () => {
                   )}
                 </>
               ) : (
-                <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                  Contract Verified
+                <span className="px-3 py-1 bg-green-300 text-green-800 rounded-md  text-sm font-medium">
+                  Hợp Đồng Đã Được Xác Nhận
                 </span>
               )}
             </div>

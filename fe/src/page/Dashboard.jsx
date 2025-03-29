@@ -128,7 +128,7 @@ const Dashboard = () => {
       const endpoints = [
         { url: "/api/v1/static/general", statKey: "general", params: {} },
         { 
-          url: "/api/v1/static/revenue", 
+          url: "/api/v1/static/revenues", 
           statKey: "revenue", 
           params: { year: filters.year } 
         },
