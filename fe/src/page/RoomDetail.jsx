@@ -267,7 +267,7 @@ const RoomDetail = () => {
       // Bước 2: Cập nhật roomId trong thông tin tài khoản người thuê
       try {
         await api.put(`/account/updateLodgerAccount/${accountId}`, {
-          roomId: roomId,
+          room: roomId,
           rentalDate: joinDate,
         });
 
@@ -434,7 +434,7 @@ const RoomDetail = () => {
       // Step 2: Update account by setting roomId to null
       try {
         await api.put(`/account/updateLodgerAccount/${accountId}`, {
-          roomId: null,
+          room: null,
           // Reset rental date or set as needed
         });
         console.log(
@@ -621,12 +621,12 @@ const RoomDetail = () => {
     <div className="container mx-auto p-4 flex flex-col min-h-screen">
       {/* Nút quay lại */}
       <div className="mb-8">
-        <div className="w-52">
+        <div className="w-36">
           <button
-            className="bg-green-500 text-white px-6 py-3 rounded w-full"
+            className="bg-green-500 hover:bg-green-800 transition duration-200 text-white font-semibold text-lg py-2 rounded w-full"
             onClick={() => navigate(`/manager/room/rooms-list`)}
           >
-            Back
+            Quay lại
           </button>
         </div>
       </div>
@@ -733,7 +733,7 @@ const RoomDetail = () => {
                 </select>
                 <button
                   onClick={handleAddMember}
-                  className="bg-blue-500 text-white px-4 py-2 rounded"
+                  className="bg-blue-500 hover:bg-blue-800 text-white px-4 py-2 rounded transition duration-200"
                 >
                   Thêm thành viên
                 </button>
@@ -744,41 +744,41 @@ const RoomDetail = () => {
       </div>
 
       {/* Các nút tác vụ chính */}
-      <div className="mt-auto grid grid-cols-3 gap-4">
+      <div className="mt-auto grid grid-cols-4 gap-4">
         {/* Nút lưu/chỉnh sửa phòng */}
         {isEditing ? (
           <button
             onClick={handleUpdateRoom}
-            className="bg-green-500 text-white px-6 py-3 rounded w-full"
+            className="bg-green-500 hover:bg-green-800 transition duration-200 text-white px-6 py-3 rounded w-full"
           >
             Lưu
           </button>
         ) : (
           <button
             onClick={() => setIsEditing(true)}
-            className="bg-green-500 text-white px-6 py-3 rounded w-full"
+            className="bg-green-500  hover:bg-green-800 transition duration-200 text-white px-6 py-3 rounded w-full"
           >
-            Edit
+            Cập nhật thông tin phòng
           </button>
         )}
 
-        {/* Nút xem hóa đơn phòng */}
-        <button
-          className="bg-green-500 text-white px-6 py-3 rounded w-full"
-          onClick={fetchBills}
-        >
-          Xem hóa đơn phòng
+        {/* Nút xem báo cáo phòng */}
+        <button className="bg-green-500 hover:bg-green-800 transition duration-200 text-white px-6 py-3 rounded w-full">
+          Xem báo cáo phòng
         </button>
 
-        {/* Nút xem báo cáo phòng */}
-        <button className="bg-green-500 text-white px-6 py-3 rounded w-full">
-          Xem báo cáo phòng
+        {/* Nút xem hóa đơn phòng */}
+        <button
+          className="bg-green-500 hover:bg-green-800 transition duration-200 text-white px-6 py-3 rounded w-full"
+          onClick={fetchBills}
+        >
+          Xem hóa danh sách hóa đơn phòng
         </button>
 
         {/* Nút tạo hóa đơn phòng */}
         <button
           onClick={() => handleCreateInvoice(roomId)}
-          className="bg-green-500 text-white px-6 py-3 rounded w-full"
+          className="bg-green-500 hover:bg-green-800 transition duration-200 text-white px-6 py-3 rounded w-full"
         >
           Tạo hóa đơn phòng
         </button>
@@ -799,7 +799,7 @@ const RoomDetail = () => {
                     onClick={() =>
                       navigate(`/manager/invoice-detail/${bill._id}`)
                     }
-                    className="bg-blue-500 text-white px-4 py-2 rounded mt-2"
+                    className="bg-blue-500 hover:bg-blue-800 transition duration-200 text-white px-4 py-2 rounded mt-2"
                   >
                     Xem chi tiết
                   </button>
@@ -808,7 +808,7 @@ const RoomDetail = () => {
             </ul>
             <button
               onClick={() => setIsBillPopupOpen(false)}
-              className="bg-red-500 text-white px-6 py-3 rounded w-full mt-4"
+              className="bg-red-500 hover:bg-red-800 transition duration-200 text-white px-6 py-3 rounded w-full mt-4"
             >
               Đóng
             </button>

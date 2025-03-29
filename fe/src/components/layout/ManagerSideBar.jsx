@@ -24,25 +24,24 @@ export default function ManagerSideBar() {
           {menuOpen && (
             <ul className="ml-4">
               <li className="mb-2 text-[#FDEE2A]">
-                <Link to="/manager/lodger-list">Home</Link>
+                <Link to="/manager">Dashboard Thống Kê</Link>
               </li>
               <li className="mb-2 text-[#FDEE2A]">
-                <Link to="/manager/invoice-list">Quản lý Hóa đơn</Link>
+                <Link to="/manager/lodger-list">Quản Lý Người Thuê</Link>
               </li>
               <li className="mb-2 text-[#FDEE2A]">
-                <Link to="/manager/room/rooms-list">Quản lý phòng trọ</Link>
-              </li>{" "}
-              <li className="mb-2 text-[#FDEE2A]">
-                <Link to="/manager/invoice/transaction-list">Quản lý giao dịch</Link>
+                <Link to="/manager/room/rooms-list">Quản Lý Phòng Trọ</Link>
               </li>
               <li className="mb-2 text-[#FDEE2A]">
-                <Link to="/manager">Dashboard</Link>
+                <Link to="/manager/invoice-list">Quản Lý Hóa Đơn</Link>
               </li>
               <li className="mb-2 text-[#FDEE2A]">
-                <Link to="/manager/lodger-list">Account List</Link>
+                <Link to="/manager/invoice/transaction-list">
+                  Quản lý Giao Dịch
+                </Link>
               </li>
               <li className="mb-2 text-[#FDEE2A]">
-                <Link to="/manager/contract">Quản lý hợp đồng</Link>
+                <Link to="/manager/contract">Quản Lý Hợp Đồng</Link>
               </li>
             </ul>
           )}

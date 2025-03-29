@@ -276,7 +276,7 @@ export default function InvoiceDetail() {
                   {bill.total?.toLocaleString("vn-VN")} VND
                 </p>
                 <p>
-                  <strong>Status:</strong>{" "}
+                  <strong>Trạng thái:</strong>{" "}
                   <span
                     className={
                       bill.isPaid

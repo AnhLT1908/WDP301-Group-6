@@ -1,144 +1,155 @@
-import Account from '../model/Account.js';
-import bcrypt from 'bcrypt';
-import Room from '../model/Room.js';
-import House from '../model/House.js';
-import getCurrentUser from '../utils/getCurrentUser.js';
-import mongoose from 'mongoose';
-import Contract from '../model/Contract.js';
-import Notification from '../model/Notification.js';
+import Account from "../model/Account.js";
+import bcrypt from "bcrypt";
+import Room from "../model/Room.js";
+import House from "../model/House.js";
+import getCurrentUser from "../utils/getCurrentUser.js";
+import mongoose from "mongoose";
+import Contract from "../model/Contract.js";
+import Notification from "../model/Notification.js";
 
 export const GetAll = async (req, res) => {
-    try {
-        const { page, limit } = req.query;
-        const pageNumber = parseInt(page) || 1;
-        const limitPerPage = parseInt(limit) || 10;
-        const skip = (pageNumber - 1) * limitPerPage;
-        const { house } = req.params;
-        console.log("House id find room", house);
-        const rooms = await Room.find({ house });
-        console.log("Room list", rooms);
-        const totalAccounts = await Account.countDocuments({ roomId: { $in: rooms.map((room) => room._id) } });
-        const data = await Account.find({ roomId: { $in: rooms.map((room) => room._id) } })
-            .skip(skip)
-            .limit(limitPerPage)
-            .sort({ createdAt: -1 })
-            .exec();
+  try {
+    const { page, limit } = req.query;
+    const pageNumber = parseInt(page) || 1;
+    const limitPerPage = parseInt(limit) || 10;
+    const skip = (pageNumber - 1) * limitPerPage;
+    const { house } = req.params;
+    console.log("House id find room", house);
+    const rooms = await Room.find({ house });
+    console.log("Room list", rooms);
+    const totalAccounts = await Account.countDocuments({
+      roomId: { $in: rooms.map((room) => room._id) },
+    });
+    const data = await Account.find({
+      roomId: { $in: rooms.map((room) => room._id) },
+    })
+      .populate("roomId")
+      .skip(skip)
+      .limit(limitPerPage)
+      .sort({ createdAt: -1 })
+      .exec();
 
     const totalPages = Math.ceil(totalAccounts / limitPerPage);
 
-        return res.status(200).json({
-            pagination: {
-                currentPage: pageNumber,
-                totalPages: totalPages,
-                totalAccounts: totalAccounts,
-                accountsPerPage: data.length,
-            },
-            memberOfHouse: data,
-        });
-    } catch (error) {
-        return res.status(500).json({
-            message: "Lỗi Server Error",
-        });
-    }
+    return res.status(200).json({
+      pagination: {
+        currentPage: pageNumber,
+        totalPages: totalPages,
+        totalAccounts: totalAccounts,
+        accountsPerPage: data.length,
+      },
+      memberOfHouse: data,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Lỗi Server Error",
+    });
+  }
 };
 
 export const getLodgerAccount = async (req, res) => {
   const { accountId } = req.params;
-  console.log("Lodger account id", accountId)
+  console.log("Lodger account id", accountId);
   try {
     const accountData = await Account.findById(accountId)
-      .populate('roomId', 'name status') // Populate room name and status
+      .populate("roomId", "name status") // Populate room name and status
       .exec();
 
     if (!accountData) {
-      return res.status(404).json({ message: 'Tài khoản không tồn tại' });
+      return res.status(404).json({ message: "Tài khoản không tồn tại" });
     }
 
     return res.status(200).json({
-      message: 'Lấy thông tin tài khoản thành công',
+      message: "Lấy thông tin tài khoản thành công",
       data: accountData,
     });
   } catch (error) {
     console.error(error);
     return res.status(500).json({
-      message: 'Lỗi Server Error',
+      message: "Lỗi Server Error",
       error: error.message,
     });
   }
 };
 
 export const deleteLodgerIfNotInContract = async (req, res, next) => {
-    try {
-        const { accountId } = req.params; // ID của Lodger cần xóa
-        const currentUserId = getCurrentUser(req); // Người thực hiện thao tác
+  try {
+    const { accountId } = req.params; // ID của Lodger cần xóa
+    const currentUserId = getCurrentUser(req); // Người thực hiện thao tác
 
-        // Kiểm tra accountId hợp lệ
-        if (!mongoose.Types.ObjectId.isValid(accountId)) {
-            return res.status(400).json({
-                success: false,
-                message: "accountId không hợp lệ!",
-            });
-        }
-
-        // Kiểm tra quyền của người dùng (Admin hoặc Manager)
-        const currentUser = await Account.findById(currentUserId);
-        if (!currentUser || !["Admin", "Manager"].includes(currentUser.accountType)) {
-            return res.status(403).json({
-                success: false,
-                message: "Chỉ Admin hoặc Manager mới có quyền xóa Lodger!",
-            });
-        }
-
-        // Tìm tài khoản cần xóa
-        const lodger = await Account.findById(accountId);
-        if (!lodger) {
-            return res.status(404).json({
-                success: false,
-                message: "Không tìm thấy tài khoản!",
-            });
-        }
-
-        // Kiểm tra tài khoản phải là Lodger
-        if (lodger.accountType !== "Lodger") {
-            return res.status(400).json({
-                success: false,
-                message: "Tài khoản này không phải Lodger!",
-            });
-        }
-
-        // Kiểm tra xem Lodger có trong hợp đồng nào không
-        const contractAsBenB = await Contract.findOne({ benB: accountId });
-        const contractAsRelatedParty = await Contract.findOne({ relatedParties: accountId });
-
-        if (contractAsBenB || contractAsRelatedParty) {
-            return res.status(400).json({
-                success: false,
-                message: "Không thể xóa Lodger vì tài khoản vẫn tồn tại trong hợp đồng!",
-                contract: contractAsBenB || contractAsRelatedParty,
-            });
-        }
-
-        // Xóa Lodger khỏi danh sách members trong Room (nếu có)
-        if (lodger.roomId) {
-            await Room.updateOne(
-                { _id: lodger.roomId },
-                { $pull: { "members": { accountId: lodger._id } } }
-            );
-        }
-
-        return res.status(200).json({
-            success: true,
-            message: `Lodger ${lodger.firstName} ${lodger.lastName} đã được xóa thành công!`,
-        });
-    } catch (error) {
-        console.error("Lỗi trong deleteLodgerIfNotInContract:", error);
-        next(error);
+    // Kiểm tra accountId hợp lệ
+    if (!mongoose.Types.ObjectId.isValid(accountId)) {
+      return res.status(400).json({
+        success: false,
+        message: "accountId không hợp lệ!",
+      });
     }
+
+    // Kiểm tra quyền của người dùng (Admin hoặc Manager)
+    const currentUser = await Account.findById(currentUserId);
+    if (
+      !currentUser ||
+      !["Admin", "Manager"].includes(currentUser.accountType)
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Chỉ Admin hoặc Manager mới có quyền xóa Lodger!",
+      });
+    }
+
+    // Tìm tài khoản cần xóa
+    const lodger = await Account.findById(accountId);
+    if (!lodger) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy tài khoản!",
+      });
+    }
+
+    // Kiểm tra tài khoản phải là Lodger
+    if (lodger.accountType !== "Lodger") {
+      return res.status(400).json({
+        success: false,
+        message: "Tài khoản này không phải Lodger!",
+      });
+    }
+
+    // Kiểm tra xem Lodger có trong hợp đồng nào không
+    const contractAsBenB = await Contract.findOne({ benB: accountId });
+    const contractAsRelatedParty = await Contract.findOne({
+      relatedParties: accountId,
+    });
+
+    if (contractAsBenB || contractAsRelatedParty) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Không thể xóa Lodger vì tài khoản vẫn tồn tại trong hợp đồng!",
+        contract: contractAsBenB || contractAsRelatedParty,
+      });
+    }
+
+    // Xóa Lodger khỏi danh sách members trong Room (nếu có)
+    if (lodger.roomId) {
+      await Room.updateOne(
+        { _id: lodger.roomId },
+        { $pull: { members: { accountId: lodger._id } } }
+      );
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Lodger ${lodger.firstName} ${lodger.lastName} đã được xóa thành công!`,
+    });
+  } catch (error) {
+    console.error("Lỗi trong deleteLodgerIfNotInContract:", error);
+    next(error);
+  }
 };
 
 export const updateLodgerAccount = async (req, res) => {
   const { accountId } = req.params;
-  const {
+  let {
     firstName,
     lastName,
     email,
@@ -155,18 +166,131 @@ export const updateLodgerAccount = async (req, res) => {
 
   console.log("Received update data: ", req.body);
 
+  if (status !== undefined) {
+    if (typeof status === "string") {
+      status = status.toLowerCase() === "true";
+    } else {
+      status = Boolean(status);
+    }
+  }
+
+  const validatePassword = (password) => {
+    if (!password) return null;
+
+    if (password.length < 8) {
+      return "Mật khẩu phải có ít nhất 8 ký tự";
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      return "Mật khẩu phải có ít nhất một chữ cái viết hoa";
+    }
+
+    if (!/[a-z]/.test(password)) {
+      return "Mật khẩu phải có ít nhất một chữ cái viết thường";
+    }
+
+    if (!/[0-9]/.test(password)) {
+      return "Mật khẩu phải có ít nhất một chữ số";
+    }
+
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      return "Mật khẩu phải có ít nhất một ký tự đặc biệt";
+    }
+
+    return null;
+  };
+
+  const validateIdentityCard = (idCard, currentIdCard) => {
+    if (!idCard || idCard === currentIdCard) return null;
+    if (!/^\d{12}$/.test(idCard)) {
+      return "Căn cước công dân phải có đúng 12 ký tự số";
+    }
+    return null;
+  };
+
+  const validateBirthDate = (birthDate) => {
+    if (!birthDate) return null;
+
+    const currentYear = new Date().getFullYear();
+    const birthYear = new Date(birthDate).getFullYear();
+
+    if (birthYear > currentYear - 18) {
+      return "Người thuê phải đủ 18 tuổi";
+    }
+
+    return null;
+  };
+
+  const validateName = (name, fieldName) => {
+    if (!name) return null;
+    if (!name.trim()) {
+      return `${fieldName} không được để trống hoặc chỉ chứa khoảng trắng`;
+    }
+    const nameRegex = /^[a-zA-Z\sÀ-ỹ]+$/;
+    if (!nameRegex.test(name)) {
+      return `${fieldName} không được chứa số hoặc ký tự đặc biệt`;
+    }
+    return null;
+  };
 
   try {
     const accountData = await Account.findById(accountId);
     if (!accountData) {
-      return res.status(404).json({ message: 'Tài khoản không tồn tại' });
+      return res.status(404).json({ message: "Tài khoản không tồn tại" });
     }
-
+    const validationErrors = {};
     if (email && email !== accountData.email) {
       const checkEmailExists = await Account.findOne({ email: email });
-      if (checkEmailExists !== null) {
-        return res.status(400).json({ message: 'Email đã tồn tại' });
+      if (checkEmailExists) {
+        validationErrors.email = "Email đã được sử dụng cho tài khoản khác";
       }
+    }
+
+    if (identityCard && identityCard !== accountData.identityCard) {
+      const idCardFormatError = validateIdentityCard(
+        identityCard,
+        accountData.identityCard
+      );
+      if (idCardFormatError) {
+        validationErrors.identityCard = idCardFormatError;
+      } else {
+        const checkIdCardExists = await Account.findOne({
+          identityCard: identityCard,
+          _id: { $ne: accountId },
+        });
+
+        if (checkIdCardExists) {
+          validationErrors.identityCard =
+            "Căn cước công dân đã được sử dụng cho tài khoản khác";
+        }
+      }
+    }
+
+    if (password) {
+      const passwordError = validatePassword(password);
+      if (passwordError) validationErrors.password = passwordError;
+    }
+
+    if (dateOfBirth) {
+      const birthDateError = validateBirthDate(dateOfBirth);
+      if (birthDateError) validationErrors.dateOfBirth = birthDateError;
+    }
+
+    if (firstName !== undefined) {
+      const firstNameError = validateName(firstName, "Tên");
+      if (firstNameError) validationErrors.firstName = firstNameError;
+    }
+
+    if (lastName !== undefined) {
+      const lastNameError = validateName(lastName, "Họ");
+      if (lastNameError) validationErrors.lastName = lastNameError;
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      return res.status(400).json({
+        message: "Dữ liệu không hợp lệ",
+        errors: validationErrors,
+      });
     }
 
     if (password) {
@@ -174,31 +298,54 @@ export const updateLodgerAccount = async (req, res) => {
       accountData.password = await bcrypt.hash(password, salt);
     }
 
-    // Room assignment handling - explicit check for null to handle removal
-    if (roomId !== undefined) {
-      if (roomId === null) {
-        // Explicitly set and mark as modified for null values
+    if (room !== undefined) {
+      if (!room || room === "") {
         accountData.roomId = null;
         accountData.markModified("roomId");
       } else {
-        // Normal room assignment flow
-        const roomData = await Room.findById(roomId);
+        const roomData = await Room.findById(room);
         if (!roomData) {
           return res.status(404).json({ message: "Phòng không tồn tại" });
         }
 
-        // Only check room capacity if we're not already in this room
-        if (!accountData.roomId || accountData.roomId.toString() !== roomId) {
-          if (roomData.members?.length >= 5) {
+        const isCurrentRoom =
+          accountData.roomId &&
+          accountData.roomId.toString() === room.toString();
+
+        if (!isCurrentRoom) {
+          if (accountData.roomId) {
+            try {
+              const oldRoom = await Room.findById(accountData.roomId);
+              if (oldRoom) {
+                oldRoom.members = oldRoom.members.filter(
+                  (member) => !member.accountId.equals(accountId)
+                );
+                oldRoom.status =
+                  oldRoom.members.length >= oldRoom.quantityMember
+                    ? false
+                    : true;
+
+                await oldRoom.save();
+              }
+            } catch (err) {
+              console.error("Error updating old room:", err);
+            }
+          }
+          if (roomData.members?.length >= roomData.quantityMember) {
             return res.status(400).json({ message: "Phòng đã đầy" });
           }
-        }
+          roomData.members.push({
+            accountId: accountId,
+            joinDate: rentalDate ? new Date(rentalDate) : new Date(),
+          });
+          roomData.status =
+            roomData.members.length >= roomData.quantityMember ? false : true;
 
-        accountData.roomId = roomId;
+          await roomData.save();
+        }
+        accountData.roomId = room;
       }
     }
-
-    // Update other account data fields
     if (firstName !== undefined) accountData.firstName = firstName;
     if (lastName !== undefined) accountData.lastName = lastName;
     if (email !== undefined) accountData.email = email;
@@ -207,17 +354,22 @@ export const updateLodgerAccount = async (req, res) => {
     if (identityCard !== undefined) accountData.identityCard = identityCard;
     if (phone !== undefined) accountData.phone = phone;
     if (rentalDate !== undefined) accountData.rentalDate = new Date(rentalDate);
-    if (leaseTerminationDate !== undefined)
-      accountData.leaseTerminationDate = new Date(leaseTerminationDate);
+    if (leaseTerminationDate !== undefined) {
+      accountData.leaseTerminationDate = leaseTerminationDate
+        ? new Date(leaseTerminationDate)
+        : null;
+    }
     if (gender !== undefined) accountData.gender = gender;
-    if (status !== undefined) accountData.status = status;
 
-        // Save updated account
-        await accountData.save();
+    if (status !== undefined) {
+      accountData.status = Boolean(status);
+    }
+
+    const updatedAccount = await accountData.save();
 
     return res.status(200).json({
       message: "Cập nhật tài khoản thành công",
-      data: updatedAccount.toObject(), // Convert to plain object for consistent serialization
+      data: updatedAccount.toObject(),
     });
   } catch (error) {
     console.error("Account update error:", error);
@@ -280,76 +432,6 @@ export const getProfile = async (req, res) => {
   }
 };
 
-// export const CreateLodgerAccount = async (req, res) => {
-//     const { firstName, lastName, email, password, dateOfBirth, identityCard, phone, room, rentalDate, leaseTerminationDate, status, accountType } = req.body;
-//     try {
-//         const checkEmailExists = await Account.findOne({ email: email });
-//         if (checkEmailExists !== null)
-//             return res.status(400).json({ message: "Email đã tồn tại" });
-
-//         const salt = await bcrypt.genSalt(10);
-//         const hashedPassword = await bcrypt.hash(password, salt);
-
-//         const roomData = await Room.findById(room);
-//         if (!roomData) {
-//             return res.status(404).json({ message: "Phòng không tồn tại" });
-//         }
-
-//         if (roomData.members?.length >= roomData.quantityMember) {
-//             return res.status(400).json({ message: "Phòng đã đầy" });
-//         }
-
-//         const accountData = await Account.create({
-//             firstName,
-//             lastName,
-//             email,
-//             password: hashedPassword,
-//             dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-//             identityCard,
-//             phone,
-//             roomId: roomData._id,
-//             rentalDate: rentalDate ? new Date(rentalDate) : null,
-//             leaseTerminationDate: leaseTerminationDate ? new Date(leaseTerminationDate) : null,
-//             status: status,
-//             accountType: accountType || "Lodger",
-//         });
-
-//         await Room.findByIdAndUpdate(
-//             roomData._id,
-//             {
-//                 $push: {
-//                     members: {
-//                         accountId: accountData._id,
-//                         joinDate: rentalDate ? new Date(rentalDate) : new Date()
-//                     }
-//                 },
-//                 $set: {
-//                     status: roomData.members.length + 1 >= roomData.quantityMember ? "full" : "available"
-//                 }
-//             },
-//             { new: true, runValidators: true }
-//         );
-
-//         return res.status(201).json({
-//             message: "Tạo tài khoản thành công",
-//             data: {
-//                 firstName: accountData.firstName,
-//                 lastName: accountData.lastName,
-//                 email: accountData.email,
-//                 accountType: accountData.accountType,
-//                 room: roomData.name,
-//                 gender: accountData.gender
-//             },
-//         });
-//     } catch (error) {
-//         console.error(error);
-//         return res.status(500).json({
-//             message: "Lỗi Server Error",
-//             error: error.message
-//         });
-//     }
-// };
-
 export const CreateLodgerAccount = async (req, res) => {
   const {
     firstName,
@@ -360,70 +442,195 @@ export const CreateLodgerAccount = async (req, res) => {
     identityCard,
     phone,
     rentalDate,
+    room,
     leaseTerminationDate,
     status,
     accountType,
+    gender,
   } = req.body;
 
+  // Validation functions
+  const validatePassword = (password) => {
+    if (!password || password.length < 8) {
+      return "Mật khẩu phải có ít nhất 8 ký tự";
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      return "Mật khẩu phải có ít nhất một chữ cái viết hoa";
+    }
+
+    if (!/[a-z]/.test(password)) {
+      return "Mật khẩu phải có ít nhất một chữ cái viết thường";
+    }
+
+    if (!/[0-9]/.test(password)) {
+      return "Mật khẩu phải có ít nhất một chữ số";
+    }
+
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      return "Mật khẩu phải có ít nhất một ký tự đặc biệt";
+    }
+
+    return null;
+  };
+
+  const validateIdentityCard = (idCard) => {
+    if (!idCard || !/^\d{12}$/.test(idCard)) {
+      return "Căn cước công dân phải có đúng 12 ký tự số";
+    }
+    return null;
+  };
+
+  const validateBirthDate = (birthDate) => {
+    if (!birthDate) {
+      return "Ngày sinh là bắt buộc";
+    }
+
+    const currentYear = new Date().getFullYear();
+    const birthYear = new Date(birthDate).getFullYear();
+
+    if (birthYear > currentYear - 18) {
+      return "Người thuê phải đủ 18 tuổi";
+    }
+    return null;
+  };
+
+  const validateName = (name) => {
+    if (!name || !name.trim()) {
+      return "Tên không được để trống hoặc chỉ chứa khoảng trắng";
+    }
+
+    const nameRegex = /^[a-zA-Z\sÀ-ỹ]+$/;
+    if (!nameRegex.test(name)) {
+      return "Tên không được chứa số hoặc ký tự đặc biệt";
+    }
+
+    return null;
+  };
+
   try {
-    // Email existence check
+    // Validate input data
+    const validationErrors = {};
+
+    // Validate firstName and lastName
+    const firstNameError = validateName(firstName);
+    if (firstNameError) validationErrors.firstName = firstNameError;
+
+    const lastNameError = validateName(lastName);
+    if (lastNameError) validationErrors.lastName = lastNameError;
+
+    // Validate password
+    const passwordError = validatePassword(password);
+    if (passwordError) validationErrors.password = passwordError;
+
+    // Validate identity card
+    const idCardError = validateIdentityCard(identityCard);
+    if (idCardError) validationErrors.identityCard = idCardError;
+
+    // Validate birth date
+    const birthDateError = validateBirthDate(dateOfBirth);
+    if (birthDateError) validationErrors.dateOfBirth = birthDateError;
+
+    // Return all validation errors, if any
+    if (Object.keys(validationErrors).length > 0) {
+      return res.status(400).json({
+        message: "Dữ liệu không hợp lệ",
+        errors: validationErrors,
+      });
+    }
+
     const checkEmailExists = await Account.findOne({ email: email });
     if (checkEmailExists) {
       return res.status(400).json({ message: "Email đã tồn tại" });
+    }
+
+    const checkIdentityCardExists = await Account.findOne({
+      identityCard: identityCard,
+    });
+    if (checkIdentityCardExists) {
+      return res.status(400).json({
+        message: "Căn cước công dân đã tồn tại",
+        errors: {
+          identityCard: "Căn cước công dân đã được sử dụng cho tài khoản khác",
+        },
+      });
     }
 
     // Password hashing
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-        const roomData = await Room.findById(room);
-        if (!roomData) {
-            return res.status(404).json({ message: "Phòng không tồn tại" });
-        }
+    const accountData = {
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+      identityCard,
+      phone,
+      gender,
+      rentalDate: rentalDate ? new Date(rentalDate) : null,
+      leaseTerminationDate: leaseTerminationDate
+        ? new Date(leaseTerminationDate)
+        : null,
+      status: status,
+      accountType: accountType || "Lodger",
+    };
 
-        if (roomData.members?.length >= roomData.quantityMember) {
-            return res.status(400).json({ message: "Phòng đã đầy" });
-        }
+    if (room) {
+      const roomData = await Room.findById(room);
+      if (!roomData) {
+        return res.status(404).json({ message: "Phòng không tồn tại" });
+      }
 
-        const accountData = await Account.create({
-            firstName,
-            lastName,
-            email,
-            password: hashedPassword,
-            dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-            identityCard,
-            phone,
-            roomId: roomData._id,
-            rentalDate: rentalDate ? new Date(rentalDate) : null,
-            leaseTerminationDate: leaseTerminationDate ? new Date(leaseTerminationDate) : null,
-            // gender,
-            status: status,
-            accountType: accountType || "Lodger",
-        });
+      if (roomData.members?.length >= roomData.quantityMember) {
+        return res.status(400).json({ message: "Phòng đã đầy" });
+      }
 
-        await Room.findByIdAndUpdate(
-            roomData._id,
-            { 
-                $push: { 
-                    members: {
-                        accountId: accountData._id,
-                        joinDate: rentalDate ? new Date(rentalDate) : new Date()
-                    }
+      accountData.roomId = roomData._id;
+    }
+
+    const newAccount = await Account.create(accountData);
+
+    if (room) {
+      try {
+        // First fetch the room to get accurate information
+        const roomToUpdate = await Room.findById(room);
+
+        if (!roomToUpdate) {
+          console.error("Room not found during update phase");
+        } else {
+          const willBeFull =
+            roomToUpdate.members.length + 1 >= roomToUpdate.quantityMember;
+
+          await Room.findByIdAndUpdate(
+            room,
+            {
+              $push: {
+                members: {
+                  accountId: newAccount._id,
+                  joinDate: rentalDate ? new Date(rentalDate) : new Date(),
                 },
-                $set: { 
-                    status: roomData.members.length + 1 >= roomData.quantityMember ? "full" : "available"
-                }
+              },
+              $set: {
+                status: willBeFull ? false : true,
+              },
             },
             { new: true, runValidators: true }
-        );
+          );
+        }
+      } catch (roomUpdateError) {
+        console.error("Error updating room:", roomUpdateError);
+      }
+    }
 
     return res.status(201).json({
       message: "Tạo tài khoản thành công",
       data: {
-        firstName: accountData.firstName,
-        lastName: accountData.lastName,
-        email: accountData.email,
-        accountType: accountData.accountType,
+        firstName: newAccount.firstName,
+        lastName: newAccount.lastName,
+        email: newAccount.email,
+        accountType: newAccount.accountType,
       },
     });
   } catch (error) {
@@ -498,20 +705,17 @@ export const UpdateProfile = async (req, res) => {
       return res.status(404).json({ message: "Account không tìm thấy" });
     }
 
-        const { 
-            firstName,
-            lastName, 
-            phone, 
-            avatar, 
-        } = req.body;
-        const updatedAccount = await Account.findByIdAndUpdate
-        (
-            accountId, {
-            firstName,
-            lastName,
-            phone,
-            avatar,
-        }, { new: true });
+    const { firstName, lastName, phone, avatar } = req.body;
+    const updatedAccount = await Account.findByIdAndUpdate(
+      accountId,
+      {
+        firstName,
+        lastName,
+        phone,
+        avatar,
+      },
+      { new: true }
+    );
 
     const {
       password,
@@ -597,7 +801,8 @@ export const ChangePassword = async (req, res) => {
   try {
     const accountId = getCurrentUser(req);
     const { oldPassword, newPassword } = req.body;
-    const account = await Account.findById(accountId);Q
+    const account = await Account.findById(accountId);
+    Q;
     if (!account) {
       res.status(404).json({
         success: false,
@@ -622,16 +827,15 @@ export const ChangePassword = async (req, res) => {
           success: true,
           message: "Đổi mật khẩu thành công",
         });
+      }
     }
-};
-  }catch (error) {
+  } catch (error) {
     console.error(error);
     return res.status(500).json({
       message: "Lỗi Server Error",
     });
   }
-}
-
+};
 
 export const updateAccountContactStatus = async (req, res, next) => {
   try {
