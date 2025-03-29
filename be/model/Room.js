@@ -50,25 +50,27 @@ const RoomSchema = new Schema(
       type: Number,
       required: true,
     },
-    members: [
-      {
-        accountId: {
+    members: {
+      type: [
+        {
+          accountId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Account",
             required: true,
-            validate: {
-                validator: function (v) {
-                    return v.length <= 4; // Tối đa 4 người
-                },
-                message: 'Số lượng bên liên quan không được vượt quá 4 người'
-            },
-            default: []
+          },
+          joinDate: {
+            type: Date,
+          },
         },
-        joinDate: {
-          type: Date,
+      ],
+      validate: {
+        validator: function (membersArray) {
+          return membersArray.length <= 5; // Limit to 5 members per room
         },
+        message: "Số lượng thành viên không được vượt quá 5 người",
       },
-    ],
+      default: [],
+    },
     area: {
       type: Number,
       required: true,

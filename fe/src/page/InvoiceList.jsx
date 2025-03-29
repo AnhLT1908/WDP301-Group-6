@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { Pencil, Trash2 } from "lucide-react";
 
 export default function InvoiceList() {
   const [bills, setBills] = useState([]);
   const [houses, setHouses] = useState({});
   const [rooms, setRooms] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
 
   const hostId = JSON.parse(localStorage.getItem("user"))._id;
@@ -100,16 +103,22 @@ export default function InvoiceList() {
             },
           }
         );
-        
+
         // Remove the deleted bill from the state
-        setBills((prevBills) => prevBills.filter((bill) => bill._id !== billId));
+        setBills((prevBills) =>
+          prevBills.filter((bill) => bill._id !== billId)
+        );
         alert(response.data.message || "Bill deleted successfully");
       } catch (error) {
         console.error("Error deleting bill:", error);
-        alert(
-          error.response?.data?.message || "Failed to delete bill"
-        );
+        alert(error.response?.data?.message || "Failed to delete bill");
       }
+    }
+  };
+
+  const handleChangePages = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
     }
   };
 
@@ -118,7 +127,7 @@ export default function InvoiceList() {
       <div className="shadow overflow-hidden m-6">
         {/* Card Header */}
         <div className="flex justify-between items-center rounded-lg bg-gradient-to-r from-green-700 to-green-500 p-6 mx-6">
-          <h6 className="text-white text-lg font-medium">Invoice List</h6>
+          <h6 className="text-white text-lg font-medium">Danh sách hóa đơn</h6>
         </div>
         {/* Card Body */}
         <div className="overflow-x-auto px-0 pt-0 pb-2">
@@ -131,7 +140,7 @@ export default function InvoiceList() {
                   "Tổng hóa đơn",
                   "Ngày tạo",
                   "Trạng thái",
-                  "Actions",
+                  "Tính năng",
                 ].map((el) => (
                   <th
                     key={el}
@@ -197,18 +206,18 @@ export default function InvoiceList() {
                     </td>
 
                     <td className={cellClass}>
-                      <div className="flex gap-2">
-                        <a
-                          href={`/manager/invoice-detail/${bill._id}`}
-                          className="text-xs font-semibold text-blue-600 hover:underline"
-                        >
-                          Edit
-                        </a>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => handleViewDetail(bill._id)}>
+                          <Pencil
+                            size={16}
+                            className="text-blue-600 hover:text-blue-800"
+                          />
+                        </button>
                         <button
                           onClick={() => handleDeleteBill(bill._id)}
-                          className="text-xs font-semibold text-red-600 hover:underline"
+                          className="text-red-600 hover:text-red-800"
                         >
-                          Delete
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </td>
@@ -218,6 +227,44 @@ export default function InvoiceList() {
             </tbody>
           </table>
         </div>
+      </div>
+      <div className="flex justify-center items-center mt-6">
+        <button
+          onClick={() => handleChangePages(currentPage - 1)}
+          disabled={currentPage === 1}
+          className={`flex items-center justify-center mr-2 w-[110px] ${
+            currentPage === 1
+              ? "bg-gray-400"
+              : "bg-green-500 hover:bg-green-700"
+          } p-2 rounded-lg text-base font-semibold text-white`}
+        >
+          Trang Trước
+        </button>
+        <div className="flex items-center space-x-2">
+          {[...Array(totalPages)].map((_, index) => {
+            const pageNum = index + 1;
+            return (
+              <button
+                key={pageNum}
+                onClick={() => handleChangePages(pageNum)}
+                className={`flex items-center justify-center px-3 py-1 text-lg font-semibold rounded-md ${
+                  pageNum === currentPage
+                    ? "bg-green-600 text-white"
+                    : "bg-gray-200 text-green-500 hover:bg-gray-300"
+                }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          onClick={() => handleChangePages(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="flex justify-center items-center ml-2 w-[110px] bg-green-500 hover:bg-green-700 p-2 rounded-lg text-base font-semibold text-white"
+        >
+          Trang Sau
+        </button>
       </div>
     </div>
   );

@@ -66,7 +66,12 @@ const ContractManagement = () => {
   }, []);
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString();
+    const date = new Date(dateString);
+    return (
+      `${date.getDate().toString().padStart(2, "0")}/` +
+      `${(date.getMonth() + 1).toString().padStart(2, "0")}/` +
+      `${date.getFullYear()}`
+    );
   };
 
   const openModal = (contractId = null) => {
@@ -188,32 +193,32 @@ const ContractManagement = () => {
   };
 
   const handleDeleteContract = async (contractId) => {
-    const updatedContracts = contracts.filter((c) => c._id !== contractId);
-    setContracts(updatedContracts);
-    try {
-      await Axios.delete(
-        `http://localhost:5000/api/v1/contract/${contractId}`
-      ).then((res) => {
-        alert(res.data.message);
-      });
-    } catch (error) {
-      alert(error.response.data.message);
-    }
+    if (window.confirm("Bạn có chắc muốn xóa hợp đồng không?")) {
+      const updatedContracts = contracts.filter((c) => c._id !== contractId);
+      setContracts(updatedContracts);
+      try {
+        await Axios.delete(
+          `http://localhost:5000/api/v1/contract/${contractId}`
+        ).then((res) => {
+          alert(res.data.message);
+        });
+      } catch (error) {
+        alert(error.response.data.message);
+      }
 
-    setShowModal(false);
+      setShowModal(false);
+    }
   };
 
   return (
     <div className="p-5 max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">
-          Contract Management Dashboard
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-800">Quản Lý Hợp Đồng</h1>
         <button
           onClick={() => openModal()}
-          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition-colors"
+          className="bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-2 rounded-md transition-colors"
         >
-          + New Contract
+          Tạo Hợp Đồng Mới
         </button>
       </div>
 
@@ -228,12 +233,17 @@ const ContractManagement = () => {
               onClick={() => openModal(contract._id)}
             >
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                {contract.description}
+                Hợp Đồng Phòng {contract.roomId.name}
               </h3>
-              <p className="text-gray-600"> {contract.roomId.name}</p>
-              <p className="text-gray-600">Status: {contract.status}</p>
               <p className="text-gray-600">
-                Start: {formatDate(contract.startDate)}
+                Điều Khoản: {contract.description}{" "}
+              </p>
+              <p className="text-gray-600">
+                Trạng Thái:{" "}
+                {contract.status === "valid" ? "Còn Hiệu Lực" : "Hết Hiệu Lực"}
+              </p>
+              <p className="text-gray-600">
+                Hiệu Lực Từ Ngày: {formatDate(contract.startDate)}
               </p>
               <span
                 className={`inline-block px-2 py-1 rounded-full text-xs mt-2 ${
@@ -242,14 +252,16 @@ const ContractManagement = () => {
                     : "bg-orange-100 text-orange-800"
                 }`}
               >
-                {contract.verifyTwoSide}
+                {contract.verifyTwoSide === "verified"
+                  ? "Đã Xác Nhận"
+                  : "Chưa Xác Nhận"}
               </span>
             </div>
             <button
               onClick={() => handleDeleteContract(contract._id)}
               className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md ml-2"
             >
-              Delete
+              Xóa
             </button>
           </div>
         ))}
@@ -259,12 +271,12 @@ const ContractManagement = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">
-              {isEditMode ? "Edit Contract" : "New Contract"}
+              {isEditMode ? "Cập Nhật Hợp Đồng" : "Hợp Đồng Mới"}
             </h2>
             <form onSubmit={handleFormSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Description
+                  Điều khoản hợp đồng
                 </label>
                 <input
                   type="text"
@@ -282,7 +294,7 @@ const ContractManagement = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Room ID
+                    Hợp đồng phòng
                   </label>
                   <select
                     value={formData.roomId}
@@ -294,17 +306,17 @@ const ContractManagement = () => {
                     }
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"
                   >
-                    <option value="">Select a Room</option>
+                    <option value="">Hãy Chọn Phòng</option>
                     {rooms.map((room) => (
                       <option key={room._id} value={room._id}>
-                        {room.name} (Floor {room.floor})
+                        {room.name} (Tầng {room.floor})
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Status
+                    Trạng Thái
                   </label>
                   <select
                     value={formData.status}
@@ -316,16 +328,16 @@ const ContractManagement = () => {
                     }
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"
                   >
-                    <option value="valid">Valid</option>
-                    <option value="invalid">Invalid</option>
+                    <option value="valid">Còn Hiệu Lực</option>
+                    <option value="invalid">Hết Hiệu Lực</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Bên A
                   </label>
-                  <div className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
-                    {parsedData.name}
+                  <div className="mt-1 block w-full rounded-md shadow-md p-2">
+                    {`${parsedData.lastName} ${parsedData.firstName}`}
                   </div>
                 </div>
                 <div>
@@ -342,7 +354,7 @@ const ContractManagement = () => {
                     }
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"
                   >
-                    <option value="">Select a beneficiary</option>
+                    <option value="">Chọn người đại diện bên B</option>
                     {listLodger.map((lodger, index) => (
                       <option key={index} value={lodger._id}>
                         {lodger.firstName} {lodger.lastName}
@@ -352,7 +364,7 @@ const ContractManagement = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Start Date
+                    Hiệu Lực Từ Ngày
                   </label>
                   <input
                     type="date"
@@ -368,7 +380,7 @@ const ContractManagement = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    End Date
+                    Hiệu Lực Đến Ngày
                   </label>
                   <input
                     type="date"
@@ -386,18 +398,18 @@ const ContractManagement = () => {
               {isEditMode && (
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold text-gray-700 mb-3">
-                    Timeline
+                    Thông Tin Khác
                   </h3>
                   <div className="space-y-2">
                     <p className="text-sm text-gray-600">
-                      <strong>Created At:</strong>{" "}
+                      <strong>Ngày Tạo Hóa Đơn:</strong>{" "}
                       {formatDate(
                         contracts.find((c) => c._id === selectedContract)
                           ?.createdAt
                       )}
                     </p>
                     <p className="text-sm text-gray-600">
-                      <strong>Updated At:</strong>{" "}
+                      <strong>Ngày Cập Nhật Hóa Đơn:</strong>{" "}
                       {formatDate(
                         contracts.find((c) => c._id === selectedContract)
                           ?.updatedAt
@@ -411,9 +423,9 @@ const ContractManagement = () => {
                   type="submit"
                   className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
                 >
-                  {isEditMode ? "Save Changes" : "Create Contract"}
+                  {isEditMode ? "Lưu Thay Đổi" : "Tạo Mới"}
                 </button>
-                {isEditMode && (
+                {/* {isEditMode && (
                   <button
                     type="button"
                     onClick={() => handleDeleteContract(selectedContract)}
@@ -421,13 +433,13 @@ const ContractManagement = () => {
                   >
                     Delete
                   </button>
-                )}
+                )} */}
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
                   className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
                 >
-                  Cancel
+                  Hủy
                 </button>
               </div>
             </form>
