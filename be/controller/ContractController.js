@@ -32,6 +32,9 @@ const ContractController = {
   removeRelatedParty: catchAsyncErrors(async (req, res, next) => {
     await ContractService.removeRelatedParty(req, res, next);
   }),
+  getContractsByLodger: catchAsyncErrors(async (req, res, next) => {
+    await ContractService.getContractsByLodger(req, res, next);
+  }),
 };
 
 export default ContractController;

@@ -39,6 +39,7 @@ import LodgerInvoiceDetail from "./page/LodgerInvoiceDetail.jsx";
 import LodgerLayout from "./components/layout/LodgerLayout.jsx";
 import ManagerDashboard from "./page/ManagerDashboard.jsx";
 import ContractManagement from "./page/ContractManagement.jsx";
+import LodgerContract from "./page/LodgerContract.jsx";
 
 function App() {
   const [accountType, setAccountType] = useState(
@@ -95,6 +96,14 @@ function App() {
               element={
                 <LodgerLayout>
                   <LodgerInvoiceDetail />
+                </LodgerLayout>
+              }
+            />
+            <Route
+              path="/contract"
+              element={
+                <LodgerLayout>
+                  <LodgerContract />
                 </LodgerLayout>
               }
             />
